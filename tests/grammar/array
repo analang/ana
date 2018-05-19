@@ -1,0 +1,24 @@
+function get(array, index)
+{
+  return array[index];
+}
+
+array = [1, 2, 3, 4, 5];
+
+retry = 0;
+while(retry <= 5) { 
+  try {
+    print(get(array, -1));
+  } catch(e) {
+  }
+  retry = retry + 1;
+}
+
+if(0) {
+  array[10] = "Hello World";
+}
+
+myobj = {};
+myobj[10] = "Ryan McCullagh";
+
+print(myobj);

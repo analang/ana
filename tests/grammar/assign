@@ -1,0 +1,8 @@
+function getName()
+{
+  return "Ryan McCullagh";
+}
+
+age = getName();
+
+print(age);

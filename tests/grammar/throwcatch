@@ -1,0 +1,14 @@
+class Program 
+{
+  public function init()
+  { 
+    throw "Illegal instantiation of class Program";
+  }
+}
+
+try {
+  program = Program();
+  program.init();
+} catch(e) {
+  
+}

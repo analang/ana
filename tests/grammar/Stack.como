@@ -1,0 +1,12 @@
+class Stack {
+  public function __init() 
+  {
+    return 1[0];
+  }
+
+  public function Stack() {
+    __init();
+  }
+}
+
+Stack();

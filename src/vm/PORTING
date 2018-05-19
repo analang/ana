@@ -1,0 +1,45 @@
+## Porting
+
+sighandler_t is a GNU extension, therefore, in configure.ac check for it,
+and if not available define it.
+
+- determine the property printf format specifier to print pointers on either
+32 bit or 64 bit systems.
+
+- determine if uintptr_t is defined on the system, and check the size
+  -if not defined determine the sizeof(void *) and store that in the size type
+
+- if sizeof(void *) == 8
+  - ana_ssize_t == long
+  if sizeof(void *) == 4
+  - ana_ssize_t == int
+
+- determine if __FUNCTION__, __FILE__, __LINE__ macros are available
+
+- determine portable signal handling function, e.g sigaction vs signal
+
+- determine if backtrace is available, and what compiler flags are need to support it
+
+Macros:
+  HAVE_BACKTRACE
+  HAVE_SIGHANDLER_T
+  SIZE_OF_SIZE_T
+  SIZE_OF_VOID
+
+#if SIZE_OF_LONG == 8
+  typedef ana_size_t long  
+  typedef ana_int_t long
+  #define COMO_INT_MAX   9223372036854775807L
+  #define COMO_INT_MIN (-9223372036854775807L-1)
+#elif SIZE_OF_LONG == 4
+  typedef ana_size_t int
+  typedef ana_int_t int
+  #define COMO_INT_MAX  2147483647
+  #define COMO_INT_MIN (-2147483648)
+#else
+  #error "System needs a pointer size of either 4 or 8"
+#endif
+
+#if !HAVE_SIGHANDLER_T
+  typedef void(*sighandler_t)(int);
+#endif

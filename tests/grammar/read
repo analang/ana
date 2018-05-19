@@ -1,0 +1,2 @@
+line = readline();
+print(line);

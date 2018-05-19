@@ -1,0 +1,12 @@
+class System
+{
+	public function size()
+	{
+  		return 8;
+	}
+}
+
+if(__name__ != "__main__")
+{
+	print("I've been imported");
+}

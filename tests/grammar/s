@@ -1,0 +1,12 @@
+function maybeGet()
+{
+  try {
+    return 10 * "";  
+  }
+  catch(e) {
+    return 1;  
+  }
+}
+
+
+print(maybeGet());

@@ -1,0 +1,5 @@
+import SequencePrinter as sp;
+SP = sp.SequencePrinter(5, "even");
+
+SP.xprint();
+

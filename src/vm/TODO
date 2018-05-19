@@ -1,0 +1,21 @@
+TODO:
+  else if, else,
+  for 
+  while
+  foreach
+  import
+  instances
+  implement in operator ("key" in map)
+  
+DONE:
+  set index,
+  get index
+  single if statement with else
+
+
+Dicussion:
+  Enforcing "module" types, whereas only a class is exported. Think package
+  like in Java. Right now, modules are no different from frames. Meaning, that 
+  upon import an import statement, the frame must be executed.
+
+  import Module(with, arguments, here)

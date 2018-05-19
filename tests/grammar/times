@@ -1,0 +1,11 @@
+function doIt() 
+{
+try {
+  name = "a" * "b";
+} catch(e) {    
+  name = "a" * "B";
+}
+}
+
+
+doIt();

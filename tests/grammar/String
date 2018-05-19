@@ -1,0 +1,11 @@
+class String
+{
+	public function String(value)
+	{
+		self._value = value;
+		self._len = value.len;
+	}
+
+	public function 
+}
+

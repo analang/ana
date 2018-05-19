@@ -1,0 +1,19 @@
+class Container {
+  public function setFoo()
+  {
+    self.foo = "Foo";
+  }
+}
+
+
+Container.age = 25;
+
+container = Container();
+container.setFoo();
+print(container.foo);
+print(container.age);
+container.name = "Ryan";
+
+print(Container.setFoo);
+print(Container.age);
+print(Container.name);

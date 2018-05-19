@@ -1,0 +1,17 @@
+i = 0;
+data = '';
+
+function do_create_array()
+{
+  return [1,2,3,4];
+}
+
+while(i <= 1000000)
+{
+  i = i + 1;
+  data = do_create_array();
+}
+
+
+
+//print(i);

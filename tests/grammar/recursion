@@ -1,0 +1,9 @@
+count = 0;
+
+function i()
+{
+  i() + i();
+}
+
+
+i();

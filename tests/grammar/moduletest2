@@ -1,0 +1,6 @@
+import sys;
+
+system = sys.System();
+
+print(system.size());
+

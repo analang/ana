@@ -1,0 +1,28 @@
+class Container {  
+  public function getName()
+  {
+    return self.__name__;
+  }
+}
+
+class List {
+  
+  public function Stub() {
+    instance = 1;
+  }
+
+  public function List(container)
+  {
+    self._container = container;
+  }
+  
+  public function getContainer()
+  {
+    return self._container;
+  }
+}
+
+container = Container();
+
+print(List(container).getContainer().getName());
+

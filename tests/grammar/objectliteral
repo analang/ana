@@ -1,0 +1,30 @@
+//
+// Implement a wrapper atop the object literal expression: {}
+//
+
+class Container 
+{
+  public function Container()
+  {
+    self._store = { __name__: self.__name__ , name: "Ryan McCullagh"};
+  }
+  
+  public function put(key, value)
+  {
+    self._store[key] = value;
+  }
+  public function get(key)
+  {
+    return self._store[key];
+  }
+}
+
+store = Container();
+
+store.put("key", "value");
+store.put("_store", store._store);
+
+
+print(store._store);
+
+print(store.get("NOT EXIST"));

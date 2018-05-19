@@ -1,0 +1,4 @@
+function print(value)
+{
+  print(value);
+}

@@ -1,0 +1,5 @@
+function get(value) {
+  return value;
+}
+
+print(get(2) + get(1));

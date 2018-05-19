@@ -1,0 +1,11 @@
+function main()
+{
+  haystack = "syntax error, unexpected EOF, expecting ';'";
+  need = "syntax error, ";
+
+  start = strstr(haystack, need);
+
+  printf("%s\n", start + strlen(need));
+
+}
+

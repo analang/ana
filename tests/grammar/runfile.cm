@@ -1,0 +1,104 @@
+function run_file()
+{
+  filename = opts.argv[0];
+  fp = false;
+
+  if(filename == '-')
+  {
+    fp = stdin;
+    filename = "<stdin>";
+  }
+
+  if(!fp)
+  {
+    fp = fopen(filename, "r");
+    
+    if(!fp)
+    {
+      retval = 1;
+      fprintf(stderr, ": Can't open file \"%s\": %s\n", filename, strerror(errno));
+    }
+  }
+
+  retval = ana_astfromfile(
+    fp, filename, opts.argc, opts.argv, state);
+  
+  if(retval != 0)
+  {
+    fprintf(stdout, "SyntaxError: %s\n", state.error);
+    fprintf(stdout, "    at %s:%d:%d \n", filename, state.first_line,
+      state.first_column);
+
+    if(fseek(fp, 0, SEEK_SET))
+    {
+      fprintf(stderr, "warning: failed to set current position to start of file\n");
+    } 
+    else 
+    {
+      c = 1;
+      line = [];
+      i = 0;
+      curline = 0;
+      while((c = fgetc(fp)) != 0)
+      {
+        if(c == '\n')
+        {
+          curline++;
+          
+          if(curline == state.first_line) 
+          {
+            line[i] = '\0';
+            
+            fprintf(stdout, "%s\n", line);
+
+            for(i = 1; i <= state.first_column; i++)
+            {
+              if(i == state.first_column) 
+              {
+                fprintf(stdout, "^\n");
+              }
+              else 
+              {
+                fputc(' ', stdout);
+              }
+            }
+          }
+
+          i= 0;
+        } 
+        else
+        {
+          if(!(i < COMO_LINE_MAX - 1)) 
+          {
+            line[i++] = '\0';
+          }
+          else 
+          {
+            line[i++] = c;
+          }
+        }
+      }
+    }
+    fclose(fp);
+  } 
+  else 
+  {
+    fclose(fp);
+    assert(state.ast.kind == COMO_AST_TOP);
+
+    if(opts.ast) 
+    {
+      visit(state.ast, 0);
+    }
+    else if(opts.opcodes)
+    {
+
+    }
+    else
+    {
+
+    }
+  }
+}
+
+run_file();

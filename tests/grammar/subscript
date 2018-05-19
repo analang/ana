@@ -1,0 +1,6 @@
+str = "ana";
+
+str[0] = "A";
+
+
+print(str);

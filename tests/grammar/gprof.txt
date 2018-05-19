@@ -1,0 +1,557 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 53.85      0.07     0.07       20     3.50     3.50  do_sweep
+ 23.08      0.10     0.03        1    30.00   126.52  ana_frame_eval
+ 15.39      0.12     0.02  2000001     0.00     0.00  string_equals
+  7.69      0.13     0.01  4000021     0.00     0.00  ana_array_push
+  0.00      0.13     0.00  2000020     0.00     0.00  ana_map_put
+  0.00      0.13     0.00  2000020     0.00     0.00  map_str
+  0.00      0.13     0.00  2000003     0.00     0.00  ana_get_local_ex
+  0.00      0.13     0.00  1000041     0.00     0.00  ana_longfromlong
+  0.00      0.13     0.00  1000041     0.00     0.00  long_dtor
+  0.00      0.13     0.00  1000004     0.00     0.00  ana_array_new
+  0.00      0.13     0.00  1000004     0.00     0.00  array_dtor
+  0.00      0.13     0.00  1000001     0.00     0.00  bool_bool
+  0.00      0.13     0.00       37     0.00     0.00  ana_arena_alloc
+  0.00      0.13     0.00       31     0.00     0.00  yylex
+  0.00      0.13     0.00       20     0.00     0.00  add_child
+  0.00      0.13     0.00       19     0.00     0.00  ana_code_push
+  0.00      0.13     0.00       19     0.00     0.00  ana_container_push
+  0.00      0.13     0.00       12     0.00     0.00  long_hash
+  0.00      0.13     0.00       10     0.00     0.00  list_node
+  0.00      0.13     0.00        9     0.00     0.00  ana_stringfromstring
+  0.00      0.13     0.00        9     0.00     0.00  string_dtor
+  0.00      0.13     0.00        7     0.00     0.00  int_node
+  0.00      0.13     0.00        5     0.00     0.00  binary_op
+  0.00      0.13     0.00        5     0.00     0.00  id_node
+  0.00      0.13     0.00        2     0.00     0.00  ana_arena_free
+  0.00      0.13     0.00        2     0.00     0.00  ana_block_new_sized
+  0.00      0.13     0.00        2     0.00     0.00  ana_compile_unit
+  0.00      0.13     0.00        2     0.00     0.00  ana_container_resize
+  0.00      0.13     0.00        2     0.00     0.00  ana_functionfromhandler
+  0.00      0.13     0.00        2     0.00     0.00  ana_map_new
+  0.00      0.13     0.00        2     0.00     0.00  function_dtor
+  0.00      0.13     0.00        2     0.00     0.00  long_equals
+  0.00      0.13     0.00        2     0.00     0.00  map_dtor
+  0.00      0.13     0.00        2     0.00     0.00  yy_flush_buffer
+  0.00      0.13     0.00        2     0.00     0.00  yy_get_previous_state
+  0.00      0.13     0.00        2     0.00     0.00  yy_init_buffer
+  0.00      0.13     0.00        1     0.00     0.00  ana__runtime_object_cache_finalize
+  0.00      0.13     0.00        1     0.00     0.00  ana__runtime_object_cache_init
+  0.00      0.13     0.00        1     0.00     0.00  ana_arena_new
+  0.00      0.13     0.00        1     0.00     0.00  ana_arena_new_sized
+  0.00      0.13     0.00        1     0.00     0.00  ana_array_push_index
+  0.00      0.13     0.00        1     0.00     0.00  ana_astfromfile
+  0.00      0.13     0.00        1     0.00     0.00  ana_bool_type_finalize
+  0.00      0.13     0.00        1     0.00     0.00  ana_bool_type_init
+  0.00      0.13     0.00        1     0.00     0.00  ana_code_new
+  0.00      0.13     0.00        1     0.00     0.00  ana_compileast
+  0.00      0.13     0.00        1     0.00     0.00  ana_container_init
+  0.00      0.13     0.00        1     0.00   130.02  ana_eval
+  0.00      0.13     0.00        1     0.00     0.00  ana_frame_new
+  0.00      0.13     0.00        1     0.00     0.00  ana_vm_finalize
+  0.00      0.13     0.00        1     0.00     0.00  ana_vm_new
+  0.00      0.13     0.00        1     0.00     0.00  array_node
+  0.00      0.13     0.00        1     0.00     0.00  code_dtor
+  0.00      0.13     0.00        1     0.00     0.00  container_dtor
+  0.00      0.13     0.00        1     0.00     0.00  frame_deinit
+  0.00      0.13     0.00        1     0.00     0.00  frame_dtor
+  0.00      0.13     0.00        1     0.00     0.00  frame_init
+  0.00      0.13     0.00        1     0.00     0.00  program_node
+  0.00      0.13     0.00        1     0.00     0.00  yy_create_buffer
+  0.00      0.13     0.00        1     0.00     0.00  yy_delete_buffer
+  0.00      0.13     0.00        1     0.00     0.00  yyensure_buffer_stack
+  0.00      0.13     0.00        1     0.00     0.00  yylex_destroy
+  0.00      0.13     0.00        1     0.00     0.00  yylex_init_extra
+  0.00      0.13     0.00        1     0.00     0.00  yyparse
+  0.00      0.13     0.00        1     0.00     0.00  yypop_buffer_state
+  0.00      0.13     0.00        1     0.00     0.00  yyrestart
+  0.00      0.13     0.00        1     0.00     0.00  yyset_in
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2015 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 7.69% of 0.13 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]    100.0    0.00    0.13                 run_file [1]
+                0.00    0.13       1/1           ana_eval [2]
+                0.00    0.00       1/1           ana_compileast [8]
+                0.00    0.00       2/2           ana_arena_free [29]
+                0.00    0.00       1/1           ana_arena_new [42]
+                0.00    0.00       1/1           ana_astfromfile [45]
+                0.00    0.00       1/1           ana_vm_new [52]
+                0.00    0.00       1/1           ana__runtime_object_cache_finalize [40]
+                0.00    0.00       1/1           ana_vm_finalize [51]
+-----------------------------------------------
+                0.00    0.13       1/1           run_file [1]
+[2]    100.0    0.00    0.13       1         ana_eval [2]
+                0.03    0.10       1/1           ana_frame_eval [3]
+                0.00    0.00       1/20          do_sweep [4]
+                0.00    0.00       1/1           ana_bool_type_init [47]
+                0.00    0.00       1/1           ana_bool_type_finalize [46]
+                0.00    0.00       1/1           frame_dtor [57]
+-----------------------------------------------
+                0.03    0.10       1/1           ana_eval [2]
+[3]     97.3    0.03    0.10       1         ana_frame_eval [3]
+                0.07    0.00      19/20          do_sweep [4]
+                0.00    0.02 2000003/2000020     map_str [5]
+                0.01    0.00 4000004/4000021     ana_array_push [7]
+                0.00    0.00 2000003/2000020     ana_map_put [10]
+                0.00    0.00 2000003/2000003     ana_get_local_ex [11]
+                0.00    0.00 1000001/1000001     bool_bool [16]
+                0.00    0.00 1000001/1000004     ana_array_new [14]
+                0.00    0.00 1000001/1000041     ana_longfromlong [12]
+                0.00    0.00       1/1           frame_deinit [56]
+-----------------------------------------------
+                0.00    0.00       1/20          ana_eval [2]
+                0.07    0.00      19/20          ana_frame_eval [3]
+[4]     53.8    0.07    0.00      20         do_sweep [4]
+                0.00    0.00 1000001/1000041     long_dtor [13]
+                0.00    0.00 1000001/1000004     array_dtor [15]
+                0.00    0.00       2/2           function_dtor [34]
+-----------------------------------------------
+                0.00    0.00       2/2000020     ana_compileast [8]
+                0.00    0.00      15/2000020     ana_compile_unit [9]
+                0.00    0.02 2000003/2000020     ana_frame_eval [3]
+[5]     15.4    0.00    0.02 2000020         map_str [5]
+                0.02    0.00 2000001/2000001     string_equals [6]
+                0.00    0.00      12/12          long_hash [22]
+                0.00    0.00       2/2           long_equals [35]
+-----------------------------------------------
+                0.02    0.00 2000001/2000001     map_str [5]
+[6]     15.4    0.02    0.00 2000001         string_equals [6]
+-----------------------------------------------
+                0.00    0.00       3/4000021     ana_compileast [8]
+                0.00    0.00      14/4000021     ana_compile_unit [9]
+                0.01    0.00 4000004/4000021     ana_frame_eval [3]
+[7]      7.7    0.01    0.00 4000021         ana_array_push [7]
+-----------------------------------------------
+                0.00    0.00       1/1           run_file [1]
+[8]      0.0    0.00    0.00       1         ana_compileast [8]
+                0.00    0.00       2/2           ana_compile_unit [9]
+                0.00    0.00       2/2000020     map_str [5]
+                0.00    0.00       3/4000021     ana_array_push [7]
+                0.00    0.00       2/9           ana_stringfromstring [24]
+                0.00    0.00       2/2           ana_functionfromhandler [32]
+                0.00    0.00       2/2000020     ana_map_put [10]
+                0.00    0.00       2/19          ana_container_push [21]
+                0.00    0.00       2/19          ana_code_push [20]
+                0.00    0.00       1/1           ana_frame_new [50]
+                0.00    0.00       1/1           frame_init [58]
+                0.00    0.00       1/1           ana_array_push_index [44]
+                0.00    0.00       1/1000041     ana_longfromlong [12]
+-----------------------------------------------
+                                  15             ana_compile_unit [9]
+                0.00    0.00       2/2           ana_compileast [8]
+[9]      0.0    0.00    0.00       2+15      ana_compile_unit [9]
+                0.00    0.00      15/2000020     map_str [5]
+                0.00    0.00      14/4000021     ana_array_push [7]
+                0.00    0.00      39/1000041     ana_longfromlong [12]
+                0.00    0.00      17/19          ana_container_push [21]
+                0.00    0.00      17/19          ana_code_push [20]
+                0.00    0.00      15/2000020     ana_map_put [10]
+                0.00    0.00       5/9           ana_stringfromstring [24]
+                                  15             ana_compile_unit [9]
+-----------------------------------------------
+                0.00    0.00       2/2000020     ana_compileast [8]
+                0.00    0.00      15/2000020     ana_compile_unit [9]
+                0.00    0.00 2000003/2000020     ana_frame_eval [3]
+[10]     0.0    0.00    0.00 2000020         ana_map_put [10]
+-----------------------------------------------
+                0.00    0.00 2000003/2000003     ana_frame_eval [3]
+[11]     0.0    0.00    0.00 2000003         ana_get_local_ex [11]
+-----------------------------------------------
+                0.00    0.00       1/1000041     ana_compileast [8]
+                0.00    0.00      39/1000041     ana_compile_unit [9]
+                0.00    0.00 1000001/1000041     ana_frame_eval [3]
+[12]     0.0    0.00    0.00 1000041         ana_longfromlong [12]
+-----------------------------------------------
+                0.00    0.00      40/1000041     frame_dtor [57]
+                0.00    0.00 1000001/1000041     do_sweep [4]
+[13]     0.0    0.00    0.00 1000041         long_dtor [13]
+-----------------------------------------------
+                0.00    0.00       1/1000004     ana_vm_new [52]
+                0.00    0.00       2/1000004     ana_frame_new [50]
+                0.00    0.00 1000001/1000004     ana_frame_eval [3]
+[14]     0.0    0.00    0.00 1000004         ana_array_new [14]
+-----------------------------------------------
+                0.00    0.00       1/1000004     ana_vm_finalize [51]
+                0.00    0.00       2/1000004     frame_dtor [57]
+                0.00    0.00 1000001/1000004     do_sweep [4]
+[15]     0.0    0.00    0.00 1000004         array_dtor [15]
+-----------------------------------------------
+                0.00    0.00 1000001/1000001     ana_frame_eval [3]
+[16]     0.0    0.00    0.00 1000001         bool_bool [16]
+-----------------------------------------------
+                0.00    0.00       5/37          yylex [18]
+                0.00    0.00       5/37          id_node [28]
+                0.00    0.00       7/37          int_node [26]
+                0.00    0.00      20/37          list_node [23]
+[17]     0.0    0.00    0.00      37         ana_arena_alloc [17]
+-----------------------------------------------
+                0.00    0.00      31/31          yyparse [65]
+[18]     0.0    0.00    0.00      31         yylex [18]
+                0.00    0.00       5/37          ana_arena_alloc [17]
+                0.00    0.00       2/2           yy_get_previous_state [38]
+                0.00    0.00       1/1           yyensure_buffer_stack [62]
+                0.00    0.00       1/1           yy_create_buffer [60]
+                0.00    0.00       1/1           yyrestart [67]
+-----------------------------------------------
+                0.00    0.00      20/20          yyparse [65]
+[19]     0.0    0.00    0.00      20         add_child [19]
+-----------------------------------------------
+                0.00    0.00       2/19          ana_compileast [8]
+                0.00    0.00      17/19          ana_compile_unit [9]
+[20]     0.0    0.00    0.00      19         ana_code_push [20]
+                0.00    0.00       2/2           ana_container_resize [31]
+-----------------------------------------------
+                0.00    0.00       2/19          ana_compileast [8]
+                0.00    0.00      17/19          ana_compile_unit [9]
+[21]     0.0    0.00    0.00      19         ana_container_push [21]
+-----------------------------------------------
+                0.00    0.00      12/12          map_str [5]
+[22]     0.0    0.00    0.00      12         long_hash [22]
+-----------------------------------------------
+                0.00    0.00       1/10          array_node [53]
+                0.00    0.00       1/10          program_node [59]
+                0.00    0.00       3/10          yyparse [65]
+                0.00    0.00       5/10          binary_op [27]
+[23]     0.0    0.00    0.00      10         list_node [23]
+                0.00    0.00      20/37          ana_arena_alloc [17]
+-----------------------------------------------
+                0.00    0.00       2/9           ana_compileast [8]
+                0.00    0.00       2/9           ana_frame_new [50]
+                0.00    0.00       5/9           ana_compile_unit [9]
+[24]     0.0    0.00    0.00       9         ana_stringfromstring [24]
+-----------------------------------------------
+                0.00    0.00       2/9           frame_dtor [57]
+                0.00    0.00       7/9           ana_vm_finalize [51]
+[25]     0.0    0.00    0.00       9         string_dtor [25]
+-----------------------------------------------
+                0.00    0.00       7/7           yyparse [65]
+[26]     0.0    0.00    0.00       7         int_node [26]
+                0.00    0.00       7/37          ana_arena_alloc [17]
+-----------------------------------------------
+                0.00    0.00       5/5           yyparse [65]
+[27]     0.0    0.00    0.00       5         binary_op [27]
+                0.00    0.00       5/10          list_node [23]
+-----------------------------------------------
+                0.00    0.00       5/5           yyparse [65]
+[28]     0.0    0.00    0.00       5         id_node [28]
+                0.00    0.00       5/37          ana_arena_alloc [17]
+-----------------------------------------------
+                0.00    0.00       2/2           run_file [1]
+[29]     0.0    0.00    0.00       2         ana_arena_free [29]
+-----------------------------------------------
+                0.00    0.00       1/2           ana_arena_new_sized [43]
+                0.00    0.00       1/2           ana_arena_new [42]
+[30]     0.0    0.00    0.00       2         ana_block_new_sized [30]
+-----------------------------------------------
+                0.00    0.00       2/2           ana_code_push [20]
+[31]     0.0    0.00    0.00       2         ana_container_resize [31]
+-----------------------------------------------
+                0.00    0.00       2/2           ana_compileast [8]
+[32]     0.0    0.00    0.00       2         ana_functionfromhandler [32]
+-----------------------------------------------
+                0.00    0.00       1/2           frame_init [58]
+                0.00    0.00       1/2           ana_frame_new [50]
+[33]     0.0    0.00    0.00       2         ana_map_new [33]
+-----------------------------------------------
+                0.00    0.00       2/2           do_sweep [4]
+[34]     0.0    0.00    0.00       2         function_dtor [34]
+-----------------------------------------------
+                0.00    0.00       2/2           map_str [5]
+[35]     0.0    0.00    0.00       2         long_equals [35]
+-----------------------------------------------
+                0.00    0.00       1/2           frame_deinit [56]
+                0.00    0.00       1/2           frame_dtor [57]
+[36]     0.0    0.00    0.00       2         map_dtor [36]
+-----------------------------------------------
+                0.00    0.00       2/2           yy_init_buffer [39]
+[37]     0.0    0.00    0.00       2         yy_flush_buffer [37]
+-----------------------------------------------
+                0.00    0.00       2/2           yylex [18]
+[38]     0.0    0.00    0.00       2         yy_get_previous_state [38]
+-----------------------------------------------
+                0.00    0.00       1/2           yy_create_buffer [60]
+                0.00    0.00       1/2           yyrestart [67]
+[39]     0.0    0.00    0.00       2         yy_init_buffer [39]
+                0.00    0.00       2/2           yy_flush_buffer [37]
+-----------------------------------------------
+                0.00    0.00       1/1           run_file [1]
+[40]     0.0    0.00    0.00       1         ana__runtime_object_cache_finalize [40]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_vm_new [52]
+[41]     0.0    0.00    0.00       1         ana__runtime_object_cache_init [41]
+                0.00    0.00       1/1           ana_arena_new_sized [43]
+-----------------------------------------------
+                0.00    0.00       1/1           run_file [1]
+[42]     0.0    0.00    0.00       1         ana_arena_new [42]
+                0.00    0.00       1/2           ana_block_new_sized [30]
+-----------------------------------------------
+                0.00    0.00       1/1           ana__runtime_object_cache_init [41]
+[43]     0.0    0.00    0.00       1         ana_arena_new_sized [43]
+                0.00    0.00       1/2           ana_block_new_sized [30]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_compileast [8]
+[44]     0.0    0.00    0.00       1         ana_array_push_index [44]
+-----------------------------------------------
+                0.00    0.00       1/1           run_file [1]
+[45]     0.0    0.00    0.00       1         ana_astfromfile [45]
+                0.00    0.00       1/1           yylex_init_extra [64]
+                0.00    0.00       1/1           yyset_in [68]
+                0.00    0.00       1/1           yylex_destroy [63]
+                0.00    0.00       1/1           yyparse [65]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_eval [2]
+[46]     0.0    0.00    0.00       1         ana_bool_type_finalize [46]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_eval [2]
+[47]     0.0    0.00    0.00       1         ana_bool_type_init [47]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_frame_new [50]
+[48]     0.0    0.00    0.00       1         ana_code_new [48]
+                0.00    0.00       1/1           ana_container_init [49]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_code_new [48]
+[49]     0.0    0.00    0.00       1         ana_container_init [49]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_compileast [8]
+[50]     0.0    0.00    0.00       1         ana_frame_new [50]
+                0.00    0.00       2/9           ana_stringfromstring [24]
+                0.00    0.00       2/1000004     ana_array_new [14]
+                0.00    0.00       1/1           ana_code_new [48]
+                0.00    0.00       1/2           ana_map_new [33]
+-----------------------------------------------
+                0.00    0.00       1/1           run_file [1]
+[51]     0.0    0.00    0.00       1         ana_vm_finalize [51]
+                0.00    0.00       7/9           string_dtor [25]
+                0.00    0.00       1/1000004     array_dtor [15]
+-----------------------------------------------
+                0.00    0.00       1/1           run_file [1]
+[52]     0.0    0.00    0.00       1         ana_vm_new [52]
+                0.00    0.00       1/1           ana__runtime_object_cache_init [41]
+                0.00    0.00       1/1000004     ana_array_new [14]
+-----------------------------------------------
+                0.00    0.00       1/1           yyparse [65]
+[53]     0.0    0.00    0.00       1         array_node [53]
+                0.00    0.00       1/10          list_node [23]
+-----------------------------------------------
+                0.00    0.00       1/1           frame_dtor [57]
+[54]     0.0    0.00    0.00       1         code_dtor [54]
+-----------------------------------------------
+                0.00    0.00       1/1           frame_dtor [57]
+[55]     0.0    0.00    0.00       1         container_dtor [55]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_frame_eval [3]
+[56]     0.0    0.00    0.00       1         frame_deinit [56]
+                0.00    0.00       1/2           map_dtor [36]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_eval [2]
+[57]     0.0    0.00    0.00       1         frame_dtor [57]
+                0.00    0.00      40/1000041     long_dtor [13]
+                0.00    0.00       2/9           string_dtor [25]
+                0.00    0.00       2/1000004     array_dtor [15]
+                0.00    0.00       1/1           code_dtor [54]
+                0.00    0.00       1/1           container_dtor [55]
+                0.00    0.00       1/2           map_dtor [36]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_compileast [8]
+[58]     0.0    0.00    0.00       1         frame_init [58]
+                0.00    0.00       1/2           ana_map_new [33]
+-----------------------------------------------
+                0.00    0.00       1/1           yyparse [65]
+[59]     0.0    0.00    0.00       1         program_node [59]
+                0.00    0.00       1/10          list_node [23]
+-----------------------------------------------
+                0.00    0.00       1/1           yylex [18]
+[60]     0.0    0.00    0.00       1         yy_create_buffer [60]
+                0.00    0.00       1/2           yy_init_buffer [39]
+-----------------------------------------------
+                0.00    0.00       1/1           yylex_destroy [63]
+[61]     0.0    0.00    0.00       1         yy_delete_buffer [61]
+-----------------------------------------------
+                0.00    0.00       1/1           yylex [18]
+[62]     0.0    0.00    0.00       1         yyensure_buffer_stack [62]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_astfromfile [45]
+[63]     0.0    0.00    0.00       1         yylex_destroy [63]
+                0.00    0.00       1/1           yy_delete_buffer [61]
+                0.00    0.00       1/1           yypop_buffer_state [66]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_astfromfile [45]
+[64]     0.0    0.00    0.00       1         yylex_init_extra [64]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_astfromfile [45]
+[65]     0.0    0.00    0.00       1         yyparse [65]
+                0.00    0.00      31/31          yylex [18]
+                0.00    0.00      20/20          add_child [19]
+                0.00    0.00       7/7           int_node [26]
+                0.00    0.00       5/5           binary_op [27]
+                0.00    0.00       5/5           id_node [28]
+                0.00    0.00       3/10          list_node [23]
+                0.00    0.00       1/1           program_node [59]
+                0.00    0.00       1/1           array_node [53]
+-----------------------------------------------
+                0.00    0.00       1/1           yylex_destroy [63]
+[66]     0.0    0.00    0.00       1         yypop_buffer_state [66]
+-----------------------------------------------
+                0.00    0.00       1/1           yylex [18]
+[67]     0.0    0.00    0.00       1         yyrestart [67]
+                0.00    0.00       1/2           yy_init_buffer [39]
+-----------------------------------------------
+                0.00    0.00       1/1           ana_astfromfile [45]
+[68]     0.0    0.00    0.00       1         yyset_in [68]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2015 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+  [19] add_child              [50] ana_frame_new          [13] long_dtor (long.c)
+  [40] ana__runtime_object_cache_finalize [32] ana_functionfromhandler [35] long_equals (long.c)
+  [41] ana__runtime_object_cache_init [11] ana_get_local_ex [22] long_hash (long.c)
+  [17] ana_arena_alloc        [12] ana_longfromlong       [36] map_dtor (map.c)
+  [29] ana_arena_free         [33] ana_map_new             [5] map_str (map.c)
+  [42] ana_arena_new          [10] ana_map_put            [59] program_node
+  [43] ana_arena_new_sized    [24] ana_stringfromstring   [25] string_dtor (string.c)
+  [14] ana_array_new          [51] ana_vm_finalize         [6] string_equals (string.c)
+   [7] ana_array_push         [52] ana_vm_new             [60] yy_create_buffer
+  [44] ana_array_push_index   [15] array_dtor (array.c)   [61] yy_delete_buffer
+  [45] ana_astfromfile        [53] array_node             [37] yy_flush_buffer
+  [30] ana_block_new_sized (arena.c) [27] binary_op       [38] yy_get_previous_state (ana_lexer.c)
+  [46] ana_bool_type_finalize [16] bool_bool (bool.c)     [39] yy_init_buffer (ana_lexer.c)
+  [47] ana_bool_type_init     [54] code_dtor (code.c)     [62] yyensure_buffer_stack (ana_lexer.c)
+  [48] ana_code_new           [55] container_dtor (container.c) [18] yylex
+  [20] ana_code_push           [4] do_sweep (vm.c)        [63] yylex_destroy
+   [9] ana_compile_unit (compile.c) [56] frame_deinit (frame.c) [64] yylex_init_extra
+   [8] ana_compileast         [57] frame_dtor (frame.c)   [65] yyparse
+  [49] ana_container_init     [58] frame_init (frame.c)   [66] yypop_buffer_state
+  [21] ana_container_push     [34] function_dtor (function.c) [67] yyrestart
+  [31] ana_container_resize   [28] id_node                [68] yyset_in
+   [2] ana_eval               [26] int_node
+   [3] ana_frame_eval (vm.c)  [23] list_node

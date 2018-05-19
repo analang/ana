@@ -1,0 +1,12 @@
+class array 
+{
+	public function array(value)
+	{
+		self._bag = value;		
+	}
+	public function search(key)
+	{
+
+
+	}
+}

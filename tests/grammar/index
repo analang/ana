@@ -1,0 +1,21 @@
+function setIndex(container, index, value)
+{
+  container[index] = value;
+}
+
+container = [1, 2, 3, 4];
+
+print(container[1]);
+
+setIndex(container, 1, container[1] * 2);
+
+print(container[1]);
+
+
+nested_container = [[1,2,3]];
+
+print(nested_container[0][0]);
+
+nested_container[0][0] = "Ryan";
+
+print(nested_container[0][0]);

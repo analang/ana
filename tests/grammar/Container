@@ -1,0 +1,23 @@
+class Container {
+  
+  public function Foo() { a = 1; }
+
+  public function Container()
+  {
+    self.name = "This";
+  }
+
+  public function setName(name)
+  {
+    self.name = name;
+  }
+}
+
+
+container = Container();
+
+print(container.name);
+
+container.setName("Ryan McCullagh");
+
+print(container.name);

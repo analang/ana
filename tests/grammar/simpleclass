@@ -1,0 +1,17 @@
+class Simple
+{
+  public function Simple()
+  {
+    self.name = "Simple";
+  }
+  public function getInt(a, b)
+  {
+    return 5;
+  }
+}
+
+simple = Simple();
+
+temp = simple.getInt(5, 10);
+
+print(temp);
