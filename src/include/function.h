@@ -26,6 +26,8 @@ COMO_OBJECT_API ana_object *ana_functionfromhandler(
   ana_function_handler handler);
 
 #define ana_get_function(obj) ((ana_function *)((obj)))
+#define ana_get_function_frame(obj) (((ana_function *)((obj)))->impl.frame)
+#define ana_get_function_flags(obj) (ana_get_function((obj))->flags)
 
 extern ana_type ana_function_type;
 

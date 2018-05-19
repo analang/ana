@@ -124,7 +124,7 @@ char *ana_arena_alloc(ana_arena *a, size_t sz)
     {
       COMO_MEM_DEBUG("checking block %p's capability to satisfy a "
         "%zu block allocation, where offset is %zu inside a block of %zu bytes "
-        "with %zu free bytes therefore\n", 
+        "with %zu free bytes\n", 
         (void *)block, rounded, 
         block->offset, 
         block->size, 

@@ -10,7 +10,7 @@ COMO_OBJECT_API ana_object *ana_module_new(ana_object *name, ana_object *members
   module->base.type = &ana_module_type;
   module->base.next = NULL;
   module->base.scope = NULL;
-  module->base.flags = 1;
+  module->base.flags = 0;
   module->name = name;
   module->members = members;
 

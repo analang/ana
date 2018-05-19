@@ -3,7 +3,7 @@
 
 /*
  * Use this arena for tasks, don't use it for the GC, as it makes debugging
-   almost impossible. This is currently only used for the parser, and AST
+   almost impossible with valgrind. This is currently only used for the parser, and AST
    construction.
 
    TODO:

@@ -111,7 +111,7 @@ COMO_OBJECT_API ana_object *ana_map_new(ana_size_t size)
   map->base.type = &ana_map_type;
   map->base.next = NULL;
   map->base.scope = NULL;
-  map->base.flags = 1;
+  map->base.flags = 0;
 
   map->capacity = size;
   map->size = 0;

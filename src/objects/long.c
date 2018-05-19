@@ -15,7 +15,7 @@ COMO_OBJECT_API inline ana_object *ana_longfromlong(long lval)
   obj->base.type = &ana_long_type;
   obj->base.next = NULL;
   obj->base.scope = NULL;
-  obj->base.flags = 1;
+  obj->base.flags = 0;
   obj->value = lval;
 
   return (ana_object *)obj;

@@ -18,7 +18,7 @@ COMO_OBJECT_API ana_frame *ana_frame_base_new(
   obj->base.type = &ana_frame_type;
   obj->base.next = NULL;
   obj->base.scope = NULL;
-  obj->base.flags = 1;
+  obj->base.flags = 0;
 
   obj->frameflags = COMO_FRAME_EXEC;
   obj->name       = name;
@@ -67,7 +67,7 @@ COMO_OBJECT_API ana_object *ana_frame_new(char *name, char *filename,
   obj->base.type = &ana_frame_type;
   obj->base.next = NULL;
   obj->base.scope = NULL;
-  obj->base.flags = 1;
+  obj->base.flags = 0;
 
   obj->frameflags = COMO_FRAME_DEFN;
   obj->name       = ana_stringfromstring(name);
@@ -183,9 +183,11 @@ static void frame_dtor(ana_object *obj)
 {
   ana_frame *self = ana_get_frame(obj);
 
+  if(self->ready)
+    frame_deinit(obj);
+  
   if(self->frameflags & COMO_FRAME_EXEC)
   {
-
     if(obj->scope)
       ana_object_dtor(obj->scope);
 
@@ -195,8 +197,8 @@ static void frame_dtor(ana_object *obj)
   }
 
   
-//  fprintf(stdout, "frame_dtor: for frame `%s`\n", 
-//    ana_cstring(self->name));
+  fprintf(stdout, "frame_dtor: for frame `%s`\n", 
+    ana_cstring(self->name));
 
   ana_object_dtor(self->name);
   ana_object_dtor(self->code);

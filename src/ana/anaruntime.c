@@ -1,13 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ana.h>
-
+#include <assert.h>
 
 #include "utils.h"
-
-ana_runtime *ana__base_runtime;
-static ana_runtime _base_runtime;
-
 
 COMO_OBJECT_API char *ana_get_fn_name(ana_frame * frame)
 {
@@ -24,37 +20,30 @@ COMO_OBJECT_API char *ana_get_fn_name(ana_frame * frame)
   return ana_build_str("%s%s%s", base, sep, fnname);
 }
 
-void ana__runtime_object_cache_init(void)
+COMO_OBJECT_API char *ana_get_frame_name(ana_object *obj)
 {
-  int i;
-  _base_runtime.object_cache_enabled = 0;
-  _base_runtime.arena = ana_arena_new_sized(COMO_ARENA_BLOCK_SIZE * 2 * 2);
-  ana__base_runtime = &_base_runtime;
-  return;
+  assert(obj != NULL);
 
-  _base_runtime.object_cache.prefetched__array_slot = 0;
-  _base_runtime.object_cache.prefetched__long_slot = 0;
-  _base_runtime.object_cache.prefetched__long_slot = 0;
-
-  for(i = 0; i < ANA_RUNTIME_OBJECT_CACHE_SIZE; i++)
+  if(ana_type_is(obj, ana_frame_type))
   {
-    /* init array */
-    _base_runtime.object_cache.prefetched__array[i] 
-      = malloc(sizeof(ana_array));
-    _base_runtime.object_cache.prefetched__array[i]->items 
-      = malloc(sizeof(ana_object *) * 8);
-    
-    /* init long */
-    _base_runtime.object_cache.prefetched__long[i] 
-      = malloc(sizeof(ana_long));
-
-    /* init bool */
-    _base_runtime.object_cache.prefetched__bool[i] 
-      = malloc(sizeof(ana_bool));
+    return ana_get_fn_name((ana_frame *)obj);
+  } 
+  else if(ana_type_is(obj, ana_function_type))
+  {
+    if(ana_get_function_flags(obj) & COMO_FUNCTION_LANG)
+    {
+      return ana_get_fn_name(ana_get_function_frame(obj));
+    } 
+    else
+    {
+      return ana_build_str("<builtin function>");
+    }
   }
-}
-
-void ana__runtime_object_cache_finalize(void)
-{
-  ana_arena_free(_base_runtime.arena);
+  else
+  {    
+    printf("fatal: can't get frame name for object of type %s\n", 
+      ana_type_name(obj));
+    fflush(stdout);
+    abort();
+  }
 }

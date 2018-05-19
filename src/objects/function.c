@@ -7,7 +7,7 @@ static ana_function *create_function(int type)
   obj->base.type = &ana_function_type;
   obj->base.next = NULL;
   obj->base.scope = NULL;
-  obj->base.flags = 1;
+  obj->base.flags = 0;
   obj->flags = type;
 
   return obj;
@@ -44,16 +44,21 @@ static void function_dtor(ana_object *obj)
 {
   ana_function *self = ana_get_function(obj); 
 
-
   if(obj->scope)
     ana_object_dtor(obj->scope);
 
+  printf("destroying function...");
 
   if(self->flags & COMO_FUNCTION_LANG)
   {
+    printf("it's a language defined function too\n");
     ana_frame *frame = self->impl.frame;
 
     ana_object_dtor(frame);
+  }
+  else
+  {
+    printf("which is builtin\n");
   }
 
   free(self);

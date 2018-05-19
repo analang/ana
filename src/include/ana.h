@@ -74,5 +74,6 @@ COMO_OBJECT_API void ana__runtime_object_cache_init(void);
 COMO_OBJECT_API void ana__runtime_object_cache_finalize(void);
 
 COMO_OBJECT_API char *ana_get_fn_name(ana_frame * frame);
+COMO_OBJECT_API char *ana_get_frame_name(ana_object *obj);
 
 #endif

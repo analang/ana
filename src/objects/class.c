@@ -7,7 +7,7 @@ COMO_OBJECT_API ana_object *ana_class_new(ana_object *base, ana_object *name,
 
   obj->base.type = &ana_class_type;
   obj->base.next = NULL;  
-  obj->base.flags = 1;
+  obj->base.flags = 0;
   obj->base.scope = NULL;
   
   obj->c_base = base;

@@ -77,7 +77,7 @@ COMO_OBJECT_API void ana_frame_growstack(ana_object *);
 #define COMO_FRAME_MAX_OBJECTS    16
 #define COMO_CODE_SIZE            8
 #define COMO_PARAMS_SIZE          4
-#define COMO_FRAME_DEFN           0x00000002
-#define COMO_FRAME_EXEC           0x00000003
+#define COMO_FRAME_DEFN           0x00000001
+#define COMO_FRAME_EXEC           0x00000002
 
 #endif

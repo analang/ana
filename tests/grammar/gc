@@ -1,13 +1,14 @@
-function noop() { return [1,2,3,4]; }
+function noop() { return 1;  }
 
 function test()
 {
-i = 0;
-while(i <= 10)
-{
-	noop();
-	i = i +1;
-}
+	i = 0;
+	while(i <= 9)
+	{
+		print(i * 50);
+		noop();
+		i = i +1;
+	}
 }
 
 test();

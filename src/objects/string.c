@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <ana.h>
 
@@ -38,7 +39,7 @@ static ana_object *ana_stringfromstringandlen(char *val, size_t len)
   obj->base.type = &ana_string_type;
   obj->base.next = NULL;
   obj->base.scope = NULL;
-  obj->base.flags = 1;
+  obj->base.flags = 0;
   
   obj->len = (ana_size_t)len;
   
@@ -133,6 +134,7 @@ static ana_object *string_add(ana_object *a, ana_object *b)
   ana_string *s2;
   int shouldfrees2 = 0;
 
+  printf("string_add: right is at %p\n", (void *)b);
   if(!ana_type_is(b, ana_string_type)) 
   {
     s2 = (ana_string *)b->type->obj_str(b);

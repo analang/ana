@@ -208,7 +208,6 @@ static int run_file(ana_options *opts)
     goto exit;
   }
 
-
   retval = ana_astfromfile(
     fp, filename, opts->argc, opts->argv, &state);
 
@@ -307,7 +306,10 @@ static int run_file(ana_options *opts)
       if(!code) 
         fprintf(stderr, PROGRAM_NAME ": compile error\n");
       else
-        ana_eval_ex(vm, code, 0); 
+        if(opts->function)
+          ana_eval(vm, code, opts->function);
+        else
+          ana_eval(vm, code, NULL); 
 
       ana_vm_finalize(vm);
     }

@@ -13,7 +13,7 @@ COMO_OBJECT_API ana_object *ana_array_new(ana_size_t capacity)
 
   obj->base.type = &ana_array_type;
   obj->base.next = NULL;  
-  obj->base.flags = 1;
+  obj->base.flags = 0;
   obj->base.scope = NULL;
   
   obj->size = 0;
@@ -125,7 +125,6 @@ static ana_object *array_set(ana_object *obj, ana_object *index,
 
   return NULL;
 }
-
 
 static struct _ana_seq_ops seqops = {
   array_get,

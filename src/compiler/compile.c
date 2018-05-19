@@ -42,6 +42,10 @@
   (ana_array_push(frame->constants, STUB_gc_new(vm, frame, ana_boolfromint(value))), \
   (ana_array_size(frame->constants) - 1))
 
+#define function_const(frame, value) \
+  (ana_array_push(frame->constants, STUB_gc_new(vm, frame, (value))), \
+  ((value)))
+
 static void ana_compile_unit(ComoVM *vm, ana_frame *frame, 
   node *ast);
 
@@ -107,8 +111,9 @@ static void compile_func(ComoVM *vm, ana_frame *frame, node *ast)
 
   ana_object *fnimpl = ana_functionfromframe(fnframe);
 
-  ana_map_put(frame->locals, create_symbol(vm, (char *)name->value), 
-    gc_new(vm, frame, fnimpl));
+  GC_TRACK(vm, fnimpl);
+
+  ana_map_put(frame->locals, create_symbol(vm, (char *)name->value), fnimpl);
 
   char *fnname2 = ana_get_fn_name(fnframe);
   fnimpl->scope = ana_stringfromstring(fnname2);
@@ -130,22 +135,10 @@ static void compile_class(ComoVM *vm, ana_frame *frame, node *ast)
   for(i = 0; i < functions->nchild; i++)
   {
     node *classmethod = functions->children[i];
-
-    assert(classmethod->kind == COMO_AST_CLASS_METHOD);
-
-    node *function = classmethod->children[0];
-
-    assert(function->kind == COMO_AST_FUNCTION);
-    
+    node *function = classmethod->children[0];    
     node_id *name = (node_id *)(function->children[0]);
-
-  //  printf("compile_class: compiling method %s.%s\n", classname->value,
-  //    name->value);
-
     node *params = function->children[1];
     node *body = function->children[2];
-
-    assert(body);
 
     ana_frame *fnframe = (ana_frame *)ana_frame_new(name->value, 
       ana_cstring(frame->filename), NULL);
@@ -170,19 +163,19 @@ static void compile_class(ComoVM *vm, ana_frame *frame, node *ast)
       emit(fnframe, IRETURN, 0, 1);    
     }
 
-    ana_map_put(members, 
-      create_symbol(vm, (char *)name->value), 
-      gc_new(vm, frame, ana_functionfromframe(fnframe))
-    );
+    ana_object *thefn = ana_functionfromframe(fnframe);
+
+    GC_TRACK(vm, thefn);
+
+    ana_map_put(members, create_symbol(vm, (char *)name->value), thefn);
   }
 
   ana_object *theclass = ana_class_new(NULL, 
     ana_stringfromstring(classname->value), members);
 
-  ana_map_put(frame->locals, 
-    create_symbol(vm, classname->value), 
-    gc_new(vm, frame, theclass)
-  );
+  GC_TRACK(vm, theclass);
+
+  ana_map_put(frame->locals, create_symbol(vm, classname->value), theclass);
 }
 
 static void compile_try(ComoVM *vm, ana_frame *frame, node *stmt)
@@ -479,42 +472,42 @@ static void ana_compile_unit(ComoVM *vm, ana_frame *frame,
         TARGET(COMO_AST_REM) {
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, IREM, 0, 0);
+          emitx(frame, IREM, 0, 0);
           break;         
         }
         TARGET(COMO_AST_LTE) {
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, ILTE, 0, 0);
+          emitx(frame, ILTE, 0, 0);
           break;
         }
         TARGET(COMO_AST_EQUAL) {
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, IEQUAL, 0, 0);
+          emitx(frame, IEQUAL, 0, 0);
           break;
         }
         TARGET(COMO_AST_NOT_EQUAL) {
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, INEQUAL, 0, 0);
+          emitx(frame, INEQUAL, 0, 0);
           break;
         }
         TARGET(COMO_AST_DIV) {
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, IDIV, 0, 0);
+          emitx(frame, IDIV, 0, 0);
           break;
         }
         TARGET(COMO_AST_ADD)
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, IADD, 0, 0);
+          emitx(frame, IADD, 0, 0);
           break;
         TARGET(COMO_AST_SUB)
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);
-          emit(frame, IMINUS, 0, 0);   
+          emitx(frame, IMINUS, 0, 0);   
           break;  
         TARGET(COMO_AST_ASSIGN) {
           /* Check property */
@@ -569,10 +562,10 @@ static void init_builtins(ComoVM *vm, ana_frame *frame)
   = ana_get_array(vm->symbols)->items[readline_symbol_index];
 
   ana_object *fn = ana_functionfromhandler(ana__builtin_readline);
-  fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? ana_cstring(ana_get_base(frame)->scope) : "__main__");
+  fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? 
+    ana_cstring(ana_get_base(frame)->scope) : "__main__");
 
-  ana_map_put(frame->locals, readline_symbol,
-    gc_new(vm, frame, fn));
+  ana_map_put(frame->locals, readline_symbol, function_const(frame, fn));
 
   ana_size_t print_symbol_index = make_symbol(vm, "print");
   ana_object *print_symbol = 
@@ -580,10 +573,10 @@ static void init_builtins(ComoVM *vm, ana_frame *frame)
 
 
   fn = ana_functionfromhandler(ana__builtin_print);
-  fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? ana_cstring(ana_get_base(frame)->scope) : "__main__");
+  fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? 
+    ana_cstring(ana_get_base(frame)->scope) : "__main__");
 
-  ana_map_put(frame->locals, print_symbol, 
-    gc_new(vm, frame, fn));
+  ana_map_put(frame->locals, print_symbol, function_const(frame, fn));
 }
 
 ana_object *ana_compileast(char *filename, ComoVM *vm, node *ast)
@@ -632,12 +625,12 @@ ana_object *ana_compilemodule(char *modulename, char *filename,
 
   int i;
 
-  for(i = 0; i < ast->nchild; i++) {
-//    fprintf(stdout, "ana_compilemodule: compiling node type %s\n", 
-//      astkind(ast->children[i]->kind));
-
+  for(i = 0; i < ast->nchild; i++) 
+  {
     ana_compile_unit(vm, (ana_frame *)mainframe, ast->children[i]);
   }
+
+  //GC_TRACK(vm, mainframe);
 
   emit((ana_frame *)mainframe, LOAD_CONST, 
     int_const(((ana_frame *)mainframe), 0), 0);

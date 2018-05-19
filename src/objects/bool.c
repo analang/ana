@@ -10,7 +10,7 @@ void ana_bool_type_init()
   xbool_true->base.type = &ana_bool_type;
   xbool_true->base.next = NULL;
   xbool_true->base.scope = NULL;
-  xbool_true->base.flags = 1;
+  xbool_true->base.flags = 0;
   xbool_true->value = 1;
 
   ana_bool *xbool_false = malloc(sizeof(ana_bool));

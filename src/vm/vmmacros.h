@@ -1,45 +1,39 @@
-//#define ANA_VM_COMPUTED_GOTO 1
+#define ANA_TRACE_DEBUG_ENABLED
 
-#define ANA_ABORT() ana_abort(frame)
-#define ANA_TRACE_DEBUG
+#define vm_case(o) switch(o)
+#define vm_target(x) case x:
+#define vm_continue() break
 
-#ifdef ANA_VM_COMPUTED_GOTO
-#   define vm_case(o)
-#   define vm_target(x) do_##x:
-#define vm_continue() do { \
-  opline = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
-  opcode = (opline >> 24) & 0xff; \
-  oparg = (opline >> 8) & 0xffff; \
-  frame->pc++;  \
-  goto *DISPATCH_TABLE[opcode]; \
-} while(0)
-#else 
-#   define vm_case(o) switch(o)
-#   define vm_target(x) case x:
-#   define vm_continue() break
-#endif
-
-#define DO_TRACE(op, arg, flag, argused) do { \
+#ifdef ANA_TRACE_DEBUG_ENABLED
+# define DO_TRACE(op, arg, flag, argused) \
+  do \
+  { \
     fprintf(stdout, "%-5d: ", (int)frame->pc); \
-    if(argused) { \
+    if(argused) \
+    { \
       fprintf(stdout, "%-15s%-10d\n", op, arg); \
-    } else {\
+    } \
+    else \
+    { \
       fprintf(stdout, "%-15s\n", op); \
     } \
-} while(0)
-
-#ifdef ANA_TRACE_DEBUG
-#   define TRACE(op, arg, flag, argused) if(1) {\
-      if(vm->flags & COMO_VM_TRACING) { \
-        DO_TRACE(#op, arg, flag, argused); \
-        if(op != IRETURN) \
-          break; \
-        else \
-          goto exit; \
+  } while(0)
+  
+# define TRACE(op, arg, flag, argused) \
+  if(1) \
+  { \
+    if(vm->flags & COMO_VM_TRACING) \
+    { \
+      DO_TRACE(#op, arg, flag, argused); \
+      if(op != IRETURN) \
+        break; \
+      else \
+        goto exit; \
       } \
-      else if(vm->flags & COMO_VM_LIVE_TRACING) {\
-        DO_TRACE(#op, arg, flag, argused); \
-      } \
+    else if(vm->flags & COMO_VM_LIVE_TRACING) \
+    { \
+      DO_TRACE(#op, arg, flag, argused); \
+    } \
   } \
 
 #else
