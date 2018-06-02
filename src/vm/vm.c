@@ -291,6 +291,20 @@ static ana_object *ana_frame_eval(ComoVM *vm)
       fetch();
 
       vm_case(opcode) {
+        vm_target(IIN) {
+          TRACE(IIN, oparg, 0, 1);
+          ana_object *container = pop();
+          ana_object *index = pop();
+          ana_object *res = getindex(container, index);
+
+          if(res == ANA_KEY_NOT_FOUND)
+            push(ana_bool_false);
+          else
+            push(ana_bool_true);
+
+          vm_continue();
+        }
+
         vm_target(IIMPORTAS) {
           result = pop();
           // result stores the filename
@@ -923,7 +937,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           /* increase the ref count here, XXX not sure, jumping somehow
              gets fucked up, if not. not sure how this works
           */
-          callable->flags++;
+          //callable->flags++;
 
           if(ana_type_is(callable, ana_function_type)) 
           {
@@ -1293,14 +1307,18 @@ static void mark(ComoVM *vm)
 
   if(vm->stackpointer == 0)
   {
+    #ifdef ANA_GC_DEBUG
     printf("mark: stackPointer was 0, this means we've popped the last frame to execute\n");
+    #endif
 
     if(CURRENT_FRAME) {
       for(j = 0; j < CURRENT_FRAME->sp; j++)
       {
         ana_object *obj = CURRENT_FRAME->stack[j];
 
-        printf("marking object %p as reachable\n", (void *)obj);
+#ifdef ANA_GC_DEBUG 
+        printf("marking object %p as reachable\n", (void *)obj)
+#endif
         obj->flags = 1;
       }   
     }
@@ -1311,7 +1329,10 @@ static void mark(ComoVM *vm)
     {
       ana_frame *frame = vm->stack[i];
 
+#ifdef ANA_GC_DEBUG
       printf("mark: doing mark for frame %s\n", ana_cstring(frame->name));
+#endif
+
       ana_get_base(frame)->flags = 1;
 
       for(j = 0; j < frame->sp; j++)
@@ -1321,7 +1342,9 @@ static void mark(ComoVM *vm)
         // TODO check if this is a function....
         // and mark it's stack
 
+#ifdef ANA_GC_DEBUG
         printf("marking object %p as reachable\n", (void *)obj);
+#endif
         obj->flags = 1;
       }
     }
@@ -1378,7 +1401,9 @@ static void sweep(ComoVM *vm)
           {
             if(CURRENT_FRAME->stack[x] == unreached)
             {
+              #ifdef ANA_GC_DEBUG
               printf("sweep: attempt to destroy object that is reachable on current frames the stack\n");
+              #endif
               found = 1;
               break;
             }
@@ -1388,8 +1413,10 @@ static void sweep(ComoVM *vm)
         if(!found)
         {
 
+#ifdef ANA_GC_DEBUG
           printf("gc.sweep: free object %p, type=%s\n", (void *)unreached,
             ana_type_name(unreached));
+#endif
 
           *root = unreached->next;
           ana_object_dtor(unreached);

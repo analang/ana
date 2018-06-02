@@ -469,6 +469,12 @@ static void ana_compile_unit(ComoVM *vm, ana_frame *frame,
     TARGET(COMO_AST_BINOP) {
       prefix = "    ";
       switch(ast->attributes) {
+        TARGET(COMO_AST_IN) {
+          ana_compile_unit(vm, frame, ast->children[0]);
+          ana_compile_unit(vm, frame, ast->children[1]);
+          emitx(frame, IIN, 0, 0);
+          break;
+        }
         TARGET(COMO_AST_REM) {
           ana_compile_unit(vm, frame, ast->children[0]);
           ana_compile_unit(vm, frame, ast->children[1]);

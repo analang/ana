@@ -1,6 +1,8 @@
 #ifndef COMO_OBJECT_H
 #define COMO_OBJECT_H
 
+#define COMO_OBJECT_API __attribute__((__visibility__("default")))
+
 /* We're modeling the object system with all of C's operators */
 typedef struct _ana_type   ana_type;
 typedef struct _ana_object ana_object;
@@ -9,7 +11,6 @@ typedef struct _ana_unary_ops ana_unary_ops;
 typedef struct _ana_comparison_ops ana_comparison_ops;
 typedef struct _ana_logical_ops ana_logical_ops;
 
-extern ana_logical_ops ComoLogicalOps;
 
 typedef long ana_size_t;
 
@@ -17,9 +18,7 @@ struct _ana_object {
   ana_size_t flags;
   struct _ana_type   *type;
   struct _ana_object *next;
-  struct _ana_object *scope; /* indiciates which frame this object was created 
-                                on
-                             */
+  struct _ana_object *scope;
 };
 
 #define ana_object_add(self, x) \
@@ -88,12 +87,15 @@ struct _ana_type {
 #define ana_type_is(ob, tp) \
   (((ana_object *)(ob))->type == &tp)
 
+#define ana_type_check_both(left, right, type) \
+  (ana_type_is((left), (type)) && ana_type_is((right), (type)))
+
 #define ana_type_name(o) \
   (((ana_object *)(o))->type->obj_name)
 
 #define ana_object_print(o) do { \
-  assert(((ana_object *)( (o)     ))->type->obj_print != NULL); \
-  (((ana_object *)(   (o)    ))->type->obj_print((ana_object *)(   (o)    ))); \
+  assert(((ana_object *)((o)))->type->obj_print != NULL); \
+  (((ana_object *)((o)))->type->obj_print((ana_object *)((o)))); \
 } while(0)
 
 #define ana_object_tostring(o) \
@@ -104,8 +106,6 @@ struct _ana_type {
 
 #define ana_get_base(o) \
   (((ana_object *)(o)))
-
-#define COMO_OBJECT_API __attribute__((__visibility__("default")))
 
 #define ana_tostring_fast(obj, block) do { \
   assert(((ana_object *)(obj))->type->obj_str != NULL); \

@@ -196,10 +196,11 @@ static void frame_dtor(ana_object *obj)
     return;
   }
 
-  
+#ifdef ANA_GC_DEBUG
   fprintf(stdout, "frame_dtor: for frame `%s`\n", 
     ana_cstring(self->name));
-
+#endif
+  
   ana_object_dtor(self->name);
   ana_object_dtor(self->code);
   ana_object_dtor(self->filename);

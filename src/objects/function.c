@@ -47,18 +47,26 @@ static void function_dtor(ana_object *obj)
   if(obj->scope)
     ana_object_dtor(obj->scope);
 
+#ifdef ANA_GC_DEBUG
   printf("destroying function...");
+#endif
 
   if(self->flags & COMO_FUNCTION_LANG)
   {
+
+#ifdef ANA_GC_DEBUG
     printf("it's a language defined function too\n");
+#endif
+    
     ana_frame *frame = self->impl.frame;
 
     ana_object_dtor(frame);
   }
   else
   {
+    #ifdef ANA_GC_DEBUG
     printf("which is builtin\n");
+    #endif
   }
 
   free(self);

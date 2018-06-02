@@ -26,6 +26,7 @@ typedef struct _ps {
 } ana_parser_state;
 
 typedef enum node_kind {
+  COMO_AST_IN,
   COMO_AST_REM,
   COMO_AST_EQUAL,
   COMO_AST_NOT_EQUAL,

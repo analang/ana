@@ -31,6 +31,7 @@
 #define IREM 0x1A
 #define IIMPORT 0X1B
 #define IIMPORTAS 0x1C
-#define ANA_LAST_OPCODE 0x1D
+#define IIN       0x1D
+#define ANA_LAST_OPCODE 0x1E
 
 #endif

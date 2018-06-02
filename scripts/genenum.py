@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys;
 
 def getAstPath():
@@ -11,17 +13,18 @@ lines = [];
 lines.append("static const char * const kind_str[] = {");
 
 for i, item in enumerate(content):
-    if i + i == len(content):
-        lines.append('"%s"' % item);
+    if i + 1 == len(content):
+        lines.append('  "%s"' % item);
     else:
-        lines.append('"%s",' % item);
+        lines.append('  "%s",' % item);
 
 lines.append("};");
 
-output = open('output.c', 'w');
+output = open('./../src/parser/astkind.c', 'w');
 
 for line in lines:
     if len(line) > 0:
+        print(line)
         output.write(line + "\n");
 
 output.close();

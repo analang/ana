@@ -6,7 +6,7 @@ function do_create_array()
   return [1,2,3,4];
 }
 
-while(i <= 1000000)
+while(i <= 100)
 {
   i = i + 1;
   data = do_create_array();

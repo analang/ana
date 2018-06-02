@@ -493,6 +493,11 @@ equality_expression:
     add_child(pstate, $$, $1);
     add_child(pstate, $$, $3);
   }
+| equality_expression T_IN relational_expression {
+    $$ = binary_op(pstate, COMO_AST_IN);
+    add_child(pstate, $$, $1);
+    add_child(pstate, $$, $3);   
+  }
 ;
 
 relational_expression:
