@@ -117,7 +117,7 @@ typedef void* yyscan_t;
 %type<ast> trycatch_stmt stmt_group stmt relational_expression
 %type<ast> function_expression
 %type<ast> selection_stmt
-%type<ast> if_statements if_statement else_if_stmt elseif else_stmt optional_assignment_expression
+%type<ast> if_statements if_statement else_if_stmts elseif else_stmt optional_assignment_expression
 
 %type<ast> basic_expression logical_or_expression logical_and_expression
 %type<ast> inclusive_or_expression shift_expression equality_expression
@@ -154,11 +154,13 @@ statement:
 selection_stmt:
   T_IF '(' assignment_expression ')' '{' if_statements '}' { 
     $$ = list_node(pstate, COMO_AST_IF);
+    // assignment_expression
     add_child(pstate, $$, $3);
+    // if_statement suite
     add_child(pstate, $$, $6);
   }
 |
-  T_IF '(' assignment_expression ')' '{' if_statements '}' else_if_stmt {
+  T_IF '(' assignment_expression ')' '{' if_statements '}' else_if_stmts {
     $$ = list_node(pstate, COMO_AST_IF);
     add_child(pstate, $$, $3);
     add_child(pstate, $$, $6);  
@@ -167,17 +169,30 @@ selection_stmt:
 |
   T_IF '(' assignment_expression ')' '{' if_statements '}' else_stmt { 
     $$ = list_node(pstate, COMO_AST_IF);
+    // assignment_expression
     add_child(pstate, $$, $3);
+    // statement_suite
     add_child(pstate, $$, $6);
+    // optional else_stmt
     add_child(pstate, $$, $8);
   }
 |
-  T_IF '(' assignment_expression ')' '{' if_statements '}' else_if_stmt else_stmt {
-    $$ = list_node(pstate, COMO_AST_IF);
-    add_child(pstate, $$, $3);
-    add_child(pstate, $$, $6);  
-    add_child(pstate, $$, $8);
-    add_child(pstate, $$, $9);
+  T_IF '(' assignment_expression ')' '{' if_statements '}' else_if_stmts else_stmt {
+    //$$ = list_node(pstate, COMO_AST_COMPOUND_IF_STATEMENT);
+    
+    $$ = compound_if_node(pstate, $3, $6, $8, $9);
+
+    // assignment_expression
+    //add_child(pstate, $$, $3);
+
+    //if_statements
+    //add_child(pstate, $$, $6);  
+  
+    // else_if_stmts
+    //add_child(pstate, $$, $8);
+
+    // else_stmt
+    //add_child(pstate, $$, $9);
   }
 |
   T_WHILE '(' assignment_expression ')' '{' if_statements '}' {
@@ -202,33 +217,41 @@ selection_stmt:
   }
 ;
 
-else_if_stmt:
-  else_if_stmt elseif { 
-    $$ = add_child(pstate, $1, $2); 
+else_if_stmts:
+  else_if_stmts elseif { 
+    $$ = $1;
+    add_child(pstate, $$, $2); 
   }
 | elseif { 
-    $$ = list_node(pstate, COMO_AST_ELSE_IF); 
+    $$ = list_node(pstate, COMO_AST_ELSE_IF_SUITE); 
+    add_child(pstate, $$, $1);
   }
 ;
 
 elseif:
   T_ELSE_IF '(' assignment_expression ')' '{' if_statements '}' {
     $$ = list_node(pstate, COMO_AST_ELSE_IF);
+    // assignment expression
     add_child(pstate, $$, $3);
+    // statements
     add_child(pstate, $$, $6);
   }
 ;
   
 else_stmt:
   T_ELSE '{' if_statements '}' {
-    $$ = list_node(pstate, COMO_AST_ELSE);
+    $$ = list_node(pstate, COMO_AST_ELSE_SUITE);
     add_child(pstate, $$, $3);
   }
 ;
 
 if_statements:
-  if_statements if_statement { $$ = add_child(pstate, $1, $2); }
-| %empty                     { $$ = list_node(pstate, COMO_AST_LIST);}
+  if_statements if_statement {
+    $$ = add_child(pstate, $1, $2); 
+  }
+| %empty                     { 
+    $$ = list_node(pstate, COMO_AST_LIST);
+  }
 
 if_statement:
   assignment_expression ';' { $$ = $1; }

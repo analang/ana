@@ -219,6 +219,7 @@ static void compile_try(ComoVM *vm, ana_frame *frame, node *stmt)
 static void compile_if(ComoVM *vm, ana_frame *frame, 
   node *ast)
 {
+
   node *expression = ast->children[0];
   node *body = ast->children[1];
   node *else_statement = NULL;
@@ -227,7 +228,8 @@ static void compile_if(ComoVM *vm, ana_frame *frame,
   if(body->nchild == 0)
     return;
 
-  if(ast->nchild == 3) {
+  if(ast->nchild == 3) 
+  {
     else_statement = ast->children[2];
     assert(else_statement->nchild == 1);
     else_statement = else_statement->children[0];
@@ -236,7 +238,6 @@ static void compile_if(ComoVM *vm, ana_frame *frame,
 
   ana_array_push(frame->jmptargets, NULL);
   int jmptargetindex_skiphandler = ana_array_size(frame->jmptargets) - 1;
-
 
   ana_array_push(frame->jmptargets, NULL);
   int jmptargetindex_pass = ana_array_size(frame->jmptargets) - 1;

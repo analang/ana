@@ -134,7 +134,6 @@ static ana_object *string_add(ana_object *a, ana_object *b)
   ana_string *s2;
   int shouldfrees2 = 0;
 
-  printf("string_add: right is at %p\n", (void *)b);
   if(!ana_type_is(b, ana_string_type)) 
   {
     s2 = (ana_string *)b->type->obj_str(b);

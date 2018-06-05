@@ -1,3 +1,20 @@
 if(1)
 {
+	print("b");
+} 
+else if(2)
+{
+	print("c");
+}
+else if(3)
+{
+	print("d");
+}
+else if(4)
+{
+	print(4);
+}
+else
+{
+	print("d");
 }

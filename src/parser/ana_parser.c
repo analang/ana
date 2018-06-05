@@ -566,19 +566,19 @@ static const yytype_uint8 yytranslate[] =
 static const yytype_uint16 yyrline[] =
 {
        0,   137,   137,   141,   142,   146,   147,   148,   149,   150,
-     151,   155,   161,   168,   175,   183,   189,   197,   206,   209,
-     215,   223,   230,   231,   234,   235,   236,   237,   238,   242,
-     251,   254,   257,   258,   259,   260,   261,   265,   274,   278,
-     285,   292,   296,   302,   303,   304,   305,   306,   310,   316,
-     317,   321,   324,   330,   336,   342,   345,   348,   354,   358,
-     363,   369,   375,   378,   381,   384,   387,   390,   394,   397,
-     403,   407,   414,   422,   426,   427,   431,   435,   442,   448,
-     449,   450,   451,   452,   456,   460,   461,   465,   466,   470,
-     471,   475,   476,   480,   481,   485,   486,   491,   496,   504,
-     505,   506,   507,   512,   516,   517,   518,   522,   523,   528,
-     536,   537,   542,   547,   555,   556,   564,   565,   566,   567,
-     568,   571,   574,   580,   581,   585,   589,   596,   600,   601,
-     604,   607,   610,   611
+     151,   155,   163,   170,   180,   198,   204,   212,   221,   225,
+     232,   242,   249,   252,   257,   258,   259,   260,   261,   265,
+     274,   277,   280,   281,   282,   283,   284,   288,   297,   301,
+     308,   315,   319,   325,   326,   327,   328,   329,   333,   339,
+     340,   344,   347,   353,   359,   365,   368,   371,   377,   381,
+     386,   392,   398,   401,   404,   407,   410,   413,   417,   420,
+     426,   430,   437,   445,   449,   450,   454,   458,   465,   471,
+     472,   473,   474,   475,   479,   483,   484,   488,   489,   493,
+     494,   498,   499,   503,   504,   508,   509,   514,   519,   527,
+     528,   529,   530,   535,   539,   540,   541,   545,   546,   551,
+     559,   560,   565,   570,   578,   579,   587,   588,   589,   590,
+     591,   594,   597,   603,   604,   608,   612,   619,   623,   624,
+     627,   630,   633,   634
 };
 #endif
 
@@ -601,9 +601,9 @@ static const char *const yytname[] =
   "\"keyword catch\"", "\"character\"", "';'", "'('", "')'", "'{'", "'}'",
   "'.'", "'['", "']'", "','", "':'", "'|'", "'^'", "'&'", "'<'", "'>'",
   "'='", "'!'", "$accept", "program", "statements", "statement",
-  "selection_stmt", "else_if_stmt", "elseif", "else_stmt", "if_statements",
-  "if_statement", "trycatch_stmt", "stmt_group", "stmt", "import_stmt",
-  "dotted_name", "import_name", "function_statements",
+  "selection_stmt", "else_if_stmts", "elseif", "else_stmt",
+  "if_statements", "if_statement", "trycatch_stmt", "stmt_group", "stmt",
+  "import_stmt", "dotted_name", "import_name", "function_statements",
   "function_statement", "jump_statement", "optional_assignment_expression",
   "optional_as_modifier", "function_def", "function_expression",
   "access_modifier", "class_statements", "class_statement", "class_def",
@@ -1811,7 +1811,9 @@ yyreduce:
 
     { 
     (yyval.ast) = list_node(pstate, COMO_AST_IF);
+    // assignment_expression
     add_child(pstate, (yyval.ast), (yyvsp[-4].ast));
+    // if_statement suite
     add_child(pstate, (yyval.ast), (yyvsp[-1].ast));
   }
 
@@ -1832,8 +1834,11 @@ yyreduce:
 
     { 
     (yyval.ast) = list_node(pstate, COMO_AST_IF);
+    // assignment_expression
     add_child(pstate, (yyval.ast), (yyvsp[-5].ast));
+    // statement_suite
     add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    // optional else_stmt
     add_child(pstate, (yyval.ast), (yyvsp[0].ast));
   }
 
@@ -1842,11 +1847,21 @@ yyreduce:
   case 14:
 
     {
-    (yyval.ast) = list_node(pstate, COMO_AST_IF);
-    add_child(pstate, (yyval.ast), (yyvsp[-6].ast));
-    add_child(pstate, (yyval.ast), (yyvsp[-3].ast));  
-    add_child(pstate, (yyval.ast), (yyvsp[-1].ast));
-    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
+    //$$ = list_node(pstate, COMO_AST_COMPOUND_IF_STATEMENT);
+    
+    (yyval.ast) = compound_if_node(pstate, (yyvsp[-6].ast), (yyvsp[-3].ast), (yyvsp[-1].ast), (yyvsp[0].ast));
+
+    // assignment_expression
+    //add_child(pstate, $$, $3);
+
+    //if_statements
+    //add_child(pstate, $$, $6);  
+  
+    // else_if_stmts
+    //add_child(pstate, $$, $8);
+
+    // else_stmt
+    //add_child(pstate, $$, $9);
   }
 
     break;
@@ -1887,7 +1902,8 @@ yyreduce:
   case 18:
 
     { 
-    (yyval.ast) = add_child(pstate, (yyvsp[-1].ast), (yyvsp[0].ast)); 
+    (yyval.ast) = (yyvsp[-1].ast);
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast)); 
   }
 
     break;
@@ -1895,7 +1911,8 @@ yyreduce:
   case 19:
 
     { 
-    (yyval.ast) = list_node(pstate, COMO_AST_ELSE_IF); 
+    (yyval.ast) = list_node(pstate, COMO_AST_ELSE_IF_SUITE); 
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
   }
 
     break;
@@ -1904,7 +1921,9 @@ yyreduce:
 
     {
     (yyval.ast) = list_node(pstate, COMO_AST_ELSE_IF);
+    // assignment expression
     add_child(pstate, (yyval.ast), (yyvsp[-4].ast));
+    // statements
     add_child(pstate, (yyval.ast), (yyvsp[-1].ast));
   }
 
@@ -1913,7 +1932,7 @@ yyreduce:
   case 21:
 
     {
-    (yyval.ast) = list_node(pstate, COMO_AST_ELSE);
+    (yyval.ast) = list_node(pstate, COMO_AST_ELSE_SUITE);
     add_child(pstate, (yyval.ast), (yyvsp[-1].ast));
   }
 
@@ -1921,13 +1940,17 @@ yyreduce:
 
   case 22:
 
-    { (yyval.ast) = add_child(pstate, (yyvsp[-1].ast), (yyvsp[0].ast)); }
+    {
+    (yyval.ast) = add_child(pstate, (yyvsp[-1].ast), (yyvsp[0].ast)); 
+  }
 
     break;
 
   case 23:
 
-    { (yyval.ast) = list_node(pstate, COMO_AST_LIST);}
+    { 
+    (yyval.ast) = list_node(pstate, COMO_AST_LIST);
+  }
 
     break;
 

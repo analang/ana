@@ -151,6 +151,14 @@ static ana_object *do_import(ana_frame *frame, ana_object *modulename,
 
   modulepath = realpath(ana_cstring(modulename), NULL);
 
+  if(!modulepath)
+  {
+    set_except("ImportError","realpath returned NULL");
+    return NULL;
+  }
+
+  /* TODO , check retval */
+
   #ifdef ANA_MODULE_DEBUG
   printf("do_import: resolved module %s to file path %s\n",
     ana_cstring(modulename), modulepath);
@@ -210,6 +218,13 @@ static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
 
   modulepath = realpath(ana_cstring(modulename), NULL);
   
+  if(!modulepath)
+  {
+    set_except("ImportError","realpath returned NULL");
+    return NULL;
+  }
+
+
   fp = ana_open_file_for_parsing(modulepath);
 
   if(!fp)
@@ -1261,41 +1276,6 @@ static void ana_print_backtrace(ana_frame *frame)
 
     next:
       fm = (ana_frame *)fm->parent;
-  }
-}
-
-static void trace_root(ana_object *root, int tabs)
-{
-  ana_object *node = root;
-  int i;
-
-  while(node)
-  {
-    if(ana_type_is(node, ana_frame_type) 
-      || ana_type_is(node, ana_function_type))
-    {
-      
-      for(i = 0; i < tabs; i++)
-        fputc(' ', stdout);
-
-      printf("%s(%p) is a root object of type %s\n", ana_get_frame_name(node),
-        (void *)node, ana_type_name(node));
-
-      if(ana_type_is(node, ana_frame_type))
-      {
-        trace_root(ana_get_frame(node)->root, tabs + 1);
-      }
-
-      else if(ana_type_is(node, ana_function_type))
-      {
-        if(ana_get_function_flags(node) & COMO_FUNCTION_LANG)
-        {
-          trace_root(ana_get_function_frame(node)->root, tabs + 1);
-        }
-      }
-
-    }
-    node = node->next;
   }
 }
 

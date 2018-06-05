@@ -1,19 +1,49 @@
 #!/usr/bin/env python
 
-import sys;
+import sys
+import os
+import re
+
+def getStruct(path):
+  regex = re.compile('\s*typedef\s*enum\s*node_kind\s*')
+  regexend = re.compile("\s*}\s*node_kind;\s*")
+  lines = [x.strip(" ") for x in open(path, "r").read().split("\n")]
+  thestruct = []
+  instruct = 0
+
+  for line in lines:
+    if regex.match(line):
+      instruct = 1
+      continue
+    if(regexend.match(line)):
+      break
+    if instruct:
+      buffer = []
+      for char in line:
+        if char == ' ' or char == '/' or char == ',':
+          break
+        else:
+          buffer.append(char)
+      thestruct.append(''.join(buffer))
+
+
+  return thestruct
+
 
 def getAstPath():
   return os.path.realpath("./../src/include/ana_ast.h");
 
 
-content = [x.strip(" ,") for x in open("astkind").read().split("\n")]
+thestruct = getStruct(getAstPath())
+print(thestruct)
+
 
 lines = [];
 
 lines.append("static const char * const kind_str[] = {");
 
-for i, item in enumerate(content):
-    if i + 1 == len(content):
+for i, item in enumerate(thestruct):
+    if i + 1 == len(thestruct):
         lines.append('  "%s"' % item);
     else:
         lines.append('  "%s",' % item);

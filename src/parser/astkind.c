@@ -1,4 +1,7 @@
 static const char * const kind_str[] = {
+  "COMO_AST_COMPOUND_IF_STATEMENT",
+  "COMO_AST_ELSE_SUITE",
+  "COMO_AST_ELSE_IF_SUITE",
   "COMO_AST_IN",
   "COMO_AST_REM",
   "COMO_AST_EQUAL",

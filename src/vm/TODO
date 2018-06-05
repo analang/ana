@@ -19,3 +19,9 @@ Dicussion:
   upon import an import statement, the frame must be executed.
 
   import Module(with, arguments, here)
+
+
+6/3/2018
+- For statements
+- For Each statements
+- If else, if compilation

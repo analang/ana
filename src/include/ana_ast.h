@@ -26,6 +26,9 @@ typedef struct _ps {
 } ana_parser_state;
 
 typedef enum node_kind {
+  COMO_AST_COMPOUND_IF_STATEMENT,
+  COMO_AST_ELSE_SUITE,
+  COMO_AST_ELSE_IF_SUITE,
   COMO_AST_IN,
   COMO_AST_REM,
   COMO_AST_EQUAL,
@@ -146,6 +149,11 @@ node *double_node(ana_parser_state *state, double val);
 node *bool_node(ana_parser_state *state, int val);
 node *throw_node(ana_parser_state *state, node *val);
 node *unary_node(ana_parser_state *state, node *operand, int type);
+node *compound_if_node(ana_parser_state *state, 
+  node *expression,
+  node *if_statement,
+  node *else_if_stmts,
+  node *else_stmts);
 
 int ana_astfromfile(
   FILE *fp, const char *fname, int argc, char **argv, ana_parser_state *state);

@@ -150,6 +150,71 @@ static void visit_bool(node *n, int tabs)
   fprintf(stdout, "Bool(%s)\n", ((node_int *)n)->value ? "true" : "false");
 }
 
+static void visit_if(node *n, int tabs)
+{
+  int i;
+  int j;
+  for(i = 0; i < tabs; i++)
+    fprintf(stdout, " ");
+
+  printf("%s\n", astkind(n->kind));
+
+ // if(n->nchild == 4) 
+ // {
+
+    if(n->nchild == 4)
+      i = 2;
+    else 
+      i = 0;
+
+    for(; i < n->nchild; i++)
+    {
+      for(j = 0; j < tabs; j++)
+        fprintf(stdout, " ");
+
+      printf("%s\n", astkind(n->children[i]->kind));
+
+      if(n->children[i]->kind == COMO_AST_ELSE_IF_SUITE)
+      {
+        int x;
+        for(x = 0; x < n->children[i]->nchild; x++)
+        {
+          printf("  %s\n", astkind(n->children[i]->children[x]->kind));
+        }
+      }
+    }
+ // }
+
+}
+
+static void visit_compound_if(node *n, int tabs)
+{
+  int i;
+  int j;
+  int x;
+
+  for(i = 0; i < tabs; i++)
+    fprintf(stdout, " ");
+
+  printf("%s\n", astkind(n->kind));
+ 
+  for(i = 2; i < n->nchild; i++)
+  {
+    for(j = 0; j < tabs; j++)
+      fprintf(stdout, " ");
+
+    printf("%s\n", astkind(n->children[i]->kind));
+
+    if(n->children[i]->kind == COMO_AST_ELSE_IF_SUITE)
+    {
+      for(x = 0; x < n->children[i]->nchild; x++)
+      {
+        printf("  %s\n", astkind(n->children[i]->children[x]->kind));
+      }
+    }
+  }
+}
+
 node *list_node(ana_parser_state *state, node_kind kind)
 {
   node *n = (node *)ana_arena_alloc(state->arena, sizeof(*n));
@@ -168,9 +233,17 @@ node *list_node(ana_parser_state *state, node_kind kind)
   assert(n->children);
 
   n->attribute_visit = NULL;
-  n->visit = visit;
+  if(kind == COMO_AST_IF || kind == COMO_AST_ELSE || kind == COMO_AST_ELSE_IF) 
+  {
+    n->visit = visit_if;
+  }
+  else 
+  {
+    n->visit = visit;
+  }
   return n;
 }
+
 
 node *list_node_sized(ana_parser_state *state, node_kind kind, size_t size)
 {
@@ -538,6 +611,27 @@ node *unary_node(ana_parser_state *state, node *operand, int type)
 
   return list;  
 }
+
+node *compound_if_node(ana_parser_state *state, 
+  node *expression,
+  node *if_statement,
+  node *else_if_stmts,
+  node *else_stmts)
+{
+  node *list = list_node(state, COMO_AST_COMPOUND_IF_STATEMENT);
+  list->attribute_visit = NULL;
+  list->attributes = 0;
+  list->visit = visit_compound_if;
+  list->info = "CompoundIfStatement";
+
+  add_child(state, list, expression);
+  add_child(state, list, if_statement);
+  add_child(state, list, else_if_stmts);
+  add_child(state, list, else_stmts);
+
+  return list;  
+}
+
 
 #include "astkind.c"
 
