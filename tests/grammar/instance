@@ -1,0 +1,11 @@
+class Foo {
+	public function Foo()
+	{
+		self._bar = 1;
+	}
+}
+
+foo = Foo();
+print(foo._bar);
+
+// error should be print(Foo._bar);

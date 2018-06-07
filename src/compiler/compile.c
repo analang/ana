@@ -216,10 +216,93 @@ static void compile_try(ComoVM *vm, ana_frame *frame, node *stmt)
     ana_longfromlong((long)ana_container_size(frame->code)));
 }
 
+#define SETUP_JMP_TARGET() \
+  (ana_array_push(frame->jmptargets, NULL), ana_array_size(frame->jmptargets) - 1)
+
+static void compile_compound_if(ComoVM *vm, ana_frame *frame, 
+  node *ast)
+{
+  (void)vm;
+  (void)frame;
+  (void)ast;
+  // node *expression = ast->children[0];
+  // node *if_statement = ast->children[1];
+  // node *else_if_statements = ast->children[2];
+  // node *else_statement = ast->children[3];
+  // int i;
+ 
+  // /* The first place to jump if the expression in the if statement
+  //    is not true
+  //    */
+  // int jmp_address_if_not_true = SETUP_JMP_TARGET();
+  // /* if it is true, then we need to jump after executing the body
+  //    */
+  // int exit_address            = SETUP_JMP_TARGET();
+
+  // // if(<expression) {
+  // ana_compile_unit(vm, frame, expression);
+
+  // emit_xx(frame, JMPZ, jmp_address_if_not_true, 0, expression);
+
+  // /* compile the body of the if() { .. } statement */
+  // ana_compile_unit(vm, frame, if_statement);
+
+  // /* Now we need to jump to the end of this block that was just executed */
+  // emit_xx(frame, JMP, exit_address, 0, if_statement);
+
+  // /* backpatch this address now that we've compiled the expression
+  //    and the body
+  //    */
+  // ana_array_push_index(frame->jmptargets, jmp_address_if_not_true, 
+  //   ana_longfromlong(ana_container_size(frame->code)))2;
+
+  // ana_object *jmp_addrs = ana_array_new(4);
+  // ana_size_t index = 0;
+
+  // /* now we can compile the else_if suite */
+  // for(i = 0; i < else_if_statements->nchild; i++)
+  // {
+  //   node *else_if_statement  = else_if_statements->children[i];
+  //   node *else_if_expression = else_if_statement[0];
+  //   node *else_if_body       = else_if_statement[1];
+
+  //   int jmp_address = SETUP_JMP_TARGET();
+  //   ana_compile_unit(vm, frame, else_if_expression);
+
+  //   if(i + 1 == else_if_statements->nchild)
+  //   {
+  //     // This is the last else if statement, so jump to the end
+  //     emit_xx(frame, JMPZ, exit_address, 0, if_statement);
+  //   }
+  //   else
+  //   {
+  //         /*
+  //         At this point, this else if statement is not the last statement,
+  //         Now we need to jump to that next statement, but first we must 
+  //         determine the address. We need to emit a 
+  //         JMPZ <address of next else if> here
+  //         */
+  //       int backpatch_addr = SETUP_JMP_TARGET();
+
+  //       ana_array_push(jmp_addrs, ana_longfromlong((long)backpatch_addr));
+
+  //       index++;
+
+  //       emit_xx(frame, JMPZ, backpatch_addr, else_if_statement);
+  //   }
+
+  //   ana_compile_unit(vm, frame, else_if_body);
+  //   /* Always after the body we must jump to the end of the suite */
+  //   emit_xx(frame, JMP, exit_address, 0, if_statement);
+
+  // }
+  //   ana_array_push_index(frame->jmptargets, exit_address, ana_longfromlong(
+  //     (long)ana_container_size(frame->code)));
+}
+
 static void compile_if(ComoVM *vm, ana_frame *frame, 
   node *ast)
 {
-
   node *expression = ast->children[0];
   node *body = ast->children[1];
   node *else_statement = NULL;
@@ -243,11 +326,9 @@ static void compile_if(ComoVM *vm, ana_frame *frame,
   int jmptargetindex_pass = ana_array_size(frame->jmptargets) - 1;
 
   ana_compile_unit(vm, frame, expression);  
-
   emit_xx(frame, JMPZ, jmptargetindex_skiphandler, 0, body);
 
   ana_compile_unit(vm, frame, body);
-
   emit_xx(frame, JMP, jmptargetindex_pass, 0, body);
 
   ana_size_t start_of_else = ana_container_size(frame->code);
@@ -311,14 +392,38 @@ static void ana_compile_unit(ComoVM *vm, ana_frame *frame,
       else
         asname = NULL;
 
-      if(importlist->nchild > 1)
+      int i;
+      ana_object *import_tree = ana_array_new(4);
+      size_t len = 0;
+      size_t pos = 0;
+      char *buffer;
+
+      for(i = 0; i < importlist->nchild; i++)
       {
-        fprintf(stderr, "compile: multi level imports are not supported on "
-          "line %d\n", ast->line);
-        exit(1);
+        char *level = ((node_id *)(importlist->children[i]))->value;
+        len += strlen(level);  
+        ana_array_push(import_tree, ana_stringfromstring(level));
       }
 
-      name = ((node_id *)(importlist->children[0]))->value;
+      buffer = malloc(len + importlist->nchild + 1);
+
+      ana_array_foreach(import_tree, index, value) {
+        (void)index;
+        char *val = ana_cstring(value);        
+        memcpy(buffer + pos, val, ana_get_string(value)->len);
+        pos += ana_get_string(value)->len;
+        
+        if(index + 1 != ana_get_array(import_tree)->size)
+          *(buffer + pos++) = '.'; 
+
+        ana_object_dtor(value);
+      } ana_array_foreach_end();
+
+      buffer[pos] = '\0';
+
+      ana_object_dtor(import_tree);
+
+      name = buffer;
       
       if(asname)
       {
@@ -329,6 +434,8 @@ static void ana_compile_unit(ComoVM *vm, ana_frame *frame,
       {
         emitx(frame, IIMPORT, make_symbol(vm, name), 0);
       }
+
+      free(buffer);
       
       break;
     }
@@ -358,6 +465,9 @@ static void ana_compile_unit(ComoVM *vm, ana_frame *frame,
     }
     TARGET(COMO_AST_IF)
       compile_if(vm, frame, ast);
+      break;
+    TARGET(COMO_AST_COMPOUND_IF_STATEMENT)
+      compile_compound_if(vm, frame, ast);
       break;
     TARGET(COMO_AST_TRY) {
       compile_try(vm, frame, ast);

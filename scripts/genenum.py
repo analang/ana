@@ -35,8 +35,6 @@ def getAstPath():
 
 
 thestruct = getStruct(getAstPath())
-print(thestruct)
-
 
 lines = [];
 

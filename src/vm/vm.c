@@ -136,6 +136,21 @@ static inline void trace_frame(ComoVM *vm, ana_frame *frame)
 
 //#define ANA_MODULE_DEBUG
 
+static char *transform_module_name(char *name)
+{
+  char *begin = name;
+
+  while(*name)
+  {
+    char *c = &(*name++);
+
+    if(*c == '.')
+      *c = '/';
+  }
+
+  return begin;
+}
+
 static ana_object *do_import(ana_frame *frame, ana_object *modulename,
   ana_object *alias)
 {
@@ -148,12 +163,13 @@ static ana_object *do_import(ana_frame *frame, ana_object *modulename,
   char *modulepath;
   ana_object *code = NULL;
   int retval;
+  char *modulename_cstr = transform_module_name(ana_cstring(modulename));
 
-  modulepath = realpath(ana_cstring(modulename), NULL);
+  modulepath = realpath(modulename_cstr, NULL);
 
   if(!modulepath)
   {
-    set_except("ImportError","realpath returned NULL");
+    set_except("ImportError","module %s was not found", modulename_cstr);
     return NULL;
   }
 
@@ -216,11 +232,13 @@ static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
   ana_object *code = NULL;
   int retval;
 
-  modulepath = realpath(ana_cstring(modulename), NULL);
+  char *modulename_cstr = transform_module_name(ana_cstring(modulename));
+
+  modulepath = realpath(modulename_cstr, NULL);
   
   if(!modulepath)
   {
-    set_except("ImportError","realpath returned NULL");
+    set_except("ImportError","module %s was not found", modulename_cstr);
     return NULL;
   }
 
@@ -1340,6 +1358,7 @@ static void sweep(ComoVM *vm)
   while (*root && i < n) 
   {
     i++;
+    
     if(!(*root)->flags) 
     {
       ana_object* unreached = *root; 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <ana.h>
 
@@ -38,7 +39,8 @@ static ana_object *module_string(ana_object *obj)
   ana_object *retval;
 
   ANA_AUTO_RELEASE(ana_build_str("<module %s at %p>", 
-    ana_cstring(module->name), (void *)module), {
+    ana_cstring(module->name), (void *)module), 
+  {
       retval = ana_stringfromstring(value);
   });
 

@@ -79,6 +79,7 @@ done:
 
 #define ANA_AUTO_RELEASE(val, block) do { \
   char *value = val; \
+  assert(value); \
   block \
   free(value); \
 } while(0)
