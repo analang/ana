@@ -134,10 +134,10 @@ static inline void trace_frame(ComoVM *vm, ana_frame *frame)
   fputc('\n', stdout);
 }
 
-//#define ANA_MODULE_DEBUG
-
-static char *transform_module_name(char *name)
+static ana_object *transform_module_name(char *name)
 {
+  ana_object *str = ana_stringfromstring(name);
+  name = ana_cstring(str);
   char *begin = name;
 
   while(*name)
@@ -148,7 +148,9 @@ static char *transform_module_name(char *name)
       *c = '/';
   }
 
-  return begin;
+  ana_cstring(str) = begin;
+
+  return str;
 }
 
 static ana_object *do_import(ana_frame *frame, ana_object *modulename,
@@ -163,22 +165,17 @@ static ana_object *do_import(ana_frame *frame, ana_object *modulename,
   char *modulepath;
   ana_object *code = NULL;
   int retval;
-  char *modulename_cstr = transform_module_name(ana_cstring(modulename));
+  ana_object *modulename_fs = transform_module_name(ana_cstring(modulename));
+  modulepath = realpath(ana_cstring(modulename_fs), NULL);
 
-  modulepath = realpath(modulename_cstr, NULL);
+  /* Only needed for path resolution */
+  ana_object_dtor(modulename_fs);
 
   if(!modulepath)
   {
-    set_except("ImportError","module %s was not found", modulename_cstr);
+    set_except("ImportError","module %s was not found", ana_cstring(modulename));
     return NULL;
   }
-
-  /* TODO , check retval */
-
-  #ifdef ANA_MODULE_DEBUG
-  printf("do_import: resolved module %s to file path %s\n",
-    ana_cstring(modulename), modulepath);
-  #endif
 
   fp = ana_open_file_for_parsing(modulepath);
 
@@ -232,16 +229,17 @@ static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
   ana_object *code = NULL;
   int retval;
 
-  char *modulename_cstr = transform_module_name(ana_cstring(modulename));
+  ana_object *modulename_fs = transform_module_name(ana_cstring(modulename));
 
-  modulepath = realpath(modulename_cstr, NULL);
+  modulepath = realpath(ana_cstring(modulename_fs), NULL);
   
+  ana_object_dtor(modulename_fs);
+
   if(!modulepath)
   {
-    set_except("ImportError","module %s was not found", modulename_cstr);
+    set_except("ImportError","module %s was not found", ana_cstring(modulename));
     return NULL;
   }
-
 
   fp = ana_open_file_for_parsing(modulepath);
 
@@ -249,7 +247,6 @@ static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
   {
     set_except("ImportError", "failed to load module %s", ana_cstring(
       modulename));
-
     goto done;
   }
 

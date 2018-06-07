@@ -1,0 +1,21 @@
+function print_even_numbers(limit)
+{
+	print("hello");
+	i = 0;
+	print(limit);
+	
+	while(i <= limit)
+	{
+		print("i is " + i);
+		if(i % 2 == 0)
+		{
+			print(i);
+		}
+
+		i = i + 1;
+	}
+}
+
+
+print("Calling print_even_numbers");
+print_even_numbers(25);
