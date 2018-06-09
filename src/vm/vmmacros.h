@@ -8,7 +8,7 @@
 # define DO_TRACE(op, arg, flag, argused) \
   do \
   { \
-    fprintf(stdout, "%-5d: ", (int)frame->pc); \
+    fprintf(stdout, "%-5d: ", (int)frame->pc -1); \
     if(argused) \
     { \
       fprintf(stdout, "%-15s%-10d\n", op, arg); \

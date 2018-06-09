@@ -1,0 +1,46 @@
+Ana Virtual Machine Disassembler
+  Frame: __main__
+  Constant Table: 
+   Index          Value        Type       
+   0              <function at function   
+   1              <function at function   
+   2              1            long       
+   3              if           string     
+   4              2            long       
+   5              else if      string     
+   6              else         string     
+   7              0            long       
+  Jump Targets: 
+   0              -1           long       
+  VM Symbols:
+   0              __name__     
+   1              readline     
+   2              print        
+   3              a            
+   4              print        
+   5              a            
+   6              print        
+   7              print        
+
+1    : LOAD_NAME      3         
+2    : LOAD_CONST     2         
+3    : IEQUAL         0         
+4    : JMPZ           0         
+5    : LOAD_CONST     3         
+6    : LOAD_NAME      4         
+7    : CALL           1         
+8    : JMP            0         
+9    : LOAD_NAME      5         
+10   : LOAD_CONST     4         
+11   : IEQUAL         0         
+12   : JMPZ           0         
+13   : LOAD_CONST     5         
+14   : LOAD_NAME      6         
+15   : CALL           1         
+16   : JMP            0         
+17   : LOAD_CONST     6         
+18   : LOAD_NAME      7         
+19   : CALL           1         
+20   : JMP            0         
+21   : LOAD_CONST     7         
+22   : IRETURN  
