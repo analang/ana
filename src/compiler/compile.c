@@ -225,79 +225,37 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
   (void)vm;
   (void)frame;
   (void)ast;
-  // node *expression = ast->children[0];
-  // node *if_statement = ast->children[1];
-  // node *else_if_statements = ast->children[2];
-  // node *else_statement = ast->children[3];
-  // int i;
- 
-  // /* The first place to jump if the expression in the if statement
-  //    is not true
-  //    */
-  // int jmp_address_if_not_true = SETUP_JMP_TARGET();
-  // /* if it is true, then we need to jump after executing the body
-  //    */
-  // int exit_address            = SETUP_JMP_TARGET();
+  node *expression = ast->children[0];
+  node *if_statement = ast->children[1];
+  node *else_if_statements = ast->children[2];
+  node *else_statement = ast->children[3];
+  int i;
 
-  // // if(<expression) {
-  // ana_compile_unit(vm, frame, expression);
+  int exit_address            = SETUP_JMP_TARGET();
 
-  // emit_xx(frame, JMPZ, jmp_address_if_not_true, 0, expression);
+  ana_compile_unit(vm, frame, expression);
 
-  // /* compile the body of the if() { .. } statement */
-  // ana_compile_unit(vm, frame, if_statement);
+  emit_xx(frame, JMPZ, exit_address, 0, expression);
+  ana_compile_unit(vm, frame, if_statement);
+  emit_xx(frame, JMP, exit_address, 0, if_statement);
 
-  // /* Now we need to jump to the end of this block that was just executed */
-  // emit_xx(frame, JMP, exit_address, 0, if_statement);
+  /* now we can compile the else_if suite */
+  for(i = 0; i < else_if_statements->nchild; i++)
+  {
+    node *else_if_statement  = else_if_statements->children[i];
+    node *else_if_expression = else_if_statement->children[0];
+    node *else_if_body       = else_if_statement->children[1];
+    ana_compile_unit(vm, frame, else_if_expression);
 
-  // /* backpatch this address now that we've compiled the expression
-  //    and the body
-  //    */
-  // ana_array_push_index(frame->jmptargets, jmp_address_if_not_true, 
-  //   ana_longfromlong(ana_container_size(frame->code)))2;
-
-  // ana_object *jmp_addrs = ana_array_new(4);
-  // ana_size_t index = 0;
-
-  // /* now we can compile the else_if suite */
-  // for(i = 0; i < else_if_statements->nchild; i++)
-  // {
-  //   node *else_if_statement  = else_if_statements->children[i];
-  //   node *else_if_expression = else_if_statement[0];
-  //   node *else_if_body       = else_if_statement[1];
-
-  //   int jmp_address = SETUP_JMP_TARGET();
-  //   ana_compile_unit(vm, frame, else_if_expression);
-
-  //   if(i + 1 == else_if_statements->nchild)
-  //   {
-  //     // This is the last else if statement, so jump to the end
-  //     emit_xx(frame, JMPZ, exit_address, 0, if_statement);
-  //   }
-  //   else
-  //   {
-  //         /*
-  //         At this point, this else if statement is not the last statement,
-  //         Now we need to jump to that next statement, but first we must 
-  //         determine the address. We need to emit a 
-  //         JMPZ <address of next else if> here
-  //         */
-  //       int backpatch_addr = SETUP_JMP_TARGET();
-
-  //       ana_array_push(jmp_addrs, ana_longfromlong((long)backpatch_addr));
-
-  //       index++;
-
-  //       emit_xx(frame, JMPZ, backpatch_addr, else_if_statement);
-  //   }
-
-  //   ana_compile_unit(vm, frame, else_if_body);
-  //   /* Always after the body we must jump to the end of the suite */
-  //   emit_xx(frame, JMP, exit_address, 0, if_statement);
-
-  // }
-  //   ana_array_push_index(frame->jmptargets, exit_address, ana_longfromlong(
-  //     (long)ana_container_size(frame->code)));
+    emit_xx(frame, JMPZ, exit_address, 0, if_statement);
+    ana_compile_unit(vm, frame, else_if_body);
+    emit_xx(frame, JMP, exit_address, 0, if_statement);
+  }
+  
+  ana_compile_unit(vm, frame, else_statement->children[0]);
+  emit_xx(frame, JMPZ, exit_address, 0, else_statement->children[0]);
+  ana_compile_unit(vm, frame, else_statement->children[1]);
+  emit_xx(frame, JMP, exit_address, 0, else_statement->children[1]);
 }
 
 static void compile_if(ComoVM *vm, ana_frame *frame, 
