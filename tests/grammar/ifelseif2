@@ -1,0 +1,15 @@
+a = 2;
+
+if(a == 1)
+{
+	print("if");
+}
+else if(a == 2)
+{
+	print("else if");
+}
+else
+{
+	print("else");
+}
+

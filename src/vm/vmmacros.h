@@ -42,6 +42,7 @@
 
 
 #define fetch() do { \
+  assert(frame->pc >= 0 && frame->pc < ana_container_size(frame->code)); \
   opline = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
   opcode = (opline >> 24) & 0xff; \
   oparg = (opline >> 8) & 0xffff; \

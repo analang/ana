@@ -219,6 +219,7 @@ static void compile_try(ComoVM *vm, ana_frame *frame, node *stmt)
 #define SETUP_JMP_TARGET() \
   (ana_array_push(frame->jmptargets, ana_longfromlong(-1L)), ana_array_size(frame->jmptargets) - 1)
 
+/* represent the address of the next instruction */
 #define CURRENT_ADDRESS() \
   (ana_longfromlong((long)ana_container_size(frame->code)))
 
@@ -244,7 +245,6 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
     /* first_jmp_address is guaranteed to be start of an else if statemet */
     emit_xx(frame, JMPZ, first_jmp_address, 0, expression);
   ana_compile_unit(vm, frame, if_statement);
-
     emit_xx(frame, JMP, exit_address, 0, if_statement);
 
   ana_array_push_index(frame->jmptargets,
@@ -262,7 +262,7 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
 
     ana_compile_unit(vm, frame, else_if_expression);
 
-    if(else_if_statement->nchild == 1)
+    if(else_if_statements->nchild == 1)
     {
       emit_xx(frame, JMPZ, else_address, 0, if_statement);
     }
@@ -271,7 +271,7 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
       if(i + 1 == else_if_statement->nchild)
       {
         /* now we go to the else statement */
-        emit_xx(frame, JMPZ, else_address, 0, if_statement);
+        emit_xx(frame, JMPZ, else_address, 0, if_statement); 
       }
       else 
       {
@@ -286,7 +286,6 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
     emit_xx(frame, JMP, exit_address, 0, if_statement);
   }
 
-
   ana_array_push_index(frame->jmptargets,
     else_address, CURRENT_ADDRESS());
 
@@ -297,8 +296,20 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
   ana_array_push_index(frame->jmptargets,
     exit_address, CURRENT_ADDRESS());
 
+
+  if(!(ana_array_size(jmp_map) == ana_array_size(jmp_targets)))
+  { 
+    printf("jmp_map:\n");
+    ana_object_print(jmp_map);
+    printf("\n");
+
+    printf("jmp_targets\n");
+    ana_object_print(jmp_targets);
+    printf("\n");
+  }
+
   assert(ana_array_size(jmp_map) == ana_array_size(jmp_targets));
-  
+
   int current_index = ana_array_size(jmp_targets);
 
   ana_array_foreach(jmp_map, index, value) {
@@ -307,8 +318,10 @@ static void compile_compound_if(ComoVM *vm, ana_frame *frame,
     ana_get_long(
       ana_get_array(frame->jmptargets)->items[jmp_target_index]
     )->value = ana_get_long(ana_get_array(jmp_targets)->items[--current_index])->value;
-
   } ana_array_foreach_end();
+
+
+  /* todo free, jmp_targets, jmp_map */
 }
 
 static void compile_if(ComoVM *vm, ana_frame *frame, 
@@ -361,6 +374,7 @@ static void compile_while(ComoVM *vm, ana_frame *frame, node *ast)
 
   /* while(<expression> is true) { */
 
+  /* this represents the next instruction address */
   ana_array_push(frame->jmptargets, ana_longfromlong((long)ana_container_size(frame->code)));
   int jmptargetindex_start = ana_array_size(frame->jmptargets) - 1;
 
