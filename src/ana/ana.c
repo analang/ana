@@ -236,11 +236,13 @@ static int run_file(ana_options *opts)
       char line[COMO_LINE_MAX];
       int i = 0;
       int curline = 0;
+      
       while((c = fgetc(fp)) != EOF)
       {
         if(c == '\n')
         {
           curline++;
+
           if(curline == state.first_line) 
           {
             line[i] = '\0';
@@ -251,7 +253,8 @@ static int run_file(ana_options *opts)
             while(*linep == ' ')
               linep++;
 
-            fprintf(stdout, "%s\n", linep);
+            if(strlen(linep) > 0)
+              fprintf(stdout, "%s\n", linep);
 
             state.first_column = state.first_column - (linep - start);
 
@@ -273,7 +276,9 @@ static int run_file(ana_options *opts)
         else
         {
           if(!(i < COMO_LINE_MAX - 1))
-            line[i++] = '\0';
+          {
+            ;
+          }
           else
             line[i++] = c;
         }
