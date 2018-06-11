@@ -326,7 +326,6 @@ static void map_print(ana_object *obj)
 
 static ana_object *map_str(ana_object *obj)
 {
-  
   ana_object *retval;
 
   ANA_AUTO_RELEASE(ana_build_str("<map at %p>", (void *)obj), {

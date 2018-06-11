@@ -112,7 +112,6 @@ static inline void trace_frame(ComoVM *vm, ana_frame *frame)
     ana_object_dtor(_sval);
   }
 
-
   fprintf(stdout, "  Jump Targets: \n");
   
   ana_array_foreach(frame->jmptargets, i, value) {
@@ -321,6 +320,9 @@ static ana_object *ana_frame_eval(ComoVM *vm)
       fetch();
 
       vm_case(opcode) {
+        default:
+          set_except("VMError", "Opcode %d is not implemented\n", opcode);
+          vm_continue();
         vm_target(IIN) {
           TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
@@ -1369,18 +1371,37 @@ static void sweep(ComoVM *vm)
           {
             if(ana_get_function_frame(unreached) == CURRENT_FRAME)
             {
-              //fprintf(stdout, "gc.sweep: attempt to free current executing frame (1)\n");
+              #ifdef ANA_GC_DEBUG
+              fprintf(stdout, "gc.sweep: attempt to free current executing frame (1)\n");
+              #endif
+
               continue;
+            }
+            else
+            {
+              if(CURRENT_FRAME != NULL)
+              {
+                /* don't free function definitions, they are constant */
+                continue;
+              }
             }
           }
         }
         if(ana_type_is(unreached, ana_frame_type))
         {
-            if(ana_get_frame(unreached) == CURRENT_FRAME)
-            {
-              //fprintf(stdout, "gc.sweep: attempt to free current executing frame (2)\n");
-              continue; 
-            }
+          if(ana_get_frame(unreached) == CURRENT_FRAME)
+          {
+            #ifdef ANA_GC_DEBUG
+            fprintf(stdout, "gc.sweep: attempt to free current executing frame (2)\n");
+            #endif
+
+            continue; 
+          }
+          if(CURRENT_FRAME != NULL) 
+          {
+           /* don't free function definitions, they are constant */
+            continue;
+          }
         }
         if(ana_type_is(unreached, ana_class_type))
         {
@@ -1480,9 +1501,6 @@ int ana_eval(ComoVM *_vm, ana_object *code, char *function)
   COMO_VM_PUSH_FRAME(frame);
 
   (void)ana_frame_eval(vm);
-
-  //printf("Ana Root Inspection\n");
-  //trace_root(vm->root, 1);
 
   CURRENT_FRAME = NULL;
 

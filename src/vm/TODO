@@ -24,4 +24,10 @@ Dicussion:
 6/3/2018
 - For statements
 - For Each statements
-- If else, if compilation
+
+
+6/10/2018
+- Finished if else if else statement suite
+  TODO:
+    make class instances real instances in the VM. Right now properties
+    can be added to the definition frame at runtime.

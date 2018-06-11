@@ -1,6 +1,11 @@
-i = 0;
-while(i <= 10)
+function myprint(x)
 {
-  print(i);
+	print(x);
+}
+
+i = 0;
+while(i <= 1000)
+{
+  myprint(i);
   i = i + 1;
 }
