@@ -294,6 +294,8 @@ static ana_object *ana_frame_eval(ComoVM *vm)
 
   while(!COMO_VM_HAS_FRAMES())
   {
+    uint64_t ticks = 0;
+    
     enter:
 
     frame = COMO_VM_POP_FRAME();
@@ -316,6 +318,9 @@ static ana_object *ana_frame_eval(ComoVM *vm)
 
     for(;;) {
       top:
+
+      if(vm->flags & (COMO_VM_TRACING|COMO_VM_LIVE_TRACING))
+        fprintf(stderr,"vm[%lu] pc at # %ld\n", ticks++, frame->pc);
 
       fetch();
 
@@ -1298,6 +1303,9 @@ static void ana_print_backtrace(ana_frame *frame)
 
 static void mark(ComoVM *vm)
 {
+  if(vm->flags & COMO_VM_GC_DISABLED)
+    return;
+
   ana_size_t i, j;
 
   /* if stackPointer is 0, then this is the main frame */
@@ -1350,6 +1358,9 @@ static void mark(ComoVM *vm)
 
 static void sweep(ComoVM *vm)
 {
+  if(vm->flags & COMO_VM_GC_DISABLED)
+    return;
+
   ana_object** root = &vm->root;
   int i = 0;
   int n = vm->nobjs;
@@ -1470,6 +1481,9 @@ static void sweep(ComoVM *vm)
 
 static void gc(ComoVM *vm)
 {
+  if(vm->flags & COMO_VM_GC_DISABLED)
+    return;
+  
   mark(vm);
   sweep(vm);
 }

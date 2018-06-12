@@ -34,6 +34,7 @@ typedef struct ana_options {
   int argc;
   int error;
   int livetracing;
+  int disable_gc;
 } ana_options;
 
 const char *shorthelpstr = "\
@@ -50,6 +51,7 @@ options and arguments:\n\
   -v, --version             print the ana version\n\
   -h, --help                display this menu\n\
   -d, --debug               print C debugging messages to stderr\n\
+  -g  --disable-gc          diable the garbage collector\n\
   command                   a string of ana source code\n\
   file                      path to the file to be executed\n\
   args                      arguments passed to the ana program\n\
@@ -73,6 +75,7 @@ static int usage(int status)
 
 static struct option long_options[] = {
   { "debug",        no_argument,       NULL, 'd'},
+  { "disable-gc",   no_argument,       NULL, 'g'},
   { "ast",          no_argument,       NULL, 'a'},
   { "opcodes",      no_argument,       NULL, 'o'},
   { "interactive",  no_argument,       NULL, 'i'},
@@ -96,7 +99,7 @@ static ana_options parse_argv(int argc, char **argv)
   {
     opterr = 1;
 
-    c = getopt_long(argc, argv, "daoic:f:vhl", long_options, &option_index);
+    c = getopt_long(argc, argv, "gdaoic:f:vhl", long_options, &option_index);
 
     if(c == -1)
       break;
@@ -104,6 +107,9 @@ static ana_options parse_argv(int argc, char **argv)
     switch(c)
     { 
       case 0:
+        break;
+      case 'g':
+        ret.disable_gc = 1;
         break;
       case 'l':
         ret.livetracing = 1;
@@ -300,6 +306,9 @@ static int run_file(ana_options *opts)
     else if(opts->opcodes)
       vm->flags |= COMO_VM_TRACING;
 
+    if(opts->disable_gc)
+      vm->flags |= COMO_VM_GC_DISABLED;
+    
     if(opts->ast)
     {
       visit(state.ast, 0);
