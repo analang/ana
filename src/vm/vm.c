@@ -1481,6 +1481,8 @@ static void sweep(ComoVM *vm)
 
 static void gc(ComoVM *vm)
 {
+  printf("gc.noobjs=%ld\n", vm->nobjs);
+
   if(vm->flags & COMO_VM_GC_DISABLED)
     return;
   

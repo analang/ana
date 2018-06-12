@@ -1,5 +1,14 @@
 i = 0;
-while(i <= 100000)
+
+upper = 1000000;
+
+while(i <= upper)
 {
-  i = i + 1;
+  	if(i == 99000)
+	{
+		print("99000");
+	} 
+	i = i + 1;
 }
+
+print(i);
