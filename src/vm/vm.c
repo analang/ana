@@ -306,7 +306,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
     locals = frame->locals;
 
 
-    if(vm->flags & (COMO_VM_TRACING|COMO_VM_LIVE_TRACING))
+    if(vm->flags & COMO_VM_TRACING_ANY)
       trace_frame(vm, frame);
 
     if(!frame->ready)
@@ -319,7 +319,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
     for(;;) {
       top:
 
-      if(vm->flags & (COMO_VM_TRACING|COMO_VM_LIVE_TRACING))
+      if(vm->flags & COMO_VM_TRACING_ANY)
         fprintf(stderr,"vm[%lu] pc at # %ld\n", ticks++, frame->pc);
 
       fetch();

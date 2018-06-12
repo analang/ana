@@ -5,9 +5,10 @@
 #include "ana_debug.h"
 
 #define COMO_VM_GC_TIMEOUT     10
-#define COMO_VM_TRACING        0x00000001
-#define COMO_VM_LIVE_TRACING   0x00000002
-#define COMO_VM_GC_DISABLED    0x00000003
+#define COMO_VM_TRACING        (1 << 0)
+#define COMO_VM_LIVE_TRACING   (1 << 1)
+#define COMO_VM_GC_DISABLED    (1 << 2)
+#define COMO_VM_TRACING_ANY    (COMO_VM_TRACING | COMO_VM_LIVE_TRACING)
 
 #define COMO_VM_STACK_MAX 255
 
