@@ -27,7 +27,7 @@ COMO_OBJECT_API ana_frame *ana_frame_base_new(
 
 
   obj->frameflags = COMO_FRAME_EXEC;
-  obj->name       = name;
+  obj->name       = ana_stringfromstring(ana_cstring(name));
   obj->params     = NULL;
   obj->code       = code;
   obj->constants  = constants;

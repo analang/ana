@@ -161,7 +161,7 @@ static void compile_class(ComoVM *vm, ana_frame *frame, node *ast)
 
     ana_object *thefn = ana_functionfromframe(fnframe);
 
-    GC_TRACK(vm, thefn);
+    VM_FUNC_DEFN_TRACK(vm, thefn);
 
     ana_map_put(members, create_symbol(vm, (char *)name->value), thefn);
   }
@@ -169,7 +169,7 @@ static void compile_class(ComoVM *vm, ana_frame *frame, node *ast)
   ana_object *theclass = ana_class_new(NULL, 
     ana_stringfromstring(classname->value), members);
 
-  GC_TRACK(vm, theclass);
+  VM_FUNC_DEFN_TRACK(vm, theclass);
 
   ana_map_put(frame->locals, create_symbol(vm, classname->value), theclass);
 }

@@ -391,7 +391,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
                 call->bpsize
               );
 
-            GC_TRACK(vm, (ana_object *)execframe);
+            //GC_TRACK(vm, (ana_object *)execframe);
 
             if(!execframe->ready) {
               ((ana_object *)execframe)->type->obj_init((ana_object *)execframe);
@@ -413,7 +413,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
 
             execframe->lineno = lineno;
             // Push frame to execute
-            COMO_VM_PUSH_FRAME(importedframe);
+            COMO_VM_PUSH_FRAME(execframe);
             // save calling frame
             COMO_VM_PUSH_FRAME(frame);
             goto enter;
@@ -443,7 +443,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
                 call->bpsize
               );
 
-            GC_TRACK(vm, (ana_object *)execframe);
+            //GC_TRACK(vm, (ana_object *)execframe);
 
             if(!execframe->ready) {
               ((ana_object *)execframe)->type->obj_init((ana_object *)execframe);
@@ -465,7 +465,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
 
             execframe->lineno = lineno;
             // Push frame to execute
-            COMO_VM_PUSH_FRAME(importedframe);
+            COMO_VM_PUSH_FRAME(execframe);
             // save calling frame
             COMO_VM_PUSH_FRAME(frame);
             goto enter;
@@ -1226,7 +1226,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
                     ana_map_put(execframe->locals, paramname, theargvalue);
                   }
 
-                  GC_TRACK(vm, (ana_object *)execframe);
+                  //GC_TRACK(vm, (ana_object *)execframe);
                 }
 
               assert(execframe->self != NULL);
