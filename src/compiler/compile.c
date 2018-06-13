@@ -111,7 +111,7 @@ static void compile_func(ComoVM *vm, ana_frame *frame, node *ast)
 
   ana_object *fnimpl = ana_functionfromframe(fnframe);
 
-  GC_TRACK(vm, fnimpl);
+  //GC_TRACK(vm, fnimpl);
 
   ana_map_put(frame->locals, create_symbol(vm, (char *)name->value), fnimpl);
 
@@ -375,22 +375,30 @@ static void compile_while(ComoVM *vm, ana_frame *frame, node *ast)
   /* while(<expression> is true) { */
 
   /* this represents the next instruction address */
-  ana_array_push(frame->jmptargets, ana_longfromlong((long)ana_container_size(frame->code)));
-  int jmptargetindex_start = ana_array_size(frame->jmptargets) - 1;
 
   ana_array_push(frame->jmptargets, NULL);
   int jmptargetindex_skiphandler = ana_array_size(frame->jmptargets) - 1;
   
+  emit_xx(frame, BEGIN_LOOP, 0, 0, body);
+
+  ana_array_push(frame->jmptargets, ana_longfromlong((long)ana_container_size(frame->code)));
+  
+  int jmptargetindex_start = ana_array_size(frame->jmptargets) - 1;
+
   ana_compile_unit(vm, frame, expression);  
 
   emit_xx(frame, JMPZ, jmptargetindex_skiphandler, 0, body);
 
   ana_compile_unit(vm, frame, body);
+
+  emit_xx(frame, EXIT_LOOP_CONTINUE, 0, 0, body);
   
   emit_xx(frame, JMP, jmptargetindex_start, 0, body);
 
   ana_array_push_index(frame->jmptargets, jmptargetindex_skiphandler,
     ana_longfromlong((long)ana_container_size(frame->code)));
+  
+  emit_xx(frame, END_LOOP, 0, 0, body);
 }
 
 static int tracing = 0;
@@ -713,7 +721,6 @@ static void init_builtins(ComoVM *vm, ana_frame *frame)
   ana_object *print_symbol = 
     ana_get_array(vm->symbols)->items[print_symbol_index];
 
-
   fn = ana_functionfromhandler(ana__builtin_print);
   fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? 
     ana_cstring(ana_get_base(frame)->scope) : "__main__");
@@ -771,8 +778,6 @@ ana_object *ana_compilemodule(char *modulename, char *filename,
   {
     ana_compile_unit(vm, (ana_frame *)mainframe, ast->children[i]);
   }
-
-  //GC_TRACK(vm, mainframe);
 
   emit((ana_frame *)mainframe, LOAD_CONST, 
     int_const(((ana_frame *)mainframe), 0), 0);

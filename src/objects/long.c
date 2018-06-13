@@ -35,7 +35,6 @@ static inline void long_dtor(ana_object *ob)
   if(ob->scope)
     ana_object_dtor(ob->scope);
 
- 
   free(lobj);
 }
 

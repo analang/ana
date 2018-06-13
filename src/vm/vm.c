@@ -85,6 +85,22 @@ void ana_vm_finalize(ComoVM *vm)
 
 #include "object_ops.h"
 
+
+static void inspect_stack(ana_frame *frame)
+{
+  fprintf(stdout, "Ana Stack Inspection (%s)\n",
+    ana_cstring(frame->name));
+  printf("    SP: %ld\n", frame->sp);
+
+  ana_size_t i;
+
+  for(i = 0; i < frame->sp; i++)
+  {
+    printf("[%ld] => %s\n", i, 
+      ana_cstring(ana_object_tostring(frame->stack[i])));
+  }
+}
+
 static inline void trace_frame(ComoVM *vm, ana_frame *frame)
 {
   fprintf(stdout, "Ana Virtual Machine Disassembler\n");
@@ -212,13 +228,11 @@ static ana_object *do_import(ana_frame *frame, ana_object *modulename,
     ana_map_put(frame->locals, modulename, code);
   else
     ana_map_put(frame->locals, alias, code);
-
 done:
   free(modulepath);
 
   return code;
 }
-
 
 static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
 {
@@ -275,7 +289,6 @@ static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
     ana_get_array(vm->symbols)->items[module_symbol_index];
 
   ana_map_put(frame->locals, module_symbol, code);
-
 done:
   free(modulepath); 
 
@@ -325,9 +338,10 @@ static ana_object *ana_frame_eval(ComoVM *vm)
       fetch();
 
       vm_case(opcode) {
-        default:
+        default: {
           set_except("VMError", "Opcode %d is not implemented\n", opcode);
           vm_continue();
+        }
         vm_target(IIN) {
           TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
@@ -512,6 +526,55 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           }
 
           done:
+          vm_continue();
+        }
+        vm_target(BEGIN_LOOP)
+        {
+          printf("BEGIN_LOOP, SP=%ld\n", frame->sp);
+          ana_basic_block *loop = malloc(sizeof(*loop));
+          loop->stack_obj_count = 0;
+          loop->next = frame->looproot;
+          frame->looproot = loop;
+
+          frame->loopstack[frame->loopp++] = loop;
+          frame->loopsize++;
+
+          vm_continue();
+        }
+        vm_target(EXIT_LOOP_CONTINUE)
+        {       
+          /* all of pushs to this tack inside the block, need to be poped 
+             if they weren't already
+            */
+
+          if(frame->loopstack[frame->loopp - 1]->stack_obj_count < 0)
+            frame->loopstack[frame->loopp - 1]->stack_obj_count = 0;
+
+          ana_size_t sz = frame->loopstack[frame->loopp - 1]->stack_obj_count;
+
+          if(sz == 0)
+            goto skip_logic;
+
+          ana_size_t i;
+
+          for(i = 0; i < sz; i++)
+          {
+            --frame->loopstack[frame->loopp - 1]->stack_obj_count;
+
+            (void)xpop();
+          }
+
+          skip_logic:
+          vm_continue();
+        }
+
+        vm_target(END_LOOP)
+        {
+          /* now we must pop this loop block */
+          --frame->loopp;
+          --frame->loopsize;
+          /* frame->sp must be the same as it was when starting the loop */
+          printf("end of loop SP=%ld\n", frame->sp);
           vm_continue();
         }
         vm_target(TRY) {
@@ -997,7 +1060,11 @@ static ana_object *ana_frame_eval(ComoVM *vm)
                   call->bpsize
                 );
               
-              GC_TRACK(vm, (ana_object *)execframe);
+              /* TODO, need somehow to track frames that are created */
+              /* perhaps on frame POP, we can deallocate it? Since for every
+                  call we create a new frame.
+              */
+              //GC_TRACK(vm, (ana_object *)execframe);
 
               if(!execframe->ready) {
                 ((ana_object *)execframe)->type->obj_init((ana_object *)execframe);
@@ -1301,6 +1368,40 @@ static void ana_print_backtrace(ana_frame *frame)
   }
 }
 
+static void mark_ex(ana_object *obj)
+{
+  ana_size_t i;
+
+  obj->flags = 1;
+
+  if(ana_type_is(obj, ana_frame_type))
+  {
+    ana_frame *frame = ana_get_frame(obj);
+
+    //printf("mark_ex: frame %s: frame->sp=%ld\n",
+    //  ana_cstring(frame->name), frame->sp);
+
+    for(i = 0; i < frame->sp; i++)
+    {
+      mark_ex(frame->stack[i]);
+    }
+  }
+  // else if(ana_type_is(obj, ana_function_type))
+  // {
+  //   ana_function *fn = ana_get_function(obj);
+
+  //   if(fn->flags & COMO_FUNCTION_LANG) 
+  //   {
+  //     ana_frame *fnframe = ana_get_function_frame(fn);
+
+  //     for(i = 0; i < fnframe->sp; i++)
+  //     {
+  //       mark_ex(fnframe->stack[i]);
+  //     }
+  //   }
+  // }
+}
+
 static void mark(ComoVM *vm)
 {
   if(vm->flags & COMO_VM_GC_DISABLED)
@@ -1308,24 +1409,11 @@ static void mark(ComoVM *vm)
 
   ana_size_t i, j;
 
-  /* if stackPointer is 0, then this is the main frame */
-
   if(vm->stackpointer == 0)
   {
-    #ifdef ANA_GC_DEBUG
-    printf("mark: stackPointer was 0, this means we've popped the last frame to execute\n");
-    #endif
-
-    if(CURRENT_FRAME) {
-      for(j = 0; j < CURRENT_FRAME->sp; j++)
-      {
-        ana_object *obj = CURRENT_FRAME->stack[j];
-
-#ifdef ANA_GC_DEBUG 
-        printf("marking object %p as reachable\n", (void *)obj)
-#endif
-        obj->flags = 1;
-      }   
+    if(CURRENT_FRAME) 
+    {
+      mark_ex((ana_object *)CURRENT_FRAME);
     }
   }
   else 
@@ -1334,23 +1422,15 @@ static void mark(ComoVM *vm)
     {
       ana_frame *frame = vm->stack[i];
 
-#ifdef ANA_GC_DEBUG
-      printf("mark: doing mark for frame %s\n", ana_cstring(frame->name));
-#endif
-
       ana_get_base(frame)->flags = 1;
 
       for(j = 0; j < frame->sp; j++)
       {
         ana_object *obj = frame->stack[j];
 
-        // TODO check if this is a function....
-        // and mark it's stack
-
-#ifdef ANA_GC_DEBUG
-        printf("marking object %p as reachable\n", (void *)obj);
-#endif
         obj->flags = 1;
+
+        mark_ex(obj);
       }
     }
   }
@@ -1362,132 +1442,72 @@ static void sweep(ComoVM *vm)
     return;
 
   ana_object** root = &vm->root;
-  int i = 0;
-  int n = vm->nobjs;
 
-  while (*root && i < n) 
-  {
-    i++;
-    
+  if(!(*root))
+    return;
+
+  assert(!ana_type_is(*root, ana_function_type));
+  assert(!ana_type_is(*root, ana_frame_type));
+  assert(!ana_type_is(*root, ana_bool_type));
+
+  while (*root) 
+  {    
     if(!(*root)->flags) 
     {
       ana_object* unreached = *root; 
             
-      if(!ana_type_is(unreached, ana_bool_type)) 
-      {
+      *root = unreached->next;
+      
+      ana_object_dtor(unreached);
 
-        if(ana_type_is(unreached, ana_function_type)) 
-        {
-          if(ana_get_function_flags(unreached) & COMO_FUNCTION_LANG)
-          {
-            if(ana_get_function_frame(unreached) == CURRENT_FRAME)
-            {
-              #ifdef ANA_GC_DEBUG
-              fprintf(stdout, "gc.sweep: attempt to free current executing frame (1)\n");
-              #endif
-
-              continue;
-            }
-            else
-            {
-              if(CURRENT_FRAME != NULL)
-              {
-                /* don't free function definitions, they are constant */
-                continue;
-              }
-            }
-          }
-        }
-        if(ana_type_is(unreached, ana_frame_type))
-        {
-          if(ana_get_frame(unreached) == CURRENT_FRAME)
-          {
-            #ifdef ANA_GC_DEBUG
-            fprintf(stdout, "gc.sweep: attempt to free current executing frame (2)\n");
-            #endif
-
-            continue; 
-          }
-          if(CURRENT_FRAME != NULL) 
-          {
-           /* don't free function definitions, they are constant */
-            continue;
-          }
-        }
-        if(ana_type_is(unreached, ana_class_type))
-        {
-          //if(ana_get_class_frame(unreached) == CURRENT_FRAME)
-          //continue;
-        }
-        
-        int x;
-        int found = 0;
-
-        if(CURRENT_FRAME) 
-        {
-          for(x = 0; x < CURRENT_FRAME->sp; x++)
-          {
-            if(CURRENT_FRAME->stack[x] == unreached)
-            {
-              #ifdef ANA_GC_DEBUG
-              printf("sweep: attempt to destroy object that is reachable on current frames the stack\n");
-              #endif
-              found = 1;
-              break;
-            }
-          }
-        }
-
-        if(!found)
-        {
-
-#ifdef ANA_GC_DEBUG
-          printf("gc.sweep: free object %p, type=%s\n", (void *)unreached,
-            ana_type_name(unreached));
-#endif
-
-          *root = unreached->next;
-          ana_object_dtor(unreached);
-          vm->nobjs--;
-        }
-      }
-
+      vm->nobjs--;
     } 
     else
     {
-      ana_object *obj = *root;
-      int found = 0;
-      int x;
-
-      if(CURRENT_FRAME)
-      {
-        for(x = 0; x < CURRENT_FRAME->sp; x++)
-        {
-          if(CURRENT_FRAME->stack[x] == obj)
-          {
-            found = 1;
-            break;
-          }
-        }
-      }
-
-      if(found == 0)
-        (*root)->flags = 0;
+      (*root)->flags = 0;
 
       root = &(*root)->next;
     }
   }
 }
 
+static ana_size_t count_objs(ana_object *obj)
+{
+  ana_object *root = obj;
+  ana_size_t x = 0;
+  while(root)
+  {
+    x++;
+    root = root->next;
+  }
+
+  return x;
+}
+
+#undef ANA_GC_DEBUG
 static void gc(ComoVM *vm)
 {
-  printf("gc.noobjs=%ld\n", vm->nobjs);
-
   if(vm->flags & COMO_VM_GC_DISABLED)
     return;
-  
+
+  //printf("gc: there are %ld objects in the root\n", vm->nobjs);
+
+
+#ifdef ANA_GC_DEBUG
+  fprintf(stderr, "gc: before sweep, nobjs=%ld\n", vm->nobjs);
+#endif
+
   mark(vm);
   sweep(vm);
+
+
+#ifdef ANA_GC_DEBUG
+  fprintf(stderr, "gc: after sweep, nobjs=%ld\n", vm->nobjs);
+#endif
+
+  vm->mxobjs = vm->mxobjs * 2;
+
+  //printf("new max objects is %ld\n", vm->mxobjs);
 }
 
 int ana_eval(ComoVM *_vm, ana_object *code, char *function)
@@ -1520,7 +1540,6 @@ int ana_eval(ComoVM *_vm, ana_object *code, char *function)
 
   CURRENT_FRAME = NULL;
 
-  gc(vm);
   gc(vm);
 
   ana_object_dtor(code);

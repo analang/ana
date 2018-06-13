@@ -1,6 +1,7 @@
 function myprint(x)
 {
-	print(x);
+return x;
+//	print(x);
 }
 
 i = 0;

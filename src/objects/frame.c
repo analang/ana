@@ -20,6 +20,12 @@ COMO_OBJECT_API ana_frame *ana_frame_base_new(
   obj->base.scope = NULL;
   obj->base.flags = 0;
 
+  obj->loopstack  = NULL;
+  obj->loopp = 0;
+  obj->loopsize = 0;
+  obj->looproot = NULL;
+
+
   obj->frameflags = COMO_FRAME_EXEC;
   obj->name       = name;
   obj->params     = NULL;
@@ -68,6 +74,11 @@ COMO_OBJECT_API ana_object *ana_frame_new(char *name, char *filename,
   obj->base.next = NULL;
   obj->base.scope = NULL;
   obj->base.flags = 0;
+
+  obj->loopstack  = NULL;
+  obj->loopp = 0;
+  obj->loopsize = 0;
+  obj->looproot = NULL;
 
   obj->frameflags = COMO_FRAME_DEFN;
   obj->name       = ana_stringfromstring(name);
@@ -139,10 +150,15 @@ static void frame_init(ana_object *obj)
   self->finalized = 0;
   self->sp = 0;
   self->blockstack = malloc(sizeof(ana_basic_block *) * COMO_BLOCK_STACK_MAX);
+  self->loopstack = malloc(sizeof(ana_basic_block *) * COMO_BLOCK_STACK_MAX);
+  self->loopp = 0;
 
   ana_size_t i;
   for(i = 0; i < COMO_BLOCK_STACK_MAX; i++)
     self->blockstack[i] = NULL;
+
+  for(i = 0; i < COMO_BLOCK_STACK_MAX; i++)
+    self->loopstack[i] = NULL;
 }
 
 static void frame_deinit(ana_object *obj)
@@ -161,6 +177,9 @@ static void frame_deinit(ana_object *obj)
   self->bp = 0;
   self->self = NULL;
   self->lineno = 0;
+  self->bpsize = 0;
+  self->loopp = 0;
+  self->loopsize = 0;
 
   ana_basic_block *blockroot = self->blockroot;
 
@@ -173,10 +192,22 @@ static void frame_deinit(ana_object *obj)
 
   free(self->blockstack);
 
+  ana_basic_block *looproot = self->looproot;
+
+  while(looproot)
+  {
+    ana_basic_block *next = looproot->next;
+    free(looproot);
+    looproot = next;
+  }
+
+  free(self->loopstack);
+
+  self->looproot = NULL;
+  self->blockroot = NULL;
+
   assert(self->locals != NULL);
   ana_object_dtor(self->locals);
-  
-  self->bpsize = 0;
 }
 
 static void frame_dtor(ana_object *obj)

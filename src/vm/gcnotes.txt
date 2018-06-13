@@ -1,0 +1,4 @@
+- Function defns aren't part of the GC since they are constant
+
+
+The stack keeps growing. There is something wrong.

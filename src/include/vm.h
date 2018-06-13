@@ -4,6 +4,9 @@
 #include <ana.h>
 #include "ana_debug.h"
 
+#define ANA_GC_DEBUG 1
+
+
 #define COMO_VM_GC_TIMEOUT     10
 #define COMO_VM_TRACING        (1 << 0)
 #define COMO_VM_LIVE_TRACING   (1 << 1)
@@ -38,7 +41,11 @@ int ana_eval(ComoVM *vm, ana_object *code, char *function);
     (ana_array_size(vm->symbols) - 1))
 
 #define GC_TRACK(vm, obj) do { \
-  if (vm->nobjs >= vm->mxobjs) \
+  if(ana_type_is((obj), ana_frame_type)) { \
+    fprintf(stdout, "%s:%s:%d can't GC track frame types\n", \
+      __FILE__, __FUNCTION__, __LINE__); \
+  } \
+  if (vm->nobjs == vm->mxobjs) \
   { \
     vm->do_gc(vm); \
   } \

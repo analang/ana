@@ -59,6 +59,10 @@
     frame->stack = realloc(frame->stack, sizeof(ana_object *) * frame->sz); \
   } \
   frame->stack[frame->sp++] = arg; \
+  if(frame->loopsize != 0) { \
+    ana_size_t pos = frame->loopp == 0 ? 0 : (frame->loopp - 1);\
+    frame->loopstack[pos]->stack_obj_count++; \
+  } \
 } while(0)
 
 #define push(x) push_ex(frame, x)
@@ -66,8 +70,14 @@
 #define pushto(frame, arg) \
   push_ex(frame, arg)
   
-#define pop() \
-  (frame->stack[--frame->sp])
+#define xpop() \
+ (frame->stack[--frame->sp])
+
+#define not_used_pop() \
+ ((frame->loopsize != 0 ? (--frame->loopstack[frame->loopp == 0 ? 0 : \
+    (frame->loopp - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
+
+#define pop not_used_pop
 
 #define empty() \
   (frame->sp == 0)

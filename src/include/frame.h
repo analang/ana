@@ -9,7 +9,10 @@
 
 /* Internal use only */
 typedef struct _ana_basic_block {
-  int jmpto;
+  union {
+    int jmpto;
+    int stack_obj_count;
+  };
   struct _ana_basic_block *next;
 } ana_basic_block;
 
@@ -21,6 +24,12 @@ typedef struct _ana_frame
   ana_object **stack;
   ana_size_t sz;
   ana_size_t sp;
+
+
+  ana_basic_block **loopstack;
+  ana_size_t loopp;
+  ana_size_t loopsize;
+  ana_basic_block *looproot;
 
   ana_object *calling_module;
   ana_size_t ready;
@@ -42,8 +51,10 @@ typedef struct _ana_frame
   ana_object *filename;
   ana_object *jmptargets;
   ana_object *retval;
+  
   ana_basic_block  **blockstack;
   ana_basic_block   *blockroot; /* for tracking */
+
   ana_size_t bp;
   ana_size_t bpsize;
   ana_size_t lineno; /* line this frame was activated on */
