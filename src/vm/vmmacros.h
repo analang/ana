@@ -73,11 +73,11 @@
 #define xpop() \
  (frame->stack[--frame->sp])
 
-#define not_used_pop() \
+#define pop_ex() \
  ((frame->loopsize != 0 ? (--frame->loopstack[frame->loopp == 0 ? 0 : \
     (frame->loopp - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
 
-#define pop not_used_pop
+#define pop pop_ex
 
 #define empty() \
   (frame->sp == 0)

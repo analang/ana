@@ -42,10 +42,6 @@
   (ana_array_push(frame->constants, STUB_gc_new(vm, frame, ana_boolfromint(value))), \
   (ana_array_size(frame->constants) - 1))
 
-#define function_const(frame, value) \
-  (ana_array_push(frame->constants, STUB_gc_new(vm, frame, (value))), \
-  ((value)))
-
 static void ana_compile_unit(ComoVM *vm, ana_frame *frame, 
   node *ast);
 
@@ -111,7 +107,7 @@ static void compile_func(ComoVM *vm, ana_frame *frame, node *ast)
 
   ana_object *fnimpl = ana_functionfromframe(fnframe);
 
-  //GC_TRACK(vm, fnimpl);
+  VM_FUNC_DEFN_TRACK(vm, fnimpl);
 
   ana_map_put(frame->locals, create_symbol(vm, (char *)name->value), fnimpl);
 
@@ -397,7 +393,7 @@ static void compile_while(ComoVM *vm, ana_frame *frame, node *ast)
 
   ana_array_push_index(frame->jmptargets, jmptargetindex_skiphandler,
     ana_longfromlong((long)ana_container_size(frame->code)));
-  
+
   emit_xx(frame, END_LOOP, 0, 0, body);
 }
 
@@ -715,7 +711,9 @@ static void init_builtins(ComoVM *vm, ana_frame *frame)
   fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? 
     ana_cstring(ana_get_base(frame)->scope) : "__main__");
 
-  ana_map_put(frame->locals, readline_symbol, function_const(frame, fn));
+  VM_FUNC_DEFN_TRACK(vm, fn);
+
+  ana_map_put(frame->locals, readline_symbol, fn);
 
   ana_size_t print_symbol_index = make_symbol(vm, "print");
   ana_object *print_symbol = 
@@ -725,7 +723,9 @@ static void init_builtins(ComoVM *vm, ana_frame *frame)
   fn->scope = ana_stringfromstring(ana_get_base(frame)->scope ? 
     ana_cstring(ana_get_base(frame)->scope) : "__main__");
 
-  ana_map_put(frame->locals, print_symbol, function_const(frame, fn));
+  VM_FUNC_DEFN_TRACK(vm, fn);
+
+  ana_map_put(frame->locals, print_symbol, fn);
 }
 
 ana_object *ana_compileast(char *filename, ComoVM *vm, node *ast)

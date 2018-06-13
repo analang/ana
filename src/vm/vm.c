@@ -70,6 +70,7 @@ ComoVM *ana_vm_new()
   vm->mxobjs = 24;
   vm->root = NULL;
   vm->symbols = ana_array_new(8);
+  vm->function_root = NULL;
 
   return vm;
 }
@@ -77,8 +78,18 @@ ComoVM *ana_vm_new()
 void ana_vm_finalize(ComoVM *vm)
 {
   ana_array_foreach_apply(vm->symbols, ana_object_dtor);
-
   ana_object_dtor(vm->symbols);
+
+  ana_object *fn = vm->function_root;
+
+  while(fn)
+  {
+    ana_object *next = fn->next;
+    
+    ana_object_dtor(fn);
+
+    fn = next;
+  } 
 
   free(vm);
 }
@@ -86,7 +97,7 @@ void ana_vm_finalize(ComoVM *vm)
 #include "object_ops.h"
 
 
-static void inspect_stack(ana_frame *frame)
+static __attribute__((unused)) void inspect_stack(ana_frame *frame)
 {
   fprintf(stdout, "Ana Stack Inspection (%s)\n",
     ana_cstring(frame->name));
@@ -1341,6 +1352,8 @@ static ana_object *ana_frame_eval(ComoVM *vm)
       }
 
       ana_object_finalize(frame);
+      /* always destroys a copy */
+      ana_object_dtor(frame);
   }
 
   return retval;
@@ -1471,20 +1484,6 @@ static void sweep(ComoVM *vm)
   }
 }
 
-static ana_size_t count_objs(ana_object *obj)
-{
-  ana_object *root = obj;
-  ana_size_t x = 0;
-  while(root)
-  {
-    x++;
-    root = root->next;
-  }
-
-  return x;
-}
-
-#undef ANA_GC_DEBUG
 static void gc(ComoVM *vm)
 {
   if(vm->flags & COMO_VM_GC_DISABLED)
@@ -1542,7 +1541,6 @@ int ana_eval(ComoVM *_vm, ana_object *code, char *function)
 
   gc(vm);
 
-  ana_object_dtor(code);
 
   ana_bool_type_finalize();
 

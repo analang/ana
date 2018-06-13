@@ -4,9 +4,6 @@
 #include <ana.h>
 #include "ana_debug.h"
 
-#define ANA_GC_DEBUG 1
-
-
 #define COMO_VM_GC_TIMEOUT     10
 #define COMO_VM_TRACING        (1 << 0)
 #define COMO_VM_LIVE_TRACING   (1 << 1)
@@ -29,6 +26,8 @@ struct ComoVM
   ana_size_t nobjs;
   ana_size_t mxobjs;
   ana_object *root; 
+
+  ana_object *function_root;
   void(*do_gc)(struct ComoVM *vm);
 };
 
@@ -54,5 +53,10 @@ int ana_eval(ComoVM *vm, ana_object *code, char *function);
   vm->root = ana_get_base(obj); \
   vm->nobjs++; \
 } while(0)
+
+#define VM_FUNC_DEFN_TRACK(vm, fn) do { \
+    ana_get_base(fn)->next = vm->function_root; \
+    vm->function_root = ana_get_base(fn); \
+} while(0) 
 
 #endif
