@@ -35,6 +35,8 @@
 #define BEGIN_LOOP 0x1E
 #define END_LOOP   0x1F
 #define EXIT_LOOP_CONTINUE 0x20
-#define ANA_LAST_OPCODE 0x21
+#define DEFINE_FUNCTION   0x21
+#define DEFINE_CLASS      0x22
+#define ANA_LAST_OPCODE 0x23
 
 #endif

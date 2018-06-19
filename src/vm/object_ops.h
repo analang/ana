@@ -1,4 +1,4 @@
-static inline ana_object *mul(ana_object *a, ana_object *b)
+static inline ana_object *mul(ana_vm *vm, ana_object *a, ana_object *b)
 {
   if(a->type->obj_binops != NULL && a->type->obj_binops->obj_mul != NULL) 
   {
@@ -12,7 +12,7 @@ static inline ana_object *mul(ana_object *a, ana_object *b)
   return NULL;
 }
 
-static inline ana_object *sub(ana_object *a, ana_object *b)
+static inline ana_object *sub(ana_vm *vm, ana_object *a, ana_object *b)
 {
   if(a->type->obj_binops != NULL && a->type->obj_binops->obj_sub != NULL) 
   {
@@ -25,7 +25,7 @@ static inline ana_object *sub(ana_object *a, ana_object *b)
   return NULL;
 }
 
-static inline ana_object *getindex(ana_object *container, 
+static inline ana_object *getindex(ana_vm *vm, ana_object *container, 
   ana_object *idx)
 {
   if(container->type->obj_seqops != NULL && container->type->obj_seqops->get != NULL)
@@ -46,7 +46,7 @@ static inline ana_object *getindex(ana_object *container,
   return NULL; 
 }
 
-static inline ana_object *setindex(ana_object *container, 
+static inline ana_object *setindex(ana_vm *vm, ana_object *container, 
   ana_object *idx, ana_object *val)
 {
   if(container->type->obj_seqops != NULL && container->type->obj_seqops->set != NULL)
@@ -67,7 +67,7 @@ static inline ana_object *setindex(ana_object *container,
   return NULL; 
 }
 
-static inline ana_object *do_div(ana_object *a, ana_object *b)
+static inline ana_object *do_div(ana_vm *vm, ana_object *a, ana_object *b)
 {
   ana_object *retval = NULL;
 

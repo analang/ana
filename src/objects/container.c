@@ -10,8 +10,8 @@ COMO_OBJECT_API void ana_container_init(ana_object *obj,
   /* Initialize the parent */
   obj->type = &ana_container_type;
   obj->flags = 0;
+  obj->refcount = 0;
   obj->next = NULL;
-  obj->scope = NULL;
  
   /* Initialize self */ 
   ana_container *self = ana_get_container(obj);
@@ -58,11 +58,7 @@ COMO_OBJECT_API void *ana_container_push(ana_object *obj, void *value)
 static void container_dtor(ana_object *x)
 {
   ana_container *self = ana_get_container(x);
-    
-  if(x->scope)
-    ana_object_dtor(x->scope);
-
-
+  
   free(self->data);
   
   /* This object (container)

@@ -15,10 +15,10 @@ typedef struct _ana_logical_ops ana_logical_ops;
 typedef long ana_size_t;
 
 struct _ana_object {
-  ana_size_t flags;
+  ana_size_t flags;        
+  ana_size_t refcount;       
   struct _ana_type   *type;
   struct _ana_object *next;
-  struct _ana_object *scope;
 };
 
 #define ana_object_add(self, x) \
@@ -99,6 +99,9 @@ struct _ana_type {
 } while(0)
 
 #define ana_object_tostring(o) \
+  (((ana_object *)(o))->type->obj_str((ana_object *)(o)))
+
+#define ana_object_to_cstring(o) \
   (((ana_object *)(o))->type->obj_str((ana_object *)(o)))
 
 #define ana_object_dtor(o) \

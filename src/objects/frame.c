@@ -1,126 +1,103 @@
 #include <ana.h>
 #include <assert.h>
 
-COMO_OBJECT_API ana_frame *ana_frame_base_new(
+ana_frame *ana_frame_new(
+  ana_object *code, 
+  ana_object *jumptargets, 
+  ana_object *line_mapping, 
+  ana_object *global_variables, 
   ana_object *name, 
-  ana_object *filename,
-  ana_object *callingframe,
-  ana_object *code,
-  ana_object *constants,
-  ana_object *jmptargets,
-  ana_object *linemapping,
-  ana_size_t bpsize
-  )
+  ana_frame *caller, 
+  int line, 
+  ana_object *filename)
 {
   ana_frame *obj = malloc(sizeof(*obj));
-  ana_size_t i;
 
   obj->base.type = &ana_frame_type;
   obj->base.next = NULL;
-  obj->base.scope = NULL;
   obj->base.flags = 0;
+  obj->base.refcount = 0;
 
-  obj->loopstack  = NULL;
-  obj->loopp = 0;
-  obj->loopsize = 0;
-  obj->looproot = NULL;
+  obj->code             = code;
+  obj->pc               = 0;
+  obj->stack            = malloc(sizeof(ana_object *) * COMO_FRAME_STACK_SIZE); 
+  obj->sz               = COMO_FRAME_STACK_SIZE;
+  obj->sp               = 0;
+  obj->locals           = ana_map_new(4);
+  obj->globals          = global_variables;
+  obj->self             = NULL;
+
+  obj->loop                     = malloc(sizeof(*obj->loop));  
+  obj->loop->stack              = malloc(sizeof(ana_basic_block *) * COMO_BLOCK_STACK_MAX);
+  obj->loop->root               = NULL;
+  obj->loop->stack_size         = 0;
+  obj->loop->stack_capacity     = COMO_BLOCK_STACK_MAX;
+  obj->loop->stack_position     = 0;
 
 
-  obj->frameflags = COMO_FRAME_EXEC;
-  obj->name       = ana_stringfromstring(ana_cstring(name));
-  obj->params     = NULL;
-  obj->code       = code;
-  obj->constants  = constants;
-  obj->stack      = malloc(sizeof(ana_object *) * COMO_FRAME_STACK_SIZE); 
-  assert(obj->stack);
-  obj->root       = NULL;
-  obj->pc         = 0;
-  obj->sz         = COMO_FRAME_STACK_SIZE;
-  obj->sp         = 0;
-  obj->nobjs      = 0;
-  obj->nobjslt    = 0;
-  
-  obj->mxobjs     = COMO_FRAME_MAX_OBJECTS;
-  obj->parent     = callingframe;
-  obj->ready      = 0;
+  obj->exception                 = malloc(sizeof(*obj->exception));
+  obj->exception->stack          = malloc(sizeof(ana_basic_block *) * COMO_BLOCK_STACK_MAX);
+  obj->exception->root           = NULL;
+  obj->exception->stack_size     = 0;
+  obj->exception->stack_capacity = COMO_FRAME_STACK_SIZE;
+  obj->exception->stack_position = 0;
 
-  obj->globals    = NULL;
-  obj->self        = NULL;
-  obj->linemapping = linemapping;
-  obj->filename    = filename;
-  obj->finalized   = 0;
-  obj->jmptargets  = jmptargets;
-  obj->bp          = 0;
-  obj->bpsize      = bpsize;
-  obj->retval      = NULL;
-  obj->lineno      = 0;
-  obj->blockstack  = NULL;
-  obj->blockroot   = NULL;
+  obj->jump_targets           = jumptargets;
+  obj->name                   = name;
 
-  for(i = 0; i < obj->sz; i++)
-    obj->stack[i] = NULL;
+  obj->activation_line_number = line;
+  obj->line_mapping           = line_mapping;
+  obj->filename               = filename;
+  obj->caller                 = caller;
+  obj->retval                 = NULL;
 
   return obj;
 }
 
-
-COMO_OBJECT_API ana_object *ana_frame_new(char *name, char *filename,
-  ana_object *callingframe)
+/* Only free what was allocated in ana_frame_new */
+static void frame_dtor(ana_object *obj)
 {
-  ana_frame *obj = malloc(sizeof(*obj));
-  ana_size_t i;
+  ana_frame *self = ana_get_frame(obj);
+  ana_basic_block *loop_root = self->loop->root;
+  ana_basic_block *exception_root = self->exception->root;
+  ana_basic_block *next;
 
-  obj->base.type = &ana_frame_type;
-  obj->base.next = NULL;
-  obj->base.scope = NULL;
-  obj->base.flags = 0;
+  while(loop_root)
+  {
+    next = loop_root->next;
 
-  obj->loopstack  = NULL;
-  obj->loopp = 0;
-  obj->loopsize = 0;
-  obj->looproot = NULL;
+    free(loop_root);
+    
+    loop_root = next;
+  }
 
-  obj->frameflags = COMO_FRAME_DEFN;
-  obj->name       = ana_stringfromstring(name);
-  obj->params     = NULL;
-  obj->code       = ana_code_new(COMO_CODE_SIZE);
-  obj->constants  = ana_array_new(COMO_FRAME_CONSTANTS_SIZE);
-  obj->locals     = NULL,
-  obj->stack      = malloc(sizeof(ana_object *) * COMO_FRAME_STACK_SIZE); 
-  obj->root       = NULL;
-  obj->pc         = 0;
-  obj->sz         = COMO_FRAME_STACK_SIZE;
-  obj->sp         = 0;
-  obj->nobjs      = 0;
-  obj->nobjslt    = 0;
-  
-  obj->mxobjs     = COMO_FRAME_MAX_OBJECTS;
-  obj->parent     = callingframe;
-  obj->ready      = 0;
+  while(exception_root)
+  {
+    next = exception_root->next;
+    
+    free(exception_root);
 
-  obj->globals    = NULL;
-  obj->self        = NULL;
-  obj->linemapping = ana_map_new(4);
-  obj->filename    = ana_stringfromstring(filename);
-  obj->finalized   = 0;
-  obj->jmptargets  = ana_array_new(4);
-  obj->bp          = 0;
-  obj->bpsize      = 0;
-  obj->retval      = NULL;
-  obj->lineno      = 0;
+    exception_root = next;
+  }
 
-  obj->blockstack = NULL;
-  obj->blockroot  = NULL;
+  free(self->loop->stack);
+  free(self->loop);
 
-  for(i = 0; i < obj->sz; i++)
-    obj->stack[i] = NULL;
+  free(self->exception->stack);
+  free(self->exception);
 
-  return (ana_object *)obj;
+  free(self->stack);
+
+  ana_object_dtor(self->locals);
+
+  free(self);
 }
+
 
 COMO_OBJECT_API ana_basic_block *ana_basic_block_new(int targetaddress)
 {
   ana_basic_block *block = malloc(sizeof(*block));
+  
   block->jmpto = targetaddress;
 
   return block;
@@ -139,161 +116,37 @@ COMO_OBJECT_API void ana_frame_growstack(ana_object *obj)
 
 static void frame_init(ana_object *obj)
 {
-  ana_frame *self = ana_get_frame(obj);
-
-//  fprintf(stdout, "frame_init: for frame `%s`\n", 
-//    ana_cstring(self->name));
-
-  self->locals = ana_map_new(COMO_FRAME_LOCALS_SIZE);
-  self->pc = 0;
-  self->ready = 1;
-  self->finalized = 0;
-  self->sp = 0;
-  self->blockstack = malloc(sizeof(ana_basic_block *) * COMO_BLOCK_STACK_MAX);
-  self->loopstack = malloc(sizeof(ana_basic_block *) * COMO_BLOCK_STACK_MAX);
-  self->loopp = 0;
-
-  ana_size_t i;
-  for(i = 0; i < COMO_BLOCK_STACK_MAX; i++)
-    self->blockstack[i] = NULL;
-
-  for(i = 0; i < COMO_BLOCK_STACK_MAX; i++)
-    self->loopstack[i] = NULL;
+  COMO_UNUSED(obj);
 }
 
 static void frame_deinit(ana_object *obj)
 {
   ana_frame *self = ana_get_frame(obj);
 
+  ana_map_foreach(self->locals, key, value) {
+    (void)key;
 
- // fprintf(stdout, "frame_deinit: for frame `%s`\n", 
- //    ana_cstring(self->name));
+    if(ana_type_is(value, ana_long_type))
+      value->refcount--;
 
-  self->pc = 0;
-  self->ready = 0;
-  self->parent = NULL;
-  self->finalized = 1;
-  self->retval = NULL;
-  self->bp = 0;
-  self->self = NULL;
-  self->lineno = 0;
-  self->bpsize = 0;
-  self->loopp = 0;
-  self->loopsize = 0;
-
-  ana_basic_block *blockroot = self->blockroot;
-
-  while(blockroot)
-  {
-    ana_basic_block *next = blockroot->next;
-    free(blockroot);
-    blockroot = next;
-  }
-
-  free(self->blockstack);
-
-  ana_basic_block *looproot = self->looproot;
-
-  while(looproot)
-  {
-    ana_basic_block *next = looproot->next;
-    free(looproot);
-    looproot = next;
-  }
-
-  free(self->loopstack);
-
-  self->looproot = NULL;
-  self->blockroot = NULL;
-
-  assert(self->locals != NULL);
-  ana_object_dtor(self->locals);
-}
-
-static void frame_dtor(ana_object *obj)
-{
-  ana_frame *self = ana_get_frame(obj);
-
-  if(self->ready)
-    frame_deinit(obj);
-  
-  if(self->frameflags & COMO_FRAME_EXEC)
-  {
-    if(obj->scope)
-      ana_object_dtor(obj->scope);
-
-    free(self->stack);
-    free(self);
-    return;
-  }
-
-#ifdef ANA_GC_DEBUG
-  fprintf(stdout, "frame_dtor: for frame `%s`\n", 
-    ana_cstring(self->name));
-#endif
-  
-  ana_object_dtor(self->name);
-  ana_object_dtor(self->code);
-  ana_object_dtor(self->filename);
-
-  ana_array_foreach_apply(self->jmptargets, ana_object_dtor);
-  ana_object_dtor(self->jmptargets);
-  ana_array_foreach_apply(self->constants, ana_object_dtor);
-  
-  ana_object_dtor(self->constants);
-
-  ana_map_foreach(self->linemapping, key, value) 
-  {
-    ana_object_dtor(key);
-    ana_object_dtor(value);
   } ana_map_foreach_end();
-
-  ana_object_dtor(self->linemapping);
-
-  if(self->params) 
-  {
-    ana_array_foreach_apply(self->params, ana_object_dtor);
-    ana_object_dtor(self->params);
-  }
-
-
-  if(obj->scope)
-    ana_object_dtor(obj->scope);
-
-  free(self->stack);
-  free(self);
 }
 
 static void frame_print(ana_object *obj)
 {
   ana_frame *self = ana_get_frame(obj);
 
-  fprintf(stdout, "<frame %s at %p>", 
-    ((ana_string*)self->name)->value, (void *)obj);
+  fprintf(stdout, "<frame '%s' at %p>", ana_cstring(self->name), 
+      (void *)obj);
 }
 
 static ana_object *frame_string(ana_object *obj)
 {
   ana_frame *self = ana_get_frame(obj);
-  char *buffer = NULL;
-  int size = 0;
-  size = snprintf(buffer, size, "<frame %s at %p>", 
-    ((ana_string*)self->name)->value, (void *)obj);
 
-  size++;
-
-  buffer = malloc(size);
-
-  snprintf(buffer, size, "<frame %s at %p>", ((ana_string*)self->name)->value, 
-            (void *)obj);
-
-  buffer[size - 1] = '\0';
-
-  ana_object *retval = ana_stringfromstring(buffer);
-  
-  free(buffer);
-
-  return retval; 
+  return ana_stringfromstring(
+      ana_build_str("<frame '%s' at %p>", ana_cstring(self->name), (void *)self)
+  );
 }
 
 static int frame_equals(ana_object *obj, ana_object *b)

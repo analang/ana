@@ -3,9 +3,6 @@
 
 #include "vm.h"
 
-ana_object *ana_compileast(char *filename, ComoVM *vm, node *ast);
-
-ana_object *ana_compilemodule(char *modulename, char *filename, 
-  ComoVM *vm, node *ast);
+ana_function *ana_compileast(char *filename, ana_vm *vm, node *ast);
 
 #endif

@@ -299,7 +299,7 @@ static int run_file(ana_options *opts)
   else 
   {
     fclose(fp);
-    ComoVM *vm = ana_vm_new();
+    ana_vm *vm = ana_vm_new();
 
     if(opts->livetracing)
       vm->flags |= COMO_VM_LIVE_TRACING;
@@ -315,15 +315,15 @@ static int run_file(ana_options *opts)
     }
     else 
     {
-      ana_object *code = ana_compileast((char *)filename, vm, state.ast);
+      ana_function *code = ana_compileast((char *)filename, vm, state.ast);
 
       if(!code) 
         fprintf(stderr, PROGRAM_NAME ": compile error\n");
       else
         if(opts->function)
-          ana_eval(vm, code, opts->function);
+          ana_eval(vm, code);
         else
-          ana_eval(vm, code, NULL); 
+          ana_eval(vm, code); 
 
       ana_vm_finalize(vm);
     }

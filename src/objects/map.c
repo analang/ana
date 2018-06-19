@@ -110,8 +110,8 @@ COMO_OBJECT_API ana_object *ana_map_new(ana_size_t size)
   ana_size_t i;
   map->base.type = &ana_map_type;
   map->base.next = NULL;
-  map->base.scope = NULL;
   map->base.flags = 0;
+  map->base.refcount = 0;
 
   map->capacity = size;
   map->size = 0;
@@ -280,10 +280,6 @@ static void map_dtor(ana_object *ob)
       }
     }
   }
-
-  if(ob->scope)
-    ana_object_dtor(ob->scope);
-
 
   free(map->buckets);
   free(map);

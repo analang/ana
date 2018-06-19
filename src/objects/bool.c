@@ -9,16 +9,16 @@ void ana_bool_type_init()
 
   xbool_true->base.type = &ana_bool_type;
   xbool_true->base.next = NULL;
-  xbool_true->base.scope = NULL;
   xbool_true->base.flags = 0;
+  xbool_true->base.refcount = 0;
   xbool_true->value = 1;
 
   ana_bool *xbool_false = malloc(sizeof(ana_bool));
   
   xbool_false->base.type = &ana_bool_type;
   xbool_false->base.next = NULL;
-  xbool_false->base.scope = NULL;
   xbool_false->base.flags = 0;
+  xbool_false->base.refcount = 0;
   xbool_false->value = 0;
 
   ana_bool_true = (ana_object *)xbool_true;
@@ -27,14 +27,7 @@ void ana_bool_type_init()
 
 void ana_bool_type_finalize()
 { 
-  if(ana_bool_true->scope)
-    ana_object_dtor(ana_bool_true->scope);
-
   free(ana_bool_true);
-  
-  if(ana_bool_false->scope)
-    ana_object_dtor(ana_bool_false->scope);
-  
   free(ana_bool_false);
 }
 

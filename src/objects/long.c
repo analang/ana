@@ -14,8 +14,8 @@ COMO_OBJECT_API inline ana_object *ana_longfromlong(long lval)
 
   obj->base.type = &ana_long_type;
   obj->base.next = NULL;
-  obj->base.scope = NULL;
   obj->base.flags = 0;
+  obj->base.refcount = 0;
   obj->value = lval;
 
   return (ana_object *)obj;
@@ -31,9 +31,6 @@ static void long_print(ana_object *ob)
 static inline void long_dtor(ana_object *ob)
 {
   ana_long *lobj = (ana_long *)ob;
-
-  if(ob->scope)
-    ana_object_dtor(ob->scope);
 
   free(lobj);
 }

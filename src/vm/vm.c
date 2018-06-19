@@ -12,16 +12,15 @@
 #include "utils.h"
 #include "compiler.h"
 #include "anaio.h"
+#include "builtin.h"
 
 #include "vmmacros.h"
 
-static void trace_frame(ComoVM *vm, ana_frame *frame);
+static void trace_frame(ana_vm *vm, ana_frame *frame);
 static void ana_print_backtrace(ana_frame *frame);
-static void gc(ComoVM *vm);
+static void gc(ana_vm *vm);
 
-static ComoVM *vm;
 static ana_frame *BASE_FRAME;
-static ana_frame *CURRENT_FRAME = NULL;
 
 static char *make_except(const char *fmt, ...)
 {
@@ -43,7 +42,7 @@ char *ex_type = NULL;
     set_except("RuntimeError", "max call stack size reached, max frame stack size is %d", \
       COMO_VM_STACK_MAX); \
   } \
-  (vm->stack[vm->stackpointer++] = frame); \
+  vm->stack[vm->stackpointer++] = frame; \
 } while(0)
 
 #define COMO_VM_POP_FRAME() \
@@ -53,9 +52,9 @@ char *ex_type = NULL;
 
 #define ANA_KEY_NOT_FOUND ((void*)-1)
 
-ComoVM *ana_vm_new()
+ana_vm *ana_vm_new()
 {  
-  ComoVM *vm = malloc(sizeof(ComoVM));
+  ana_vm *vm = malloc(sizeof(ana_vm));
   ana_size_t i;
 
   for(i = 0; i < COMO_VM_STACK_MAX; i++)
@@ -69,33 +68,40 @@ ComoVM *ana_vm_new()
   vm->do_gc = gc;
   vm->mxobjs = 24;
   vm->root = NULL;
-  vm->symbols = ana_array_new(8);
-  vm->function_root = NULL;
+  vm->symbols   = ana_array_new(8);
+  vm->constants = ana_array_new(16);
+  vm->base_frame = NULL;
+
+  vm->frameroot = NULL;
+
+  ana_bool_type_init();
 
   return vm;
 }
 
-void ana_vm_finalize(ComoVM *vm)
+void ana_vm_finalize(ana_vm *vm)
 {
   ana_array_foreach_apply(vm->symbols, ana_object_dtor);
   ana_object_dtor(vm->symbols);
 
-  ana_object *fn = vm->function_root;
+  ana_array_foreach_apply(vm->constants, ana_object_dtor);
+  ana_object_dtor(vm->constants);
 
-  while(fn)
-  {
-    ana_object *next = fn->next;
-    
-    ana_object_dtor(fn);
-
-    fn = next;
-  } 
+  ana_bool_type_finalize();
 
   free(vm);
 }
 
-#include "object_ops.h"
+ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol)
+{
+  ana_object *thesymbol = ana_stringfromstring(symbol);
 
+  ana_array_push(vm->symbols, thesymbol);
+
+  return thesymbol;
+}
+
+#include "object_ops.h"
 
 static __attribute__((unused)) void inspect_stack(ana_frame *frame)
 {
@@ -107,12 +113,12 @@ static __attribute__((unused)) void inspect_stack(ana_frame *frame)
 
   for(i = 0; i < frame->sp; i++)
   {
-    printf("[%ld] => %s\n", i, 
-      ana_cstring(ana_object_tostring(frame->stack[i])));
+    printf("    [%ld] => %p(%s)\n", i, 
+      (void *)frame->stack[i], ana_cstring(ana_object_tostring(frame->stack[i])));
   }
 }
 
-static inline void trace_frame(ComoVM *vm, ana_frame *frame)
+static inline void trace_frame(ana_vm *vm, ana_frame *frame)
 {
   fprintf(stdout, "Ana Virtual Machine Disassembler\n");
   fprintf(stdout, "  Frame: %s\n", ana_cstring(frame->name));
@@ -121,9 +127,9 @@ static inline void trace_frame(ComoVM *vm, ana_frame *frame)
 
   ana_size_t i;
 
-  for(i = 0; i < ana_array_size(frame->constants); i++)
+  for(i = 0; i < ana_array_size(vm->constants); i++)
   {
-    ana_object *value = ana_array_get(frame->constants, i);
+    ana_object *value = ana_array_get(vm->constants, i);
     assert(value); 
     ana_string *_sval = (ana_string *)ana_object_tostring(value);
     char *sval = _sval->value;
@@ -141,7 +147,7 @@ static inline void trace_frame(ComoVM *vm, ana_frame *frame)
 
   fprintf(stdout, "  Jump Targets: \n");
   
-  ana_array_foreach(frame->jmptargets, i, value) {
+  ana_array_foreach(frame->jump_targets, i, value) {
     ana_string *_sval = (ana_string *)ana_object_tostring(value);
     char *sval = _sval->value;
     fprintf(stdout, "   %-15d%-13.25s%-11s\n", (int)i, sval, 
@@ -160,153 +166,8 @@ static inline void trace_frame(ComoVM *vm, ana_frame *frame)
   fputc('\n', stdout);
 }
 
-static ana_object *transform_module_name(char *name)
-{
-  ana_object *str = ana_stringfromstring(name);
-  name = ana_cstring(str);
-  char *begin = name;
 
-  while(*name)
-  {
-    char *c = &(*name++);
-
-    if(*c == '.')
-      *c = '/';
-  }
-
-  ana_cstring(str) = begin;
-
-  return str;
-}
-
-static ana_object *do_import(ana_frame *frame, ana_object *modulename,
-  ana_object *alias)
-{
-  #ifdef ANA_MODULE_DEBUG
-  printf("do_import: request to load %s\n", ana_cstring(modulename));
-  #endif
-
-  ana_parser_state state;
-  FILE *fp = NULL;
-  char *modulepath;
-  ana_object *code = NULL;
-  int retval;
-  ana_object *modulename_fs = transform_module_name(ana_cstring(modulename));
-  modulepath = realpath(ana_cstring(modulename_fs), NULL);
-
-  /* Only needed for path resolution */
-  ana_object_dtor(modulename_fs);
-
-  if(!modulepath)
-  {
-    set_except("ImportError","module %s was not found", ana_cstring(modulename));
-    return NULL;
-  }
-
-  fp = ana_open_file_for_parsing(modulepath);
-
-  if(!fp)
-  {
-    set_except("ImportError", "failed to load module %s", ana_cstring(
-      modulename));
-
-    goto done;
-  }
-
-  state.arena = ana_arena_new();
-  
-  retval = ana_astfromfile(
-    fp, modulepath, 0, NULL, &state);
-
-  fclose(fp);
-  
-  if(retval != 0)
-  {
-    set_except("ImportError", "failed to parse module %s", 
-      ana_cstring(modulename));
-    ana_arena_free(state.arena);
-    goto done;
-  }
-
-  code = ana_compilemodule(ana_cstring(modulename), 
-    modulepath, vm, state.ast);
-
-  GC_TRACK(vm, code);
-
-  ana_arena_free(state.arena);
-
-  if(!alias)
-    ana_map_put(frame->locals, modulename, code);
-  else
-    ana_map_put(frame->locals, alias, code);
-done:
-  free(modulepath);
-
-  return code;
-}
-
-static ana_object *do_literal_import(ana_frame *frame, ana_object *modulename)
-{
-  ana_parser_state state;
-  FILE *fp = NULL;
-  char *modulepath;
-  ana_object *code = NULL;
-  int retval;
-
-  ana_object *modulename_fs = transform_module_name(ana_cstring(modulename));
-
-  modulepath = realpath(ana_cstring(modulename_fs), NULL);
-  
-  ana_object_dtor(modulename_fs);
-
-  if(!modulepath)
-  {
-    set_except("ImportError","module %s was not found", ana_cstring(modulename));
-    return NULL;
-  }
-
-  fp = ana_open_file_for_parsing(modulepath);
-
-  if(!fp)
-  {
-    set_except("ImportError", "failed to load module %s", ana_cstring(
-      modulename));
-    goto done;
-  }
-
-  state.arena = ana_arena_new();
-  
-  retval = ana_astfromfile(
-    fp, modulepath, 0, NULL, &state);
-
-  fclose(fp);
-  
-  if(retval != 0)
-  {
-    set_except("ImportError", "failed to parse module %s", 
-      ana_cstring(modulename));
-    ana_arena_free(state.arena);
-    goto done;
-  }
-
-  code = ana_compilemodule(ana_cstring(modulename), modulepath, vm, state.ast);
-
-  GC_TRACK(vm, code);
-
-  ana_arena_free(state.arena);
-
-  ana_size_t module_symbol_index = make_symbol(vm, ana_cstring(modulename));
-  ana_object *module_symbol = 
-    ana_get_array(vm->symbols)->items[module_symbol_index];
-
-  ana_map_put(frame->locals, module_symbol, code);
-done:
-  free(modulepath); 
-
-  return code;
-}
-
-static ana_object *ana_frame_eval(ComoVM *vm)
+static ana_object *ana_frame_eval(ana_vm *vm)
 {
   ana_frame *frame;
   ana_uint32_t **code;
@@ -317,34 +178,28 @@ static ana_object *ana_frame_eval(ComoVM *vm)
   ana_object *arg = NULL, *retval = NULL, *left, *right, *result;
 
   while(!COMO_VM_HAS_FRAMES())
-  {
-    uint64_t ticks = 0;
-    
+  {    
     enter:
 
     frame = COMO_VM_POP_FRAME();
-    CURRENT_FRAME = frame;
+    vm->base_frame = frame;
+
     code = (ana_uint32_t **)(((ana_container *)frame->code)->data);
-    jmptargets = (ana_long **)(((ana_array *)frame->jmptargets)->items);
-    constants = (ana_object **)(((ana_array *)frame->constants)->items);
+    jmptargets = (ana_long **)(((ana_array *)frame->jump_targets)->items);
+    constants = (ana_object **)(((ana_array *)vm->constants)->items);
     locals = frame->locals;
 
 
     if(vm->flags & COMO_VM_TRACING_ANY)
       trace_frame(vm, frame);
 
-    if(!frame->ready)
-      ana_object_init(frame);
-
     ana_uint32_t opline;
     ana_uint32_t opcode;
     short oparg;
+    int current_line;
 
     for(;;) {
       top:
-
-      if(vm->flags & COMO_VM_TRACING_ANY)
-        fprintf(stderr,"vm[%lu] pc at # %ld\n", ticks++, frame->pc);
 
       fetch();
 
@@ -357,7 +212,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
           ana_object *index = pop();
-          ana_object *res = getindex(container, index);
+          ana_object *res = getindex(vm, container, index);
 
           if(res == ANA_KEY_NOT_FOUND)
             push(ana_bool_false);
@@ -367,113 +222,6 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           vm_continue();
         }
 
-        vm_target(IIMPORTAS) {
-          result = pop();
-          // result stores the filename
-          TRACE(IIMPORTAS, oparg, 0, 1);
-          // the alias
-          ana_object *alias = ana_array_get(vm->symbols, oparg);
-          ana_frame *importedframe = (ana_frame *)do_import(frame, result, 
-            alias);
-          
-          if(importedframe != NULL) {
-            ana_frame *call = importedframe;
-
-            ana_frame *execframe = 
-              ana_frame_base_new(
-                call->name,
-                call->filename,
-                (ana_object *)frame,
-                call->code,
-                call->constants,
-                call->jmptargets,
-                call->linemapping,
-                call->bpsize
-              );
-
-            //GC_TRACK(vm, (ana_object *)execframe);
-
-            if(!execframe->ready) {
-              ((ana_object *)execframe)->type->obj_init((ana_object *)execframe);
-            }
-
-            execframe->parent = (ana_object *)frame;
-            execframe->params  = NULL;
-            execframe->globals = BASE_FRAME->locals;
-            execframe->self = call->self;
-            execframe->calling_module = frame->filename;
-
-            ana_object *pc = ana_longfromlong((long)frame->pc);
-            ana_object *theline = ana_map_get(frame->linemapping, pc);
-            int lineno = 0;
-            if(theline)
-              lineno = (int)ana_get_long(theline)->value;
-
-            ana_object_dtor(pc);
-
-            execframe->lineno = lineno;
-            // Push frame to execute
-            COMO_VM_PUSH_FRAME(execframe);
-            // save calling frame
-            COMO_VM_PUSH_FRAME(frame);
-            goto enter;
-          }
-          // exception may have happened, do_literal_import set's the ex 
-          // variable         
-          vm_continue();
-        }
-        vm_target(IIMPORT) {
-          TRACE(IIMPORT, oparg, 0, 1);
-          ana_object *thename = ana_array_get(vm->symbols, oparg);
-          ana_frame *importedframe = (ana_frame *)do_literal_import(frame, thename);
-          
-          if(importedframe != NULL) 
-          {
-            ana_frame *call = importedframe;
-
-            ana_frame *execframe = 
-              ana_frame_base_new(
-                call->name,
-                call->filename,
-                (ana_object *)frame,
-                call->code,
-                call->constants,
-                call->jmptargets,
-                call->linemapping,
-                call->bpsize
-              );
-
-            //GC_TRACK(vm, (ana_object *)execframe);
-
-            if(!execframe->ready) {
-              ((ana_object *)execframe)->type->obj_init((ana_object *)execframe);
-            }
-
-            execframe->parent = (ana_object *)frame;
-            execframe->params  = NULL;
-            execframe->globals = BASE_FRAME->locals;
-            execframe->self = call->self;
-            execframe->calling_module = frame->filename;
-
-            ana_object *pc = ana_longfromlong((long)frame->pc);
-            ana_object *theline = ana_map_get(frame->linemapping, pc);
-            int lineno = 0;
-            if(theline)
-              lineno = (int)ana_get_long(theline)->value;
-
-            ana_object_dtor(pc);
-
-            execframe->lineno = lineno;
-            // Push frame to execute
-            COMO_VM_PUSH_FRAME(execframe);
-            // save calling frame
-            COMO_VM_PUSH_FRAME(frame);
-            goto enter;
-          }
-          // exception may have happened, do_literal_import set's the ex 
-          // variable
-          vm_continue();
-        }
         vm_target(IUNARYMINUS) {
           TRACE(IUNARYMINUS, 0, 0, 1);
           arg = pop();
@@ -541,14 +289,14 @@ static ana_object *ana_frame_eval(ComoVM *vm)
         }
         vm_target(BEGIN_LOOP)
         {
-          printf("BEGIN_LOOP, SP=%ld\n", frame->sp);
+          /* TODO need to check if need resize */
           ana_basic_block *loop = malloc(sizeof(*loop));
           loop->stack_obj_count = 0;
-          loop->next = frame->looproot;
-          frame->looproot = loop;
+          loop->next = frame->loop->root;
+          frame->loop->root = loop;
 
-          frame->loopstack[frame->loopp++] = loop;
-          frame->loopsize++;
+          frame->loop->stack[frame->loop->stack_position++] = loop;
+          frame->loop->stack_size++;
 
           vm_continue();
         }
@@ -558,51 +306,49 @@ static ana_object *ana_frame_eval(ComoVM *vm)
              if they weren't already
             */
 
-          if(frame->loopstack[frame->loopp - 1]->stack_obj_count < 0)
-            frame->loopstack[frame->loopp - 1]->stack_obj_count = 0;
+          if(frame->loop->stack[frame->loop->stack_position - 1]->stack_obj_count < 0)
+            frame->loop->stack[frame->loop->stack_position - 1]->stack_obj_count = 0;
 
-          ana_size_t sz = frame->loopstack[frame->loopp - 1]->stack_obj_count;
-
-          if(sz == 0)
-            goto skip_logic;
+          ana_size_t sz = frame->loop->stack[frame->loop->stack_position - 1]
+              ->stack_obj_count;
 
           ana_size_t i;
 
           for(i = 0; i < sz; i++)
           {
-            --frame->loopstack[frame->loopp - 1]->stack_obj_count;
+            --frame->loop->stack[frame->loop->stack_position - 1]->stack_obj_count;
 
             (void)xpop();
           }
 
-          skip_logic:
           vm_continue();
         }
-
         vm_target(END_LOOP)
         {
           /* now we must pop this loop block */
-          --frame->loopp;
-          --frame->loopsize;
+          --frame->loop->stack_position;
+          --frame->loop->stack_size;
           /* frame->sp must be the same as it was when starting the loop */
-          printf("end of loop SP=%ld\n", frame->sp);
+          //printf("end of loop SP=%ld\n", frame->sp);
           vm_continue();
         }
         vm_target(TRY) {
           int arg = get_arg();
           /* Arg is the index into the jmptargets table */
           TRACE(TRY, arg, 0, 1);
-          ana_object *jmptargetobj = ana_array_get(frame->jmptargets,
+          ana_object *jmptargetobj = ana_array_get(frame->jump_targets,
             (ana_size_t)arg);
 
           ana_basic_block *tryblock = 
             ana_basic_block_new((int)ana_get_long(jmptargetobj)->value);
 
-          tryblock->next = frame->blockroot;
-          frame->blockroot = tryblock;
+          tryblock->next = frame->exception->root;
+          frame->exception->root = tryblock;
 
-          frame->blockstack[frame->bp++] = tryblock;
-          frame->bpsize++;
+          frame->exception->stack[frame->exception->stack_position++] 
+            = tryblock;
+
+          frame->exception->stack_size++;
 
           vm_continue();
         }
@@ -624,7 +370,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           TRACE(LOAD_SUBSCRIPT, 0, 0, 0);
           ana_object *index = pop();
           ana_object *container = pop();
-          ana_object *res = getindex(container, index);
+          ana_object *res = getindex(vm, container, index);
 
           if(res == ANA_KEY_NOT_FOUND)
           {
@@ -648,7 +394,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           ana_object *value = pop();
           ana_object *index = pop();
           ana_object *container = pop();
-          ana_object *res = setindex(container, index, value);   
+          ana_object *res = setindex(vm, container, index, value);   
           
           if(res == ANA_KEY_NOT_FOUND)
           {
@@ -796,11 +542,12 @@ static ana_object *ana_frame_eval(ComoVM *vm)
             ana_frame *caller = vm->stack[vm->stackpointer - 1];
             pushto(caller, arg);
           }
+
           goto exit; 
         }
         vm_target(LOAD_CONST) {
           TRACE(LOAD_CONST, oparg, 0, 1);
-          arg = get_const(oparg);
+          arg = ana_array_get(vm->constants, oparg);
           push(arg);
           vm_continue();
         }
@@ -808,15 +555,38 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           TRACE(STORE_NAME, oparg, 0, 1);
           ana_object *thename = ana_array_get(vm->symbols, oparg);
           result = pop();
+
+          {
+            ana_object *oldvalue;
+
+            oldvalue = ana_map_get(locals, thename);
+
+            if(oldvalue)
+            {
+              if(ana_get_base(oldvalue)->refcount > 0)
+              {
+                
+                #ifdef ANA_GC_DEBUG
+                printf("decreasing refcount for %p, old %ld\n",
+                  (void *)oldvalue, ana_get_base(oldvalue)->refcount);
+                #endif
+                ana_get_base(oldvalue)->refcount--;
+              }
+            }       
+          }
+
           ana_map_put(locals, thename, result);
+          
+          result->refcount++;
+
           push(result);
           vm_continue();
         }
-        vm_target(LOAD_NAME) {
+        vm_target(LOAD_NAME) 
+        {
           TRACE(LOAD_NAME, oparg, 0, 1);
           ana_object *thename  = ana_array_get(vm->symbols, oparg);
-
-          ana_object *result = ana_map_get(frame->locals, thename);
+          ana_object *result   = ana_map_get(frame->locals, thename);
 
           if(!result && frame->self != NULL)
           {
@@ -847,7 +617,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           right = pop();
           left  = pop();
 
-          result = do_div(left, right);
+          result = do_div(vm, left, right);
 
           if(result) {
             push(result);
@@ -975,7 +745,6 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           
           vm_continue();
         }
-
         vm_target(ILTE) {
           TRACE(ILTE, get_arg(), 0, 1);
           right = pop();
@@ -1014,7 +783,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           right = pop();
           left  = pop();
 
-          result = mul(left, right);
+          result = mul(vm, left, right);
 
           if(result) {
             push(result);
@@ -1029,7 +798,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
           right = pop();
           left  = pop();
 
-          result = sub(left, right);
+          result = sub(vm, left, right);
 
           if(result) {
             push(result);
@@ -1039,9 +808,34 @@ static ana_object *ana_frame_eval(ComoVM *vm)
 
           vm_continue();
         }
-        vm_target(CALL) {
+        vm_target(DEFINE_CLASS) {
+          TRACE(DEFINE_CLASS, oparg, 0, 1);
+          ana_object *name = pop();
+          ana_object *fncount = pop();
+          ana_class *theclass = (ana_class *)ana_class_new(NULL, name);
+          long i = ana_get_long(fncount)->value;
+
+          while(--i)
+          {
+            ana_object *function_name = pop();
+            ana_object *function_code = pop();
+
+            ana_map_put(theclass->members, function_name, function_code);
+          }
+
+          vm_continue();
+        }
+        vm_target(DEFINE_FUNCTION) {
           int arg = get_arg();
-          TRACE(CALL, arg, 0, 1);
+          TRACE(DEFINE_FUNCTION, arg, 0, 1);        
+          ana_object *name = pop();
+          ana_object *code = pop();
+          ana_map_put(frame->locals, name, code);
+          vm_continue();
+        }
+        vm_target(CALL) {
+          TRACE(CALL, oparg, 0, 1);
+
           ana_object *res = NULL;
           ana_object *callable = pop();
 
@@ -1052,49 +846,32 @@ static ana_object *ana_frame_eval(ComoVM *vm)
 
           if(ana_type_is(callable, ana_function_type)) 
           {
-            int totalargs = arg;
+            int totalargs = oparg;
             ana_function *fn = ana_get_function(callable);
 
             if(fn->flags & COMO_FUNCTION_LANG) 
             {         
-              ana_frame *call = fn->impl.frame;
+              struct _ana_function_def *call = fn->func;
 
-              ana_frame *execframe = 
-                ana_frame_base_new(
-                  call->name,
-                  call->filename,
-                  (ana_object *)frame,
-                  call->code,
-                  call->constants,
-                  call->jmptargets,
-                  call->linemapping,
-                  call->bpsize
-                );
-              
-              /* TODO, need somehow to track frames that are created */
-              /* perhaps on frame POP, we can deallocate it? Since for every
-                  call we create a new frame.
-              */
-              //GC_TRACK(vm, (ana_object *)execframe);
+              ana_frame *execframe = ana_frame_new(
+                call->code,
+                call->jump_targets, 
+                call->line_mapping, 
+                frame->locals, /* TODO, check if frame is __main__ */ 
+                fn->name, 
+                frame,
+                current_line,
+                fn->filename
+              );
 
-              if(!execframe->ready) {
-                ((ana_object *)execframe)->type->obj_init((ana_object *)execframe);
-              }
-
-              execframe->parent = (ana_object *)frame;
-              execframe->params  = call->params;
-              execframe->globals = BASE_FRAME->locals;
-              execframe->self = call->self;
-              execframe->calling_module = frame->filename;
-
-              if(execframe->params != NULL)
+              if(call->parameters != NULL)
               {
-                if(ana_get_array(execframe->params)->size != totalargs)
+                if(ana_get_array(call->parameters)->size != totalargs)
                 {
                   set_except(
                     "TypeError", "%s expects %lu arguments, %d given",
                     ana_get_fn_name(execframe), 
-                    ana_get_array(execframe->params)->size,
+                    ana_get_array(call->parameters)->size,
                     totalargs);
                   
                   goto call_exit;
@@ -1104,9 +881,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
               {
                 set_except(
                   "TypeError", "%s expects 0 arguments, %d given",
-                  ana_get_fn_name(execframe), 
-                  0,
-                  totalargs);
+                  ana_get_fn_name(execframe), totalargs);
 
                 goto call_exit;
               }
@@ -1116,23 +891,13 @@ static ana_object *ana_frame_eval(ComoVM *vm)
                 ana_object *theargvalue = pop();
 
                 ana_object *paramname = ana_array_get(
-                  execframe->params, (ana_size_t)totalargs);
+                  call->parameters, (ana_size_t)totalargs);
 
                 ana_map_put(execframe->locals, paramname, theargvalue);
               }
               
               COMO_VM_PUSH_FRAME(frame);      
               COMO_VM_PUSH_FRAME(execframe);
-              
-              ana_object *pc = ana_longfromlong((long)frame->pc);
-              ana_object *theline = ana_map_get(frame->linemapping, pc);
-              int lineno = 0;
-              if(theline)
-                lineno = (int)ana_get_long(theline)->value;
-
-              ana_object_dtor(pc);
-
-              execframe->lineno = lineno;
 
               goto enter;
             }
@@ -1143,10 +908,11 @@ static ana_object *ana_frame_eval(ComoVM *vm)
               while(totalargs--)
               {
                 ana_object *thearg = pop();
+
                 ana_array_push(nativeargs, thearg);
               }       
 
-              ana_object *res = fn->impl.handler(nativeargs); 
+              ana_object *res = fn->handler(nativeargs); 
 
               if(res) 
               {
@@ -1156,110 +922,6 @@ static ana_object *ana_frame_eval(ComoVM *vm)
               ana_object_dtor(nativeargs);
             }
           }
-          /* Call the constructor, set up the instance */
-          else if(ana_type_is(callable, ana_class_type))
-          {            
-            int totalargs = arg;
-
-            ana_object_ctor(callable);
-
-            ana_class *theclass = (ana_class *)callable;
-            
-            ana_object *self = ana_stringfromstring("self");
-            GC_TRACK(vm, self);
-            ana_map_put(theclass->members, self, callable);
-            
-            ana_object *__name__ = ana_stringfromstring("__name__");
-            GC_TRACK(vm, __name__);
-            ana_map_put(theclass->members, __name__, theclass->name);
-
-            ana_object *constructor = ana_map_get(theclass->members, 
-              theclass->name);
-
-            if(constructor)
-            {
-              ana_frame *realconstructor = 
-                ((ana_function *)constructor)->impl.frame;
-              ana_frame *execframe;
-
-                {
-                  execframe = 
-                    ana_frame_base_new(
-                      realconstructor->name,
-                      realconstructor->filename,
-                      (ana_object *)frame,
-                      realconstructor->code,
-                      realconstructor->constants,
-                      realconstructor->jmptargets,
-                      realconstructor->linemapping,
-                      realconstructor->bpsize
-                    ); 
-
-                  execframe->self = realconstructor->self;
-                  execframe->params = realconstructor->params;
-                  
-                  if(!execframe->ready)
-                    ((ana_object *)execframe)
-                       ->type->obj_init((ana_object *)execframe);
-                  
-                  if(execframe->params != NULL)
-                  {
-                    if(ana_get_array(execframe->params)->size != totalargs)
-                    {
-                      set_except(
-                        "TypeError", "%s expects %lu arguments, %d given",
-                        ana_get_fn_name(execframe), 
-                        ana_get_array(execframe->params)->size,
-                        totalargs);
-
-                      goto call_exit;
-                    }
-                  } 
-
-                  while(totalargs--)
-                  {
-                    ana_object *theargvalue = pop();
-
-                    ana_object *paramname = ana_array_get(
-                      execframe->params, (ana_size_t)totalargs);
-
-                    ana_map_put(execframe->locals, paramname, theargvalue);
-                  }
-
-                  //GC_TRACK(vm, (ana_object *)execframe);
-                }
-
-              assert(execframe->self != NULL);
-              assert(execframe->self == callable);
-
-              execframe->parent  = (ana_object *)frame;
-              /* only if frame == main */
-              execframe->globals = frame->locals;
-
-              /* Save calling frame */
-              COMO_VM_PUSH_FRAME(frame);
-              /* Push frame to execute */
-              COMO_VM_PUSH_FRAME(execframe);
-
-              /* Get the line this frame was activated on */
-              ana_object *pc = ana_longfromlong((long)frame->pc);
-              ana_object *theline = ana_map_get(frame->linemapping, pc);
-              int lineno = 0;
-              if(theline)
-                lineno = (int)ana_get_long(theline)->value;
-
-              ana_object_dtor(pc);
-
-              execframe->lineno = lineno;
-
-              execframe->retval = callable;
-
-              goto enter;
-            }
-
-            res = callable;
-          }
-
           else
           {                  
             set_except("RuntimeError", "value of type '%s' is not callable",
@@ -1283,9 +945,9 @@ static ana_object *ana_frame_eval(ComoVM *vm)
         {
 
           ana_basic_block *block;
-          while(!(thisframe->bp == 0))
+          while(!(thisframe->exception->stack_position == 0))
           {
-            block = thisframe->blockstack[--thisframe->bp];
+            block = thisframe->exception->stack[--thisframe->exception->stack_position];
 
             thisframe->pc = (ana_size_t)block->jmpto;
             
@@ -1324,7 +986,7 @@ static ana_object *ana_frame_eval(ComoVM *vm)
         /* TODO 
             abstract the fetch, to automatically update the current line number
             */
-        ana_object *theline = ana_map_get(frame->linemapping, 
+        ana_object *theline = ana_map_get(frame->line_mapping, 
           pc);
 
         if(theline)
@@ -1347,12 +1009,25 @@ static ana_object *ana_frame_eval(ComoVM *vm)
       }
     }
     exit:
-      while(!empty()) {
+      
+      while(!empty()) 
+      {
         (void)pop();
       }
 
       ana_object_finalize(frame);
-      /* always destroys a copy */
+
+      ana_map_foreach(frame->locals, key, value) 
+      {
+        (void)key;
+
+        if(value->refcount > 0) 
+        {
+          value->refcount--;
+        }
+
+      } ana_map_foreach_end();
+      
       ana_object_dtor(frame);
   }
 
@@ -1373,95 +1048,75 @@ static void ana_print_backtrace(ana_frame *frame)
     fprintf(stdout, "\tat %s (%s:%ld)\n", 
       fnname,
       ana_cstring(fm->filename),
-      fm->lineno
+      fm->activation_line_number
     );
 
     next:
-      fm = (ana_frame *)fm->parent;
+      fm = fm->caller;
   }
 }
 
 static void mark_ex(ana_object *obj)
 {
-  ana_size_t i;
+  if(obj->flags)
+    return;
 
   obj->flags = 1;
 
-  if(ana_type_is(obj, ana_frame_type))
+  if(ana_type_is(obj, ana_array_type))
   {
-    ana_frame *frame = ana_get_frame(obj);
+    ana_array *array = ana_get_array(obj);
 
-    //printf("mark_ex: frame %s: frame->sp=%ld\n",
-    //  ana_cstring(frame->name), frame->sp);
+    ana_size_t i;
 
-    for(i = 0; i < frame->sp; i++)
+    for(i = 0; i < array->size; i++)
     {
-      mark_ex(frame->stack[i]);
+      mark_ex(array->items[i]);
     }
   }
-  // else if(ana_type_is(obj, ana_function_type))
-  // {
-  //   ana_function *fn = ana_get_function(obj);
+  else if(ana_type_is(obj, ana_map_type))
+  {
+    ana_map_foreach(obj, key, value) {
+      
+      (void)key;
 
-  //   if(fn->flags & COMO_FUNCTION_LANG) 
-  //   {
-  //     ana_frame *fnframe = ana_get_function_frame(fn);
+      mark_ex(value);
 
-  //     for(i = 0; i < fnframe->sp; i++)
-  //     {
-  //       mark_ex(fnframe->stack[i]);
-  //     }
-  //   }
-  // }
+    } ana_map_foreach_end();
+  }
 }
 
-static void mark(ComoVM *vm)
+static void mark(ana_vm *vm)
 {
   if(vm->flags & COMO_VM_GC_DISABLED)
     return;
 
   ana_size_t i, j;
 
-  if(vm->stackpointer == 0)
+  for(i = 0; i < vm->stackpointer; i++)
   {
-    if(CURRENT_FRAME) 
+    ana_frame *frame = vm->stack[i];
+
+    /* Mark this root as reachable */
+    ana_get_base(frame)->flags = 1;
+
+    for(j = 0; j < frame->sp; j++)
     {
-      mark_ex((ana_object *)CURRENT_FRAME);
+      ana_object *obj = frame->stack[j];
+
+      mark_ex(obj);
     }
-  }
-  else 
-  {
-    for(i = 0; i < vm->stackpointer; i++)
-    {
-      ana_frame *frame = vm->stack[i];
 
-      ana_get_base(frame)->flags = 1;
-
-      for(j = 0; j < frame->sp; j++)
-      {
-        ana_object *obj = frame->stack[j];
-
-        obj->flags = 1;
-
-        mark_ex(obj);
-      }
-    }
+    mark_ex(frame->locals);
   }
 }
 
-static void sweep(ComoVM *vm)
+static void sweep(ana_vm *vm)
 {
   if(vm->flags & COMO_VM_GC_DISABLED)
     return;
-
-  ana_object** root = &vm->root;
-
-  if(!(*root))
-    return;
-
-  assert(!ana_type_is(*root, ana_function_type));
-  assert(!ana_type_is(*root, ana_frame_type));
-  assert(!ana_type_is(*root, ana_bool_type));
+  
+  ana_object **root = &vm->root;
 
   while (*root) 
   {    
@@ -1469,34 +1124,46 @@ static void sweep(ComoVM *vm)
     {
       ana_object* unreached = *root; 
             
-      *root = unreached->next;
       
-      ana_object_dtor(unreached);
+      if(unreached->refcount == 0) 
+      {
+        *root = unreached->next;
 
-      vm->nobjs--;
+        ana_object_dtor(unreached);
+
+        vm->nobjs--;
+      }
+      else
+      {
+        #ifdef ANA_GC_DEBUG
+        ana_object *str = ana_object_tostring(unreached);
+        printf("not releasing %p(%s, %s), it's reference count is %ld\n", 
+            (void *)unreached, ana_type_name(unreached), ana_cstring(str), unreached->refcount);
+        ana_object_dtor(str);
+        #endif
+
+        root = &(*root)->next;
+      }
     } 
     else
     {
       (*root)->flags = 0;
-
       root = &(*root)->next;
     }
   }
 }
 
-static void gc(ComoVM *vm)
+static void gc(ana_vm *vm)
 {
   if(vm->flags & COMO_VM_GC_DISABLED)
     return;
-
-  //printf("gc: there are %ld objects in the root\n", vm->nobjs);
-
 
 #ifdef ANA_GC_DEBUG
   fprintf(stderr, "gc: before sweep, nobjs=%ld\n", vm->nobjs);
 #endif
 
   mark(vm);
+
   sweep(vm);
 
 
@@ -1505,44 +1172,32 @@ static void gc(ComoVM *vm)
 #endif
 
   vm->mxobjs = vm->mxobjs * 2;
-
-  //printf("new max objects is %ld\n", vm->mxobjs);
 }
 
-int ana_eval(ComoVM *_vm, ana_object *code, char *function)
+int ana_eval(ana_vm *vm, ana_function *functionobj)
 {
-  vm = _vm;
+  ana_function_defn *func = ANA_GET_FUNCTION_DEF(functionobj);
 
-  ana_frame *frame = (ana_frame *)code;
+  ana_frame *firstframe = ana_frame_new(
+    func->code,
+    func->jump_targets, 
+    func->line_mapping, 
+    NULL,
+    functionobj->name, 
+    NULL,
+    0,
+    functionobj->filename
+  );
 
-  BASE_FRAME = frame;
+  BASE_FRAME = firstframe;
 
-  if(function)
-  {
-    ana_object *fname = ana_stringfromstring(function);
-    ana_object *fn = ana_map_get(frame->locals, fname);
-    
-    if(!fn)
-    {
-      fprintf(stderr, "ana: function %s does not exist in module\n", function);
-      exit(1);
-    }
+  COMO_VM_PUSH_FRAME(firstframe);
 
-    frame = ana_get_function(fn)->impl.frame;
-
-    ana_object_dtor(fname);
-  }
-
-  COMO_VM_PUSH_FRAME(frame);
-
-  (void)ana_frame_eval(vm);
-
-  CURRENT_FRAME = NULL;
+  ana_frame_eval(vm);
 
   gc(vm);
 
-
-  ana_bool_type_finalize();
+  ana_object_dtor(functionobj);
 
   return 0;
 }

@@ -11,11 +11,11 @@
     fprintf(stdout, "%-5d: ", (int)frame->pc -1); \
     if(argused) \
     { \
-      fprintf(stdout, "%-15s%-10d\n", op, arg); \
+      fprintf(stdout, "%-25s%-10d\n", op, arg); \
     } \
     else \
     { \
-      fprintf(stdout, "%-15s\n", op); \
+      fprintf(stdout, "%-25s\n", op); \
     } \
   } while(0)
   
@@ -43,6 +43,16 @@
 
 #define fetch() do { \
   assert(frame->pc >= 0 && frame->pc < ana_container_size(frame->code)); \
+  \
+  ana_object *pc = ana_longfromlong((long)frame->pc); \
+  ana_object *theline = ana_map_get(frame->line_mapping, pc); \
+  \
+  if(theline) \
+    current_line = (int)ana_get_long(theline)->value; \
+  else \
+    current_line = 0; \
+  ana_object_dtor(pc); \
+  \
   opline = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
   opcode = (opline >> 24) & 0xff; \
   oparg = (opline >> 8) & 0xffff; \
@@ -53,19 +63,20 @@
 #define get_arg() (oparg)
 
 #define push_ex(frame, arg) do { \
+  assert(frame); \
   if(frame->sp >= frame->sz) \
   { \
     frame->sz = frame->sz * 2; \
     frame->stack = realloc(frame->stack, sizeof(ana_object *) * frame->sz); \
   } \
   frame->stack[frame->sp++] = arg; \
-  if(frame->loopsize != 0) { \
-    ana_size_t pos = frame->loopp == 0 ? 0 : (frame->loopp - 1);\
-    frame->loopstack[pos]->stack_obj_count++; \
+  if(frame->loop->stack_size != 0) { \
+    ana_size_t pos = frame->loop->stack_position == 0 ? 0 : (frame->loop->stack_position - 1);\
+    frame->loop->stack[pos]->stack_obj_count++; \
   } \
 } while(0)
 
-#define push(x) push_ex(frame, x)
+#define push(arg) push_ex(frame, arg)
 
 #define pushto(frame, arg) \
   push_ex(frame, arg)
@@ -74,8 +85,8 @@
  (frame->stack[--frame->sp])
 
 #define pop_ex() \
- ((frame->loopsize != 0 ? (--frame->loopstack[frame->loopp == 0 ? 0 : \
-    (frame->loopp - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
+ ((frame->loop->stack_size != 0 ? (--frame->loop->stack[frame->loop->stack_position == 0 ? 0 : \
+    (frame->loop->stack_position - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
 
 #define pop pop_ex
 

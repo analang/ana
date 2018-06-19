@@ -33,6 +33,5 @@
 #define UNLIKELY(x)     __builtin_expect(!!(x), 0)
 
 COMO_OBJECT_API char *ana_get_fn_name(ana_frame * frame);
-COMO_OBJECT_API char *ana_get_frame_name(ana_object *obj);
 
 #endif

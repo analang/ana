@@ -1,0 +1,16 @@
+function init(upper, part)
+{
+	i = 0;
+
+	while(i <= upper)
+	{
+		if(i % part == 0)
+		{
+			print(i);
+		}
+		
+		i = i + 1;
+	}
+}
+
+init(50, 5);

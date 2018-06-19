@@ -5,8 +5,6 @@
 #   error "Please do not include class.h directly"
 #endif
 
-#define COMO_BLOCK_STACK_MAX      16
-
 /* Internal use only */
 typedef struct _ana_basic_block {
   union {
@@ -16,67 +14,53 @@ typedef struct _ana_basic_block {
   struct _ana_basic_block *next;
 } ana_basic_block;
 
-typedef struct _ana_frame 
+typedef struct ana_generic_block
 {
-  ana_object base;
-  ana_size_t pc;
-  ana_object *code;
-  ana_object **stack;
-  ana_size_t sz;
-  ana_size_t sp;
+  ana_basic_block **stack;
+  ana_basic_block  *root;
+  ana_size_t        stack_size;
+  ana_size_t        stack_capacity;
+  ana_size_t        stack_position;
+} ana_generic_block;
 
+typedef struct _ana_frame ana_frame;
 
-  ana_basic_block **loopstack;
-  ana_size_t loopp;
-  ana_size_t loopsize;
-  ana_basic_block *looproot;
-
-  ana_object *calling_module;
-  ana_size_t ready;
-  ana_size_t finalized;
-  ana_size_t frameflags;
-  ana_object *name; 
-  ana_object *params;  /* parameter names, in reverse calling order */
-  ana_object *constants;
-  ana_object *locals;
-  ana_object *root;  
-  ana_size_t nobjs;   /* Total objects currently in cycle */
-  ana_size_t nobjslt; /* Lifetime allocation count        */
-  ana_size_t mxobjs;  /* Max objects */
-
-  ana_object *parent;  /* The calling frame */
-  ana_object *globals;
-  ana_object *self;   /* instance */
-  ana_object *linemapping; /* pc to source line mapping */
+struct _ana_frame {
+  /* 24 bytes */
+  ana_object  base;
+  ana_object *code;             /* this is not allocated or deallocated here, it's provided by a function defn */
+  ana_size_t  pc;               /* current index into the code array, reset to 0 at EOO (end of execution) */
+  ana_object **stack;           /* this is dynamically allocated */
+  ana_size_t sz;                /* keeps its size across reuse */
+  ana_size_t sp;                /* always reset to 0, at EOO */
+  ana_object *locals;           /* hash map of names to values */
+  ana_object *globals;          /* global variables */
+  ana_object          *self;    /* the current object */
+  ana_generic_block  *loop;     
+  ana_generic_block  *exception;
+  ana_object         *jump_targets;
+  ana_object *name;             /* the name of the function being executed */
+  ana_size_t  activation_line_number;
+  ana_object *line_mapping;
   ana_object *filename;
-  ana_object *jmptargets;
+  ana_frame  *caller;
   ana_object *retval;
-  
-  ana_basic_block  **blockstack;
-  ana_basic_block   *blockroot; /* for tracking */
+};
 
-  ana_size_t bp;
-  ana_size_t bpsize;
-  ana_size_t lineno; /* line this frame was activated on */
-} ana_frame;
+ana_frame *ana_frame_new(
+    ana_object *code, 
+    ana_object *jumptargets, 
+    ana_object *line_mapping, 
+    ana_object *global_variables, 
+    ana_object *name, 
+    ana_frame  *caller, 
+    int line, 
+    ana_object *filename
+);
 
 #define ana_get_frame(o) ((ana_frame *)((o)))
 
 extern ana_type ana_frame_type;
-
-COMO_OBJECT_API ana_frame *ana_frame_base_new(
-  ana_object *name, 
-  ana_object *filename,
-  ana_object *callingframe,
-  ana_object *code,
-  ana_object *constants,
-  ana_object *jmptargets,
-  ana_object *linemapping,
-  ana_size_t bpsize
-);
-
-COMO_OBJECT_API ana_object *ana_frame_new(char *name, char *filename, 
-  ana_object *callingframe);
 
 COMO_OBJECT_API ana_basic_block *ana_basic_block_new(int targetaddress);
 
@@ -88,7 +72,9 @@ COMO_OBJECT_API void ana_frame_growstack(ana_object *);
 #define COMO_FRAME_MAX_OBJECTS    16
 #define COMO_CODE_SIZE            8
 #define COMO_PARAMS_SIZE          4
-#define COMO_FRAME_DEFN           0x00000001
-#define COMO_FRAME_EXEC           0x00000002
+#define COMO_BLOCK_STACK_MAX      16
+#define COMO_FRAME_DEFN           (1 << 0)
+#define COMO_FRAME_EXEC           (1 << 1)
+#define COMO_FRAME_MODULE         (1 << 2)
 
 #endif

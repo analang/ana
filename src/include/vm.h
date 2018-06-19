@@ -12,13 +12,14 @@
 
 #define COMO_VM_STACK_MAX 255
 
-typedef struct ComoVM ComoVM;
+typedef struct ana_vm ana_vm;
 
-struct ComoVM
+struct ana_vm
 {
   ana_object *symbols;
+  ana_object *constants;
   ana_object *exception;
-  ana_frame *stack[COMO_VM_STACK_MAX]; 
+  ana_frame  *stack[COMO_VM_STACK_MAX]; 
   ana_size_t stacksize;
   ana_size_t stackpointer;
   ana_uint32_t flags;
@@ -27,36 +28,30 @@ struct ComoVM
   ana_size_t mxobjs;
   ana_object *root; 
 
-  ana_object *function_root;
-  void(*do_gc)(struct ComoVM *vm);
+  ana_frame *base_frame;
+  ana_object *frameroot;
+  void(*do_gc)(ana_vm *);
 };
 
-ComoVM *ana_vm_new();
-void ana_vm_finalize(ComoVM *vm);
-int ana_eval(ComoVM *vm, ana_object *code, char *function);
+ana_vm *ana_vm_new();
+void ana_vm_finalize(ana_vm *vm);
+int ana_eval(ana_vm *vm, ana_function *function);
+ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol);
 
 #define make_symbol(vm, symbol) \
   (ana_array_push(vm->symbols, ana_stringfromstring((symbol))), \
     (ana_array_size(vm->symbols) - 1))
 
+#define NEW_SYMBOL make_symbol
+  
 #define GC_TRACK(vm, obj) do { \
-  if(ana_type_is((obj), ana_frame_type)) { \
-    fprintf(stdout, "%s:%s:%d can't GC track frame types\n", \
-      __FILE__, __FUNCTION__, __LINE__); \
-  } \
   if (vm->nobjs == vm->mxobjs) \
   { \
     vm->do_gc(vm); \
   } \
   ana_get_base(obj)->next = vm->root; \
-  ana_get_base(obj)->flags = 0; \
   vm->root = ana_get_base(obj); \
   vm->nobjs++; \
 } while(0)
-
-#define VM_FUNC_DEFN_TRACK(vm, fn) do { \
-    ana_get_base(fn)->next = vm->function_root; \
-    vm->function_root = ana_get_base(fn); \
-} while(0) 
 
 #endif

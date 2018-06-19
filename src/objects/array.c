@@ -13,9 +13,8 @@ COMO_OBJECT_API ana_object *ana_array_new(ana_size_t capacity)
 
   obj->base.type = &ana_array_type;
   obj->base.next = NULL;  
-  obj->base.flags = 0;
-  obj->base.scope = NULL;
-  
+  obj->base.flags = 0;  
+  obj->base.refcount = 0;
   obj->size = 0;
   obj->capacity = capacity;
   obj->items = malloc(sizeof(ana_object *) * capacity);
@@ -67,9 +66,6 @@ COMO_OBJECT_API ana_object *ana_array_push_index(ana_object *xself,
 
 static inline void array_dtor(ana_object *xself)
 { 
-  if(xself->scope)
-    ana_object_dtor(xself->scope);
-  
   free(((ana_array *)xself)->items);
   free(xself);
 }

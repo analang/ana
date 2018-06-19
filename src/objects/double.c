@@ -12,8 +12,8 @@ COMO_OBJECT_API ana_object *ana_doublefromdouble(double dval)
 
   obj->base.type = &ana_double_type;
   obj->base.next = NULL; 
-  obj->base.scope = NULL;
   obj->base.flags = 0;
+  obj->base.refcount = 0;
   obj->value = dval;
 
   return (ana_object *)obj;
@@ -51,9 +51,6 @@ static ana_object *double_string(ana_object *obj)
 
 static void double_dtor(ana_object *ob)
 {
-  if(ob->scope)
-    ana_object_dtor(ob->scope);
-
   ana_double *dval = (ana_double *)ob;
   free(dval);
 }

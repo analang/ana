@@ -69,6 +69,11 @@ COMO_OBJECT_API ana_object *ana_put_local_ex(
   } while(0); \
 } \
 
+#define ana_map_foreach_kv_apply(map, function) \
+  ana_map_foreach(map, key, value) { \
+    function(key); \
+    function(value); \
+  } ana_map_foreach_end() 
 
 
 #define ANA_KEY_NOT_FOUND ((void*)-1)

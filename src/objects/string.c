@@ -38,8 +38,8 @@ static ana_object *ana_stringfromstringandlen(char *val, size_t len)
 
   obj->base.type = &ana_string_type;
   obj->base.next = NULL;
-  obj->base.scope = NULL;
   obj->base.flags = 0;
+  obj->base.refcount = 0;
   
   obj->len = (ana_size_t)len;
   
@@ -62,8 +62,8 @@ COMO_OBJECT_API ana_object *ana_stringfromstring(char *val)
 
   obj->base.type = &ana_string_type;
   obj->base.next = NULL;
-  obj->base.scope = NULL;
   obj->base.flags = 0;
+  obj->base.refcount = 0;
   
   obj->len = (ana_size_t)len;
   
@@ -86,9 +86,6 @@ static void string_print(ana_object *ob)
 static void string_dtor(ana_object *ob)
 {
   ana_string *str = (ana_string *)ob;
-
-  if(ob->scope)
-    ana_object_dtor(ob->scope);
 
   free(str->value);
   free(str);
