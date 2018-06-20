@@ -9,4 +9,4 @@ function postfix_obj(obj)
 }
 
 print(postfix_inc(5));
-print(postfix_obj({ value : 0}));
+print(postfix_obj({ 'value' : 0}));

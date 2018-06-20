@@ -67,8 +67,8 @@ typedef void* yyscan_t;
 %token <lval> T_INT "integer literal"
 %token <dval> T_DOUBLE "double literal"
 %token <id> T_ID "identifier"
-
 %token <stringliteral> T_STR_LIT "string literal"
+
 %token T_FUNCTION "keyword function"
 %token T_CLASS "keyword class"
 %token T_PUBLIC "keyword public"
@@ -443,6 +443,7 @@ keyvpair:
 
 key:
   T_ID       { $$ = string_node(pstate, $1); }
+| T_STR_LIT  { $$ = string_node(pstate, $1); } 
 ;
 
 optional_parameter_list:
