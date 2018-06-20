@@ -471,11 +471,26 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           
           ana_object *value = pop();          
           ana_object *instance = pop();
-          ana_class *theclass = (ana_class*)instance;
 
-          assert(value);
-          assert(instance);
+          if(ana_type_is(instance, ana_map_type))
+          {
+            ana_object *prev;
+            prev = ana_map_get(instance, arg);
 
+            if(prev)
+            {
+              if(prev->refcount > 0)
+                prev->refcount--;
+            }
+
+            ana_map_put(instance, arg, value);
+            
+            push(value);
+
+            goto SETPROP_leave;
+          }
+
+          
           if(!ana_type_is(instance, ana_class_type))
           {
             set_except("RuntimeError", "Can't set property on object of type %s",
@@ -483,6 +498,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           } 
           else 
           {
+            ana_class *theclass = (ana_class*)instance;
             ana_object *res = ana_map_put(theclass->members, arg, value);
 
             if(!res)
@@ -490,7 +506,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
             push(res);
           } 
-
+SETPROP_leave:
           vm_continue();
         }
         vm_target(GETPROP) {
@@ -498,6 +514,22 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           TRACE(GETPROP, argvalue, 0, 1);
           ana_object *instance = pop();
           arg = ana_get_array(vm->symbols)->items[argvalue];
+
+          if(ana_type_is(instance, ana_map_type)) 
+          {
+            ana_object *res = ana_map_get(instance, arg);
+
+            if(res)
+            {
+              push(res);
+            }
+            else
+            {
+              set_except("KeyError", "%s", ana_cstring(arg));
+            }
+
+            goto leave_GETPROP;
+          }
 
           /* this is a module get */
           if(ana_type_is(instance, ana_frame_type))
@@ -538,6 +570,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
               push(res);
             }
           }
+leave_GETPROP:
           vm_continue();
         }
         vm_target(IRETURN) {

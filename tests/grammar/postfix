@@ -5,7 +5,7 @@ function postfix_inc(value)
 
 function postfix_obj(obj)
 {
-  return obj['value']++;
+  return obj.value++;
 }
 
 print(postfix_inc(5));

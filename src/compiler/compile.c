@@ -695,15 +695,19 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
       if(left->kind == COMO_AST_PROP)
       {
-        printf("Got a property, but this isn't implemented yet\n");
-        exit(1);
+        // for GETPROP, container is on stack, property is an index on the
+        // opline
 
+        /* compile the container */
         ana_compile_unit(vm, funcobj, left->children[0]);
 
         char *id = ((node_id *)left->children[1])->value;
-
-        ana_compile_unit(vm, funcobj, ast->children[1]);
-
+       
+        /* compile to GETPROP */ 
+        ana_compile_unit(vm, funcobj, left);
+        
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IADD,       0,                    0, left);
         EMITX(vm, func, SETPROP, NEW_SYMBOL(vm, id), 1, ast);
       }
       else if(left->kind == COMO_AST_INDEX)
@@ -711,6 +715,7 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
         ana_compile_unit(vm, funcobj, left->children[0]); /* the container */
         ana_compile_unit(vm, funcobj, left->children[1]); /* the index */
+        /* this will compile into LOAD_SUBSCRIPT */
         ana_compile_unit(vm, funcobj, left);
 
         EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);

@@ -1,13 +1,1 @@
-class Container {
-  public function Container(self)
-  {
-    self.a = 1;
-    self.name = "Container";
-  }
-}
-
-container = Container();
-
-container.UnknownProperty = 1;
-
-print(container.UnknownProperty);
+container.x = 1;
