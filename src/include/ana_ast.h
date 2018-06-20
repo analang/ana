@@ -155,6 +155,8 @@ node *compound_if_node(ana_parser_state *state,
   node *else_if_stmts,
   node *else_stmts);
 
+node *postfix_node(ana_parser_state *state, node *left, int type);
+
 int ana_astfromfile(
   FILE *fp, const char *fname, int argc, char **argv, ana_parser_state *state);
 

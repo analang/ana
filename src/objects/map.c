@@ -276,6 +276,7 @@ static void map_dtor(ana_object *ob)
         ana_map_bucket *next = bucket->next;
         /* we don't free keys, or values, */
         free(bucket);
+        
         bucket = next;
       }
     }

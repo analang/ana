@@ -539,12 +539,15 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
       node *args = ast->children[1];
       int callflags = 0;
       int i;
+      
       for(i = 0; i < args->nchild; i++) {
         ana_compile_unit(vm, funcobj, args->children[i]);
       }
 
       ana_compile_unit(vm, funcobj, callable_expression);
-      EMITX(vm, func, CALL, args->nchild, callflags, ast);
+      
+      EMITX(vm, func, CALL, args->nchild, callflags, callable_expression);
+      
       break;
     }
     TARGET(COMO_AST_INT) {
@@ -686,8 +689,53 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
       break;
     }
 
-    default:
+    TARGET(COMO_AST_POSTFIXINC) 
+    {
+      node *left = ast->children[0];
+
+      if(left->kind == COMO_AST_PROP)
+      {
+        printf("Got a property, but this isn't implemented yet\n");
+        exit(1);
+
+        ana_compile_unit(vm, funcobj, left->children[0]);
+
+        char *id = ((node_id *)left->children[1])->value;
+
+        ana_compile_unit(vm, funcobj, ast->children[1]);
+
+        EMITX(vm, func, SETPROP, NEW_SYMBOL(vm, id), 1, ast);
+      }
+      else if(left->kind == COMO_AST_INDEX)
+      {
+
+        ana_compile_unit(vm, funcobj, left->children[0]); /* the container */
+        ana_compile_unit(vm, funcobj, left->children[1]); /* the index */
+        ana_compile_unit(vm, funcobj, left);
+
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IADD,       0,                    0, left);
+
+        EMITX(vm, func, STORE_SUBSCRIPT, 0, 0, ast);
+      }
+      else 
+      {
+        assert(left->kind == COMO_AST_ID);
+
+        node_id *name = (node_id *)left;
+
+        EMITX(vm, func, LOAD_NAME,  NEW_SYMBOL(vm, name->value), 1, left);
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IADD,       0,                    0, left);
+        EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, name->value), 0, left);
+      }
+
       break;
+    }
+
+    default:
+      printf("compile: %s is not implemented\n", astkind(ast->kind));
+      exit(1);
   }
 }
 

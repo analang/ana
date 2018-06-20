@@ -31,3 +31,8 @@ Dicussion:
   TODO:
     make class instances real instances in the VM. Right now properties
     can be added to the definition frame at runtime.
+
+
+6/20
+unquoted identifiers in object literals
+object_literal.key access rather than objectliteral['key']

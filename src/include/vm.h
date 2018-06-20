@@ -35,7 +35,7 @@ struct ana_vm
 
 ana_vm *ana_vm_new();
 void ana_vm_finalize(ana_vm *vm);
-int ana_eval(ana_vm *vm, ana_function *function);
+int ana_eval(ana_vm *vm, ana_function *function, char *function_name);
 ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol);
 
 #define make_symbol(vm, symbol) \

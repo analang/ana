@@ -632,6 +632,19 @@ node *compound_if_node(ana_parser_state *state,
   return list;  
 }
 
+node *postfix_node(ana_parser_state *state, node *left, int type)
+{
+  node *list = list_node(state, type);
+  list->attribute_visit = NULL;
+  list->attributes = 0;
+  list->visit = visit;
+  list->info = "Postfix";
+
+  add_child(state, list, left);
+
+  return list;  
+}
+
 
 #include "astkind.c"
 

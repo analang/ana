@@ -43,6 +43,8 @@ char *ex_type = NULL;
       COMO_VM_STACK_MAX); \
   } \
   vm->stack[vm->stackpointer++] = frame; \
+  ana_get_base(frame)->next = (ana_object *)vm->frameroot; \
+  vm->frameroot = ana_get_base(frame); \
 } while(0)
 
 #define COMO_VM_POP_FRAME() \
@@ -179,6 +181,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
   while(!COMO_VM_HAS_FRAMES())
   {    
+    int current_line = 0;
+
     enter:
 
     frame = COMO_VM_POP_FRAME();
@@ -196,18 +200,27 @@ static ana_object *ana_frame_eval(ana_vm *vm)
     ana_uint32_t opline;
     ana_uint32_t opcode;
     short oparg;
-    int current_line;
+    int previous_line;
 
     for(;;) {
       top:
-
+      /* this is for exceptions, we need to be able to store the line that
+         was active prior to exception handling. The PC will have changed in
+         the case of a function call because it's actually a new code object
+       */
+      previous_line = current_line;
       fetch();
 
       vm_case(opcode) {
         default: {
-          set_except("VMError", "Opcode %d is not implemented\n", opcode);
+          set_except("VMError", "Opcode %#04x is not implemented\n", opcode);
           vm_continue();
         }
+
+        vm_target(POSTFIX_INC) {
+          TRACE(POSTFIX_INC, oparg, 0, 0);
+        }
+
         vm_target(IIN) {
           TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
@@ -531,18 +544,26 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           TRACE(IRETURN, get_arg(), 0, 0);
           /* this is for early return value binding, for class constructors instances */
           if(frame->retval)
+          {
             arg = frame->retval;
+          }
           else
+          {
             arg = pop();
-
-          assert(arg);
+          }
 
           if(!COMO_VM_HAS_FRAMES())
           {
             ana_frame *caller = vm->stack[vm->stackpointer - 1];
+
+            if(arg->refcount > 0)
+              arg->refcount--;
+            
+            frame->retval = arg;
+
             pushto(caller, arg);
           }
-
+                  
           goto exit; 
         }
         vm_target(LOAD_CONST) {
@@ -585,6 +606,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         vm_target(LOAD_NAME) 
         {
           TRACE(LOAD_NAME, oparg, 0, 1);
+
           ana_object *thename  = ana_array_get(vm->symbols, oparg);
           ana_object *result   = ana_map_get(frame->locals, thename);
 
@@ -597,15 +619,18 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           if(!result)
           {
-            if(frame->globals) {
+            if(frame->globals) 
+            {
               result = ana_map_get(frame->globals, thename);
             }
           }
 
-          if(result) {
+          if(result) 
+          {
             push(result);
           }
-          else {
+          else 
+          {
             set_except("RuntimeError", "undefined variable '%s'", 
               ana_cstring(thename));
           }
@@ -718,6 +743,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           if(ana_type_check_both(left, right, ana_long_type))
           {
             long val = ana_get_long(left)->value + ana_get_long(right)->value;
+            
             result = ana_longfromlong(val);
           } 
           else 
@@ -800,7 +826,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           result = sub(vm, left, right);
 
-          if(result) {
+          if(result) 
+          {
             push(result);
           }
           else
@@ -811,6 +838,9 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         vm_target(DEFINE_CLASS) {
           TRACE(DEFINE_CLASS, oparg, 0, 1);
           ana_object *name = pop();
+
+          printf("defining class %s\n", ana_cstring(name));
+
           ana_object *fncount = pop();
           ana_class *theclass = (ana_class *)ana_class_new(NULL, name);
           long i = ana_get_long(fncount)->value;
@@ -822,6 +852,12 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
             ana_map_put(theclass->members, function_name, function_code);
           }
+
+          ana_map_put(frame->locals, name, (ana_object *)theclass);
+
+          ana_get_base(theclass)->refcount++;
+
+          GC_TRACK(vm, theclass);
 
           vm_continue();
         }
@@ -838,11 +874,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           ana_object *res = NULL;
           ana_object *callable = pop();
-
-          /* increase the ref count here, XXX not sure, jumping somehow
-             gets fucked up, if not. not sure how this works
-          */
-          //callable->flags++;
+          ana_object *globals = BASE_FRAME->locals;
 
           if(ana_type_is(callable, ana_function_type)) 
           {
@@ -857,7 +889,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                 call->code,
                 call->jump_targets, 
                 call->line_mapping, 
-                frame->locals, /* TODO, check if frame is __main__ */ 
+                globals,
                 fn->name, 
                 frame,
                 current_line,
@@ -890,13 +922,15 @@ static ana_object *ana_frame_eval(ana_vm *vm)
               {
                 ana_object *theargvalue = pop();
 
+                theargvalue->refcount++;
+
                 ana_object *paramname = ana_array_get(
                   call->parameters, (ana_size_t)totalargs);
 
                 ana_map_put(execframe->locals, paramname, theargvalue);
               }
               
-              COMO_VM_PUSH_FRAME(frame);      
+              COMO_VM_PUSH_FRAME(frame);
               COMO_VM_PUSH_FRAME(execframe);
 
               goto enter;
@@ -921,6 +955,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
               ana_object_dtor(nativeargs);
             }
+          }
+          else if(ana_type_is(callable, ana_class_type))
+          {
+            #include "class.h"
           }
           else
           {                  
@@ -980,25 +1018,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
         }
 
-        int currentpc = frame->pc;
-        int line = 0;
-        ana_object *pc = ana_longfromlong((long)currentpc);
-        /* TODO 
-            abstract the fetch, to automatically update the current line number
-            */
-        ana_object *theline = ana_map_get(frame->line_mapping, 
-          pc);
-
-        if(theline)
-        {
-          line = ana_get_long(theline)->value;
-        }
-
         fprintf(stdout, "%s: %s in %s:%d\n", 
           ex_type, 
           ex, 
           ana_cstring(frame->filename), 
-          line
+          current_line
         );
 
         free(ex);
@@ -1012,10 +1036,13 @@ static ana_object *ana_frame_eval(ana_vm *vm)
       
       while(!empty()) 
       {
-        (void)pop();
-      }
+        ana_object *temp = pop();
 
-      ana_object_finalize(frame);
+        assert(temp);
+
+        if(temp->refcount > 0)
+          temp->refcount--;
+      }
 
       ana_map_foreach(frame->locals, key, value) 
       {
@@ -1023,13 +1050,24 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
         if(value->refcount > 0) 
         {
-          value->refcount--;
+          if(value != frame->retval) 
+          {
+            /* the return value is always going to need to be kept around */
+            /* the caller can worry about it*/
+            value->refcount--;
+          }
         }
-
       } ana_map_foreach_end();
       
+#ifdef ANA_DUMP_LOCALS_AFTER_FRAME_EXIT
+      ana_object_print(frame->locals);
+      fputc('\n', stdout);
+#endif
+
+      ana_object_finalize(frame);
       ana_object_dtor(frame);
-  }
+      vm->base_frame = NULL;
+    }
 
   return retval;
 }
@@ -1071,7 +1109,8 @@ static void mark_ex(ana_object *obj)
 
     for(i = 0; i < array->size; i++)
     {
-      mark_ex(array->items[i]);
+      if(!array->items[i]->flags)
+        mark_ex(array->items[i]);
     }
   }
   else if(ana_type_is(obj, ana_map_type))
@@ -1080,10 +1119,39 @@ static void mark_ex(ana_object *obj)
       
       (void)key;
 
-      mark_ex(value);
+      if(!value->flags)
+        mark_ex(value);
 
     } ana_map_foreach_end();
   }
+  else if(ana_type_is(obj, ana_array_type))
+  {
+    ana_array_foreach(obj, index, value) {
+
+      (void)index;
+
+      if(!value->flags)
+        mark_ex(value);
+
+    } ana_array_foreach_end();
+  }
+}
+
+static void mark_frame(ana_frame *frame)
+{
+  ana_size_t i;
+
+  ana_get_base(frame)->flags = 1;
+
+  for(i = 0; i < frame->sp; i++)
+  {
+    ana_object *obj = frame->stack[i];
+
+    if(!obj->flags)
+      mark_ex(obj);
+  }
+
+  mark_ex(frame->locals);
 }
 
 static void mark(ana_vm *vm)
@@ -1091,24 +1159,17 @@ static void mark(ana_vm *vm)
   if(vm->flags & COMO_VM_GC_DISABLED)
     return;
 
-  ana_size_t i, j;
+  ana_size_t i;
 
   for(i = 0; i < vm->stackpointer; i++)
   {
     ana_frame *frame = vm->stack[i];
 
-    /* Mark this root as reachable */
-    ana_get_base(frame)->flags = 1;
-
-    for(j = 0; j < frame->sp; j++)
-    {
-      ana_object *obj = frame->stack[j];
-
-      mark_ex(obj);
-    }
-
-    mark_ex(frame->locals);
+    mark_frame(frame);
   }
+
+  if(vm->base_frame)
+    mark_frame(vm->base_frame);
 }
 
 static void sweep(ana_vm *vm)
@@ -1124,7 +1185,8 @@ static void sweep(ana_vm *vm)
     {
       ana_object* unreached = *root; 
             
-      
+      assert(!ana_type_is(unreached, ana_function_type));
+
       if(unreached->refcount == 0) 
       {
         *root = unreached->next;
@@ -1174,9 +1236,68 @@ static void gc(ana_vm *vm)
   vm->mxobjs = vm->mxobjs * 2;
 }
 
-int ana_eval(ana_vm *vm, ana_function *functionobj)
+static int trace_function(ana_vm *vm, char *function_name)
+{
+  ana_size_t i;
+  ana_array *constants = ana_get_array(vm->constants);
+  ana_object *function_name_obj = ana_stringfromstring(function_name);
+  ana_function *function = NULL;
+
+  for(i = 0; i < constants->size; i++)
+  {
+    ana_object *value = constants->items[i];
+
+    if(ana_type_is(value, ana_function_type))
+    {
+      ana_function *func = ana_get_function(value);
+
+      if(func->name->type->obj_equals(func->name, function_name_obj))
+      {
+        function = func;
+
+        break;
+      }
+    }
+  }
+
+  if(function == NULL)
+  {
+    printf("function '%s' is not defined\n", function_name);
+    exit(1);
+  }
+
+  ana_function_defn *func = ANA_GET_FUNCTION_DEF(function);
+
+  ana_frame *firstframe = ana_frame_new(
+    func->code,
+    func->jump_targets, 
+    func->line_mapping, 
+    NULL,
+    function->name, 
+    NULL,
+    0,
+    function->filename
+  );
+
+  BASE_FRAME = firstframe;
+
+  COMO_VM_PUSH_FRAME(firstframe);
+
+  ana_frame_eval(vm);
+
+  gc(vm);
+
+  return 0;
+}
+
+int ana_eval(ana_vm *vm, ana_function *functionobj, char *function)
 {
   ana_function_defn *func = ANA_GET_FUNCTION_DEF(functionobj);
+
+  if(function && vm->flags && COMO_VM_TRACING) 
+  {
+    return trace_function(vm, function);
+  }
 
   ana_frame *firstframe = ana_frame_new(
     func->code,

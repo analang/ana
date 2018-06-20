@@ -620,7 +620,9 @@ argument:
 ;
 
 postfix_expression:
-  primary_expression  { $$ = $1; }
+  primary_expression  { 
+    $$ = $1; 
+  }
 | postfix_expression '[' assignment_expression ']' { 
     $$ = index_node(pstate, $1, $3);
   }
@@ -630,8 +632,12 @@ postfix_expression:
 | postfix_expression '.' T_ID { 
     $$ = property_node(pstate, $1, $3);
   }
-| postfix_expression T_INC { $$ = $1; }
-| postfix_expression T_DEC { $$ = $1; }
+| postfix_expression T_INC { 
+    $$ = postfix_node(pstate, $1, COMO_AST_POSTFIXINC); 
+  }
+| postfix_expression T_DEC { 
+    $$ = postfix_node(pstate, $1, COMO_AST_POSTFIXDEC); 
+  }
 ;
 
 %%

@@ -1,0 +1,12 @@
+function postfix_inc(value)
+{
+  return value++;
+}
+
+function postfix_obj(obj)
+{
+  return obj['value']++;
+}
+
+print(postfix_inc(5));
+print(postfix_obj({ value : 0}));

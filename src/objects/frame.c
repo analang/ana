@@ -123,13 +123,7 @@ static void frame_deinit(ana_object *obj)
 {
   ana_frame *self = ana_get_frame(obj);
 
-  ana_map_foreach(self->locals, key, value) {
-    (void)key;
-
-    if(ana_type_is(value, ana_long_type))
-      value->refcount--;
-
-  } ana_map_foreach_end();
+  COMO_UNUSED(self);
 }
 
 static void frame_print(ana_object *obj)

@@ -17,8 +17,11 @@ static inline ana_object *sub(ana_vm *vm, ana_object *a, ana_object *b)
   if(a->type->obj_binops != NULL && a->type->obj_binops->obj_sub != NULL) 
   {
     ana_object *res = a->type->obj_binops->obj_sub(a, b);
-    if(res) {
+    
+    if(res) 
+    {
       GC_TRACK(vm, res);
+      
       return res;
     }
   }
@@ -51,6 +54,14 @@ static inline ana_object *setindex(ana_vm *vm, ana_object *container,
 {
   if(container->type->obj_seqops != NULL && container->type->obj_seqops->set != NULL)
   {
+    if(container->type->obj_seqops != NULL && container->type->obj_seqops->get != NULL)
+    {
+      ana_object *prev = container->type->obj_seqops->get(container, idx);;
+
+      if(prev && prev->refcount > 0)
+        prev->refcount--;
+    }
+
     ana_object *res = container->type->obj_seqops->set(container, idx, val);
 
     if(!res)
@@ -60,6 +71,8 @@ static inline ana_object *setindex(ana_vm *vm, ana_object *container,
     if(!ana_type_is(container, ana_array_type) 
       && !ana_type_is(container, ana_map_type))
         GC_TRACK(vm, res);
+
+    res->refcount++;
 
     return res;
   }

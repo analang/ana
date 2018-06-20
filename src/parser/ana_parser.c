@@ -577,8 +577,8 @@ static const yytype_uint16 yyrline[] =
      494,   498,   499,   503,   504,   508,   509,   514,   519,   527,
      528,   529,   530,   535,   539,   540,   541,   545,   546,   551,
      559,   560,   565,   570,   578,   579,   587,   588,   589,   590,
-     591,   594,   597,   603,   604,   608,   612,   619,   623,   624,
-     627,   630,   633,   634
+     591,   594,   597,   603,   604,   608,   612,   619,   623,   626,
+     629,   632,   635,   638
 };
 #endif
 
@@ -2712,7 +2712,9 @@ yyreduce:
 
   case 128:
 
-    { (yyval.ast) = (yyvsp[0].ast); }
+    { 
+    (yyval.ast) = (yyvsp[0].ast); 
+  }
 
     break;
 
@@ -2742,13 +2744,17 @@ yyreduce:
 
   case 132:
 
-    { (yyval.ast) = (yyvsp[-1].ast); }
+    { 
+    (yyval.ast) = postfix_node(pstate, (yyvsp[-1].ast), COMO_AST_POSTFIXINC); 
+  }
 
     break;
 
   case 133:
 
-    { (yyval.ast) = (yyvsp[-1].ast); }
+    { 
+    (yyval.ast) = postfix_node(pstate, (yyvsp[-1].ast), COMO_AST_POSTFIXDEC); 
+  }
 
     break;
 

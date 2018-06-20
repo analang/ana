@@ -1,0 +1,12 @@
+COUNT = 16;
+
+function global_test()
+{  
+  print(COUNT);
+
+  COUNT = COUNT + 1;
+}
+
+global_test();
+
+print(COUNT);

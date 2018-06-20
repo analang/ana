@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 1 /* For realpath */
+  #define _GNU_SOURCE 1 /* For realpath */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -256,11 +256,12 @@ static int run_file(ana_options *opts)
             char *start = line;
             char *linep = line;
 
-            while(*linep == ' ')
+            while(*linep == ' ' || *linep == '\t')
               linep++;
 
-            if(strlen(linep) > 0)
+            if(strlen(linep) > 0) {
               fprintf(stdout, "%s\n", linep);
+            }
 
             state.first_column = state.first_column - (linep - start);
 
@@ -321,9 +322,9 @@ static int run_file(ana_options *opts)
         fprintf(stderr, PROGRAM_NAME ": compile error\n");
       else
         if(opts->function)
-          ana_eval(vm, code);
+          ana_eval(vm, code, opts->function);
         else
-          ana_eval(vm, code); 
+          ana_eval(vm, code, NULL); 
 
       ana_vm_finalize(vm);
     }

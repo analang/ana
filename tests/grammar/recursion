@@ -1,9 +1,16 @@
 count = 0;
 
-function i()
+function i(n)
 {
-  i() + i();
+  if(n == 5)
+  {
+    return;
+  }
+  else
+  {
+    return i(n + 1);
+  }
 }
 
 
-i();
+i(0);

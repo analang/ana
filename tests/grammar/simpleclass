@@ -4,14 +4,10 @@ class Simple
   {
     self.name = "Simple";
   }
-  public function getInt(a, b)
-  {
-    return 5;
-  }
 }
 
-simple = Simple();
+//simple = Simple();
+//print(simple.name);
+//unused = simple.name;
+//print(simple);
 
-temp = simple.getInt(5, 10);
-
-print(temp);
