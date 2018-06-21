@@ -1,0 +1,10 @@
+function postfix_inc_prop(obj)
+{
+  prev = obj.value++;
+  print("prev: " + prev);
+  return obj.value;
+}
+
+print(postfix_inc_prop({
+  value : 5
+}));

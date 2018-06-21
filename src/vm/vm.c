@@ -477,7 +477,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
             ana_map_put(instance, arg, value);
             
-            push(value);
+            if(!opflag) {
+              printf("pushing value to stack for SETPROP\n");
+              
+              push(value);
+            }
 
             goto SETPROP_leave;
           }
@@ -496,7 +500,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             if(!res)
               assert(res);
 
-            push(res);
+            if(!opflag)
+              push(res);
           } 
 SETPROP_leave:
           vm_continue();

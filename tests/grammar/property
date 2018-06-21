@@ -1,1 +1,3 @@
-container.x = 1;
+function init() {
+  return container.x++;
+}

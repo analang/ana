@@ -791,22 +791,21 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
       if(left->kind == COMO_AST_PROP)
       {
-        printf("boken1\n");
-        abort();
-        // for GETPROP, container is on stack, property is an index on the
-        // opline
+        /* compile the previous value */
+        ana_compile_unit(vm, funcobj, left->children[0]);
+        char *id = ((node_id *)left->children[1])->value;
+        EMITX(vm, func, GETPROP, NEW_SYMBOL(vm, id), 0, ast);
+        /* end */
 
-        /* compile the container */
+        /* push container onto stack, for the later SETPROP opcode */
         ana_compile_unit(vm, funcobj, left->children[0]);
 
-        char *id = ((node_id *)left->children[1])->value;
-       
-        /* compile to GETPROP */ 
+        /* now compile the GETPROP opcode */
         ana_compile_unit(vm, funcobj, left);
-        
+
         EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
         EMITX(vm, func, IADD,       0,                    0, left);
-        EMITX(vm, func, SETPROP, NEW_SYMBOL(vm, id), 1, ast);
+        EMITX(vm, func, SETPROP,    NEW_SYMBOL(vm, id),   1,  ast);
       }
       else if(left->kind == COMO_AST_INDEX)
       {
@@ -820,7 +819,6 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
         EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
         EMITX(vm, func, IADD,       0,                    0, left);
-
         EMITX(vm, func, STORE_SUBSCRIPT, 0, 0, ast);
       }
       else 
@@ -844,17 +842,16 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
       if(left->kind == COMO_AST_PROP)
       {
-        printf("this is broken, for COMO_AST_POSTFIXDEC.COMO_AST_PROP right now\n");
-        abort();
-        // for GETPROP, container is on stack, property is an index on the
-        // opline
+        /* compile the previous value */
+        ana_compile_unit(vm, funcobj, left->children[0]);
+        char *id = ((node_id *)left->children[1])->value;
+        EMITX(vm, func, GETPROP, NEW_SYMBOL(vm, id), 0, ast);
+        /* end */
 
-        /* compile the container */
+        /* push container onto stack, for the later SETPROP opcode */
         ana_compile_unit(vm, funcobj, left->children[0]);
 
-        char *id = ((node_id *)left->children[1])->value;
-       
-        /* compile to GETPROP */ 
+        /* now compile the GETPROP opcode */
         ana_compile_unit(vm, funcobj, left);
         
         EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
