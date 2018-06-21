@@ -339,9 +339,11 @@ static ana_object *long_lte(ana_object *a, ana_object *b)
     return ana_bool_false;
 }
 
-static int long_bool(ana_object *x)
+static int long_bool(ana_object *obj)
 {
-  return ((ana_long *)x)->value != 0L;
+  ana_long *self = ana_get_long(obj);
+  
+  return self->value != 0L;
 }
 
 static ana_comparison_ops compops = {

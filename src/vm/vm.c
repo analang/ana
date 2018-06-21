@@ -200,7 +200,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
     ana_uint32_t opline;
     ana_uint32_t opcode;
     short oparg;
-    int previous_line;
+    unsigned opflag;
 
     for(;;) {
       top:
@@ -208,7 +208,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
          was active prior to exception handling. The PC will have changed in
          the case of a function call because it's actually a new code object
        */
-      previous_line = current_line;
       fetch();
 
       vm_case(opcode) {
@@ -216,11 +215,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           set_except("VMError", "Opcode %#04x is not implemented\n", opcode);
           vm_continue();
         }
-
-        vm_target(POSTFIX_INC) {
-          TRACE(POSTFIX_INC, oparg, 0, 0);
-        }
-
         vm_target(IIN) {
           TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
@@ -234,7 +228,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           vm_continue();
         }
-
         vm_target(IUNARYMINUS) {
           TRACE(IUNARYMINUS, 0, 0, 1);
           arg = pop();
@@ -279,7 +272,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           if(LIKELY(result->type == &ana_bool_type))
           {
-
             if(!(((ana_bool *)result)->value))
             {
               frame->pc = (*(jmptargets + oparg))->value;
@@ -291,8 +283,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             }
           } 
 
-          if(!result->type->obj_bool(result))
-          {            
+          if(result->type->obj_bool(result) == 0)
+          {     
             frame->pc = (*(jmptargets + oparg))->value;
             goto top;
           }
@@ -605,7 +597,8 @@ leave_GETPROP:
           push(arg);
           vm_continue();
         }
-        vm_target(STORE_NAME) {
+        vm_target(STORE_NAME) 
+        {
           TRACE(STORE_NAME, oparg, 0, 1);
           ana_object *thename = ana_array_get(vm->symbols, oparg);
           result = pop();
@@ -633,7 +626,11 @@ leave_GETPROP:
           
           result->refcount++;
 
-          push(result);
+          if(!opflag) 
+          {
+            push(result);
+          }
+
           vm_continue();
         }
         vm_target(LOAD_NAME) 
@@ -712,8 +709,9 @@ leave_GETPROP:
 
           vm_continue();
         }
-        vm_target(INEQUAL) {
-          TRACE(INEQUAL, get_arg(), 0, 1);
+        vm_target(INEQUAL) 
+        {
+          TRACE(INEQUAL, oparg, 0, 1);
           right = pop();
           left  = pop();
           result = NULL;

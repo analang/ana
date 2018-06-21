@@ -689,7 +689,7 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
       break;
     }
 
-    TARGET(COMO_AST_POSTFIXINC) 
+    TARGET(COMO_AST_PREFIXINC) 
     {
       node *left = ast->children[0];
 
@@ -720,6 +720,106 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
         EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
         EMITX(vm, func, IADD,       0,                    0, left);
+        EMITX(vm, func, STORE_SUBSCRIPT, 0, 0, ast);
+      }
+      else 
+      {
+        assert(left->kind == COMO_AST_ID);
+
+        node_id *name = (node_id *)left;
+
+        EMITX(vm, func, LOAD_NAME,  NEW_SYMBOL(vm, name->value), 1, left);
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IADD,     0,                    0, left);
+        EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, name->value), 0, left);
+      }
+
+      break;
+    }
+
+    TARGET(COMO_AST_PREFIXDEC)
+    {
+      node *left = ast->children[0];
+
+      if(left->kind == COMO_AST_PROP)
+      {
+        // for GETPROP, container is on stack, property is an index on the
+        // opline
+
+        /* compile the container */
+        ana_compile_unit(vm, funcobj, left->children[0]);
+
+        char *id = ((node_id *)left->children[1])->value;
+       
+        /* compile to GETPROP */ 
+        ana_compile_unit(vm, funcobj, left);
+        
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IMINUS,       0,                  0, left);
+        EMITX(vm, func, SETPROP,    NEW_SYMBOL(vm, id),   1, ast);
+      }
+      else if(left->kind == COMO_AST_INDEX)
+      {
+
+        ana_compile_unit(vm, funcobj, left->children[0]); /* the container */
+        ana_compile_unit(vm, funcobj, left->children[1]); /* the index */
+        /* this will compile into LOAD_SUBSCRIPT */
+        ana_compile_unit(vm, funcobj, left);
+
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IMINUS,       0,                    0, left);
+        EMITX(vm, func, STORE_SUBSCRIPT, 0, 0, ast);
+      }
+      else 
+      {
+        assert(left->kind == COMO_AST_ID);
+
+        node_id *name = (node_id *)left;
+
+        EMITX(vm, func, LOAD_NAME,  NEW_SYMBOL(vm, name->value), 1, left);
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IMINUS,     0,                    0, left);
+        EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, name->value), 0, left);
+      }
+
+      break;    
+    }
+
+    TARGET(COMO_AST_POSTFIXINC) 
+    {
+      node *left = ast->children[0];
+
+      if(left->kind == COMO_AST_PROP)
+      {
+        printf("boken1\n");
+        abort();
+        // for GETPROP, container is on stack, property is an index on the
+        // opline
+
+        /* compile the container */
+        ana_compile_unit(vm, funcobj, left->children[0]);
+
+        char *id = ((node_id *)left->children[1])->value;
+       
+        /* compile to GETPROP */ 
+        ana_compile_unit(vm, funcobj, left);
+        
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IADD,       0,                    0, left);
+        EMITX(vm, func, SETPROP, NEW_SYMBOL(vm, id), 1, ast);
+      }
+      else if(left->kind == COMO_AST_INDEX)
+      {
+        printf("broken2\n");
+        abort();
+
+        ana_compile_unit(vm, funcobj, left->children[0]); /* the container */
+        ana_compile_unit(vm, funcobj, left->children[1]); /* the index */
+        /* this will compile into LOAD_SUBSCRIPT */
+        ana_compile_unit(vm, funcobj, left);
+
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IADD,       0,                    0, left);
 
         EMITX(vm, func, STORE_SUBSCRIPT, 0, 0, ast);
       }
@@ -736,6 +836,61 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
       }
 
       break;
+    }
+
+    TARGET(COMO_AST_POSTFIXDEC)
+    {
+      node *left = ast->children[0];
+
+      if(left->kind == COMO_AST_PROP)
+      {
+        printf("this is broken, for COMO_AST_POSTFIXDEC.COMO_AST_PROP right now\n");
+        abort();
+        // for GETPROP, container is on stack, property is an index on the
+        // opline
+
+        /* compile the container */
+        ana_compile_unit(vm, funcobj, left->children[0]);
+
+        char *id = ((node_id *)left->children[1])->value;
+       
+        /* compile to GETPROP */ 
+        ana_compile_unit(vm, funcobj, left);
+        
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IMINUS,       0,                  0, left);
+        EMITX(vm, func, SETPROP,    NEW_SYMBOL(vm, id),   1, ast);
+      }
+      else if(left->kind == COMO_AST_INDEX)
+      {
+        printf("this is broken, for COMO_AST_POSTFIXDEC.COMO_AST_INDEX right now\n");
+        abort();
+
+        ana_compile_unit(vm, funcobj, left->children[0]); /* the container */
+        ana_compile_unit(vm, funcobj, left->children[1]); /* the index */
+        /* this will compile into LOAD_SUBSCRIPT */
+        ana_compile_unit(vm, funcobj, left);
+
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IMINUS,       0,                  0, left);
+        EMITX(vm, func, STORE_SUBSCRIPT, 0, 0, ast);
+      }
+      else 
+      {
+        assert(left->kind == COMO_AST_ID);
+
+        node_id *name = (node_id *)left;
+
+        /* Store the value before it was decremented */
+        EMITX(vm, func, LOAD_NAME,  NEW_SYMBOL(vm, name->value), 1, left);
+        EMITX(vm, func, LOAD_NAME,  NEW_SYMBOL(vm, name->value), 1, left);
+        EMITX(vm, func, LOAD_CONST, NEW_INT_CONST(vm, 1), 1, left);
+        EMITX(vm, func, IMINUS,     0,                    0, left);
+        /* pass 1 to oparg, to tell it not to push this value to the stack */
+        EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, name->value), 1, left);
+      }
+
+      break;    
     }
 
     default:

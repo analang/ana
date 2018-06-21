@@ -576,9 +576,9 @@ static const yytype_uint16 yyrline[] =
      472,   473,   474,   475,   476,   480,   484,   485,   489,   490,
      494,   495,   499,   500,   504,   505,   509,   510,   515,   520,
      528,   529,   530,   531,   536,   540,   541,   542,   546,   547,
-     552,   560,   561,   566,   571,   579,   580,   588,   589,   590,
-     591,   592,   595,   598,   604,   605,   609,   613,   620,   624,
-     627,   630,   633,   636,   639
+     552,   560,   561,   566,   571,   579,   580,   588,   591,   594,
+     597,   600,   603,   606,   612,   613,   617,   621,   628,   632,
+     635,   638,   641,   644,   647
 };
 #endif
 
@@ -2646,25 +2646,33 @@ yyreduce:
 
   case 117:
 
-    { (yyval.ast) = (yyvsp[0].ast); }
+    { 
+    (yyval.ast) = (yyvsp[0].ast); 
+  }
 
     break;
 
   case 118:
 
-    { (yyval.ast) = throw_node(pstate, (yyvsp[0].ast)); }
+    { 
+    (yyval.ast) = throw_node(pstate, (yyvsp[0].ast)); 
+  }
 
     break;
 
   case 119:
 
-    { (yyval.ast) = (yyvsp[0].ast); }
+    { 
+    (yyval.ast) = unary_node(pstate, (yyvsp[0].ast), COMO_AST_PREFIXDEC);
+  }
 
     break;
 
   case 120:
 
-    { (yyval.ast) = (yyvsp[0].ast); }
+    { 
+    (yyval.ast) = unary_node(pstate, (yyvsp[0].ast), COMO_AST_PREFIXINC);
+  }
 
     break;
 

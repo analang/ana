@@ -1,0 +1,10 @@
+function postfix_dec(value)
+{
+  while(value--)
+  {
+    print(value);
+  }
+}
+
+postfix_dec(5);
+

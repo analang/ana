@@ -1,0 +1,9 @@
+function prefix_inc(value)
+{
+  while(++value != 10)
+  {
+    print(value);
+  }
+}
+
+prefix_inc(0);

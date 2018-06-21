@@ -585,10 +585,18 @@ assignment_expression:
 ;
 
 unary_expression: 
-  postfix_expression       { $$ = $1; }
-| T_THROW unary_expression { $$ = throw_node(pstate, $2); }
-| T_DEC   unary_expression { $$ = $2; }
-| T_INC   unary_expression { $$ = $2; }
+  postfix_expression { 
+    $$ = $1; 
+  }
+| T_THROW unary_expression { 
+    $$ = throw_node(pstate, $2); 
+  }
+| T_DEC   unary_expression { 
+    $$ = unary_node(pstate, $2, COMO_AST_PREFIXDEC);
+  }
+| T_INC   unary_expression { 
+    $$ = unary_node(pstate, $2, COMO_AST_PREFIXINC);
+  }
 | '-' unary_expression { 
     $$ = unary_node(pstate, $2, COMO_AST_UNARY_MINUS);
   }

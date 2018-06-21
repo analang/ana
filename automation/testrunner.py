@@ -9,30 +9,14 @@ def usage():
 def run(path, args):  
   path = os.path.realpath(path)
   args = os.path.realpath(args)
-  """
-  run well execute the program located at path with arguments arg. The program
-  is executed in a child process, and the parent will wait for it's exit status
-  and if any signals were sent to it. run considers a program to have exited
-  succesfully if SIGSEV was not sent to it and it's exit status was 0.
-  """
   pid = os.fork()
 
   if pid == 0:
     # In the child
     pipefds = os.pipe()
-    piped_stdin = os.pipe()
-    piped_stderr = os.pipe()
-
-    # 1 is write, make the stdin be a pipe we can write to 
-    os.dup2(piped_stdin[1], 0)
     os.dup2(pipefds[1], 1) # for stdout
-    
-    os.dup2(piped_stderr[0], 2)
-
-
-    os.write(piped_stdin[1], "Testing...")
-
     os.execl(path, path.split("/").pop(), args)
+    
   else:
     # Wait for the child to exit
     pid, status = os.waitpid(pid, 0)

@@ -56,6 +56,7 @@
   opline = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
   opcode = (opline >> 24) & 0xff; \
   oparg = (opline >> 8) & 0xffff; \
+  opflag =  (opline) & 0xff; \
   frame->pc++;  \
 } while(0)
 
