@@ -1073,12 +1073,42 @@ leave_GETPROP:
             
             /* frame that threw the exception */
             /* code won't continue from there */
-            //COMO_VM_PUSH_FRAME(originalframe);
-
             if(originalframe != thisframe)
             {
+
+              while(!(originalframe->sp == 0)) 
+              {
+                ana_object *temp = pop2(originalframe);
+
+                assert(temp);
+
+                if(temp->refcount > 0) 
+                {
+                  decref_recursively(temp);
+                }
+              }
+
+              ana_map_foreach(originalframe->locals, key, value) 
+              {
+                (void)key;
+
+                if(value->refcount > 0) 
+                {
+                  if(value != frame->retval) 
+                  {
+                    /* the return value is always going to need to be kept around */
+                    /* the caller can worry about it*/
+
+                    decref_recursively(value);
+                  }
+                }
+              } ana_map_foreach_end();
+
+
               /* finalize this frame, as we won't be returning*/
               ana_object_finalize(originalframe);
+              ana_object_dtor(originalframe);
+
             }
 
             /* frame with the exception handler */

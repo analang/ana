@@ -89,6 +89,11 @@
  ((frame->loop->stack_size != 0 ? (--frame->loop->stack[frame->loop->stack_position == 0 ? 0 : \
     (frame->loop->stack_position - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
 
+#define pop2(frame) \
+ ((frame->loop->stack_size != 0 ? (--frame->loop->stack[frame->loop->stack_position == 0 ? 0 : \
+    (frame->loop->stack_position - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
+
+
 #define pop pop_ex
 
 #define empty() \
