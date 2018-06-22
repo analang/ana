@@ -575,10 +575,10 @@ static const yytype_uint16 yyrline[] =
      426,   430,   437,   445,   446,   450,   451,   455,   459,   466,
      472,   473,   474,   475,   476,   480,   484,   485,   489,   490,
      494,   495,   499,   500,   504,   505,   509,   510,   515,   520,
-     528,   529,   530,   531,   536,   540,   541,   542,   546,   547,
-     552,   560,   561,   566,   571,   579,   580,   588,   591,   594,
-     597,   600,   603,   606,   612,   613,   617,   621,   628,   632,
-     635,   638,   641,   644,   647
+     528,   529,   534,   539,   544,   552,   553,   558,   566,   567,
+     572,   580,   581,   586,   591,   599,   600,   608,   611,   614,
+     617,   620,   623,   626,   632,   633,   637,   641,   648,   652,
+     655,   658,   661,   664,   667
 };
 #endif
 
@@ -2522,13 +2522,21 @@ yyreduce:
 
   case 101:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("< is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
   case 102:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("> is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
@@ -2544,7 +2552,11 @@ yyreduce:
 
   case 104:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("T_GTE is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
@@ -2556,13 +2568,21 @@ yyreduce:
 
   case 106:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("T_LS is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
   case 107:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("T_RS is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 

@@ -1,10 +1,46 @@
+// postfix ++ operator tests
 function postfix_inc_prop(obj)
 {
-  prev = obj.value++;
-  print("prev: " + prev);
-  return obj.value;
+  return obj.value++;
 }
 
-print(postfix_inc_prop({
-  value : 5
-}));
+function postfix_inc_index(obj)
+{
+  return obj['value']++;
+}
+
+function postfix_inc_scalar(value)
+{
+  return value++;
+}
+
+function expect(truth)
+{
+  if(!truth)
+  {
+    throw "Unexpected result";
+  }
+}
+
+obj = { value : 0 };
+retval = postfix_inc_prop(obj);
+expect(retval == 0 && obj.value == 1);
+
+// indexing has a memory leak
+obj = { value : 0 };
+retval = postfix_inc_index(obj);
+expect(retval == 0 && obj.value == 1);
+
+obj = 0;
+retval = postfix_inc_scalar(obj);
+expect(retval == 0 && obj == 0);
+
+
+
+
+
+
+
+
+
+

@@ -78,11 +78,25 @@ static void array_print(ana_object *ob)
     ana_tostring_fast(v, {
       if(index + 1 != array->size)
       {
-        printf("%s, ", value);
+        if(ana_type_is(v, ana_string_type)) 
+        {
+          printf("'%s', ", value);
+        }
+        else
+        {
+          printf("%s, ", value); 
+        }
       }
       else
       {
-        printf("%s", value);
+        if(ana_type_is(v, ana_string_type)) 
+        {
+          printf("'%s'", value);
+        }
+        else
+        {
+          printf("%s", value);         
+        }
       }
     });
   }  

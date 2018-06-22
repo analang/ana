@@ -19,6 +19,7 @@
 static void trace_frame(ana_vm *vm, ana_frame *frame);
 static void ana_print_backtrace(ana_frame *frame);
 static void gc(ana_vm *vm);
+static void decref_recursively(ana_object *obj);
 
 static ana_frame *BASE_FRAME;
 
@@ -215,6 +216,22 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           set_except("VMError", "Opcode %#04x is not implemented\n", opcode);
           vm_continue();
         }
+        vm_target(IUNARYNOT)
+        {
+          TRACE(IUNARYNOT, oparg, 0, 1);
+          arg = pop();
+          
+          if(arg->type->obj_bool(arg) == 0)
+          {
+            push(ana_bool_true);
+          }
+          else
+          {
+            push(ana_bool_false);
+          }
+
+          vm_continue();
+        }
         vm_target(IIN) {
           TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
@@ -247,6 +264,29 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           else
           {
             set_except("RuntimeError", "unsupported operand type for - operator");
+          }
+
+          vm_continue();
+        }
+        vm_target(IUNARYPLUS) {
+          TRACE(IUNARYPLUS, 0, 0, 1);
+          arg = pop();
+
+          if(arg->type->obj_unops != NULL 
+            && arg->type->obj_unops->obj_plus != NULL)
+          {
+            result = arg->type->obj_unops->obj_plus(arg);
+
+            if(result) {
+              GC_TRACK(vm, result);
+              push(result);
+            }
+            else
+              set_except("RuntimeError", "unsupported operand type for + operator");
+          }
+          else
+          {
+            set_except("RuntimeError", "unsupported operand type for + operator");
           }
 
           vm_continue();
@@ -399,7 +439,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *value = pop();
           ana_object *index = pop();
           ana_object *container = pop();
-          ana_object *res = setindex(vm, container, index, value);   
+          ana_object *res = setindex(vm, container, index, value);
           
           if(res == ANA_KEY_NOT_FOUND)
           {
@@ -413,7 +453,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
           else
           {
-            push(res);
+            if(!opflag) 
+            {
+              push(res);
+            }
           }
 
           vm_continue();
@@ -448,6 +491,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             assert(ana_type_is(key, ana_string_type));
 
             ana_map_put(obj, key, val);
+
+            val->refcount++;
           }
 
           GC_TRACK(vm, obj);
@@ -472,14 +517,13 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             if(prev)
             {
               if(prev->refcount > 0)
-                prev->refcount--;
+                decref_recursively(prev);
             }
 
             ana_map_put(instance, arg, value);
             
-            if(!opflag) {
-              printf("pushing value to stack for SETPROP\n");
-              
+            if(!opflag) 
+            {              
               push(value);
             }
 
@@ -622,7 +666,7 @@ leave_GETPROP:
                 printf("decreasing refcount for %p, old %ld\n",
                   (void *)oldvalue, ana_get_base(oldvalue)->refcount);
                 #endif
-                ana_get_base(oldvalue)->refcount--;
+                decref_recursively(ana_get_base(oldvalue));
               }
             }       
           }
@@ -1069,15 +1113,16 @@ leave_GETPROP:
       }
     }
     exit:
-      
       while(!empty()) 
       {
         ana_object *temp = pop();
 
         assert(temp);
 
-        if(temp->refcount > 0)
-          temp->refcount--;
+        if(temp->refcount > 0) 
+        {
+          decref_recursively(temp);
+        }
       }
 
       ana_map_foreach(frame->locals, key, value) 
@@ -1090,7 +1135,8 @@ leave_GETPROP:
           {
             /* the return value is always going to need to be kept around */
             /* the caller can worry about it*/
-            value->refcount--;
+
+            decref_recursively(value);
           }
         }
       } ana_map_foreach_end();
@@ -1130,6 +1176,48 @@ static void ana_print_backtrace(ana_frame *frame)
   }
 }
 
+static void decref_recursively(ana_object *obj)
+{
+
+  if(obj->refcount == 0)
+    return;
+
+  obj->refcount--;
+
+  if(ana_type_is(obj, ana_array_type))
+  {
+    ana_array *array = ana_get_array(obj);
+
+    ana_size_t i;
+
+    for(i = 0; i < array->size; i++)
+    {
+      decref_recursively(array->items[i]);
+    }
+  }
+  else if(ana_type_is(obj, ana_map_type))
+  {
+    ana_map_foreach(obj, key, value) {
+      
+      (void)key;
+
+      decref_recursively(value);
+
+    } ana_map_foreach_end();
+  }
+  else if(ana_type_is(obj, ana_array_type))
+  {
+    ana_array_foreach(obj, index, value) {
+
+      (void)index;
+
+      decref_recursively(value);
+
+    } ana_array_foreach_end();
+  }
+ 
+}
+
 static void mark_ex(ana_object *obj)
 {
   if(obj->flags)
@@ -1155,8 +1243,7 @@ static void mark_ex(ana_object *obj)
       
       (void)key;
 
-      if(!value->flags)
-        mark_ex(value);
+      mark_ex(value);
 
     } ana_map_foreach_end();
   }
@@ -1166,8 +1253,7 @@ static void mark_ex(ana_object *obj)
 
       (void)index;
 
-      if(!value->flags)
-        mark_ex(value);
+      mark_ex(value);
 
     } ana_array_foreach_end();
   }
@@ -1233,12 +1319,12 @@ static void sweep(ana_vm *vm)
       }
       else
       {
-        #ifdef ANA_GC_DEBUG
+        //#ifdef ANA_GC_DEBUG
         ana_object *str = ana_object_tostring(unreached);
         printf("not releasing %p(%s, %s), it's reference count is %ld\n", 
             (void *)unreached, ana_type_name(unreached), ana_cstring(str), unreached->refcount);
         ana_object_dtor(str);
-        #endif
+        //#endif
 
         root = &(*root)->next;
       }

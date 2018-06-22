@@ -526,20 +526,40 @@ equality_expression:
 
 relational_expression:
   shift_expression { $$ = $1; }
-| relational_expression '<'   shift_expression    { $$ = $1; }
-| relational_expression '>'   shift_expression    { $$ = $1; }
+| relational_expression '<'   shift_expression    { 
+    printf("< is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
+| relational_expression '>'   shift_expression    { 
+    printf("> is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
 | relational_expression T_LTE shift_expression    { 
     $$ = binary_op(pstate, COMO_AST_LTE);
     add_child(pstate, $$, $1);
     add_child(pstate, $$, $3);
   }
-| relational_expression T_GTE shift_expression    { $$ = $1; }
+| relational_expression T_GTE shift_expression    { 
+    printf("T_GTE is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
 ;
 
 shift_expression:
   additive_expression { $$ = $1; }
-| shift_expression T_LS additive_expression { $$ = $1; }
-| shift_expression T_RS additive_expression { $$ = $1; }
+| shift_expression T_LS additive_expression { 
+    printf("T_LS is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
+| shift_expression T_RS additive_expression { 
+    printf("T_RS is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
 ;
 
 additive_expression:

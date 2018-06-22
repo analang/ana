@@ -56,10 +56,11 @@ static inline ana_object *setindex(ana_vm *vm, ana_object *container,
   {
     if(container->type->obj_seqops != NULL && container->type->obj_seqops->get != NULL)
     {
-      ana_object *prev = container->type->obj_seqops->get(container, idx);;
+      ana_object *prev = container->type->obj_seqops->get(container, idx);
 
-      if(prev && prev->refcount > 0)
-        prev->refcount--;
+      if(prev && prev->refcount > 0) {
+        decref_recursively(prev);
+      }
     }
 
     ana_object *res = container->type->obj_seqops->set(container, idx, val);

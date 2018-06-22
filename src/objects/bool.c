@@ -120,8 +120,6 @@ static ana_object *bool_lte(ana_object *obj, ana_object *x)
   
 static int bool_bool(ana_object *x)
 {
-  printf("calling bool_bool\n");
-  abort();
   return ((ana_bool *)x)->value != 0;
 }
 

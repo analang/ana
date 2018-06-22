@@ -1,3 +1,3 @@
 function init() {
-  return container.x++;
+  return container['x']++;
 }
