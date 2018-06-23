@@ -26,6 +26,8 @@ typedef struct _ps {
 } ana_parser_state;
 
 typedef enum node_kind {
+  COMO_AST_LEFT_SHIFT,
+  COMO_AST_RIGHT_SHIFT,
   COMO_AST_COMPOUND_IF_STATEMENT,
   COMO_AST_ELSE_SUITE,
   COMO_AST_ELSE_IF_SUITE,
@@ -45,6 +47,9 @@ typedef enum node_kind {
   COMO_AST_ID,
   COMO_AST_BINOP,
   COMO_AST_LTE,
+  COMO_AST_GTE,
+  COMO_AST_LT,
+  COMO_AST_GT,
   COMO_AST_ASSIGN,
   COMO_AST_ADD,
   COMO_AST_WHILE,

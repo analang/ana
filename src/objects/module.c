@@ -57,5 +57,6 @@ ana_type ana_module_type = {
   .obj_binops  = NULL,
   .obj_unops   = NULL,
   .obj_compops = NULL,
-  .obj_seqops  = NULL
+  .obj_seqops  = NULL,
+  .obj_get_attr = NULL
 };

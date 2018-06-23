@@ -2523,9 +2523,9 @@ yyreduce:
   case 101:
 
     { 
-    printf("< is not implemented yet\n");
-    exit(1);
-    (yyval.ast) = (yyvsp[-2].ast); 
+    (yyval.ast) = binary_op(pstate, COMO_AST_LT);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
   }
 
     break;
@@ -2533,9 +2533,9 @@ yyreduce:
   case 102:
 
     { 
-    printf("> is not implemented yet\n");
-    exit(1);
-    (yyval.ast) = (yyvsp[-2].ast); 
+    (yyval.ast) = binary_op(pstate, COMO_AST_GT);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
   }
 
     break;
@@ -2553,9 +2553,9 @@ yyreduce:
   case 104:
 
     { 
-    printf("T_GTE is not implemented yet\n");
-    exit(1);
-    (yyval.ast) = (yyvsp[-2].ast); 
+    (yyval.ast) = binary_op(pstate, COMO_AST_GTE);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
   }
 
     break;
@@ -2569,9 +2569,9 @@ yyreduce:
   case 106:
 
     { 
-    printf("T_LS is not implemented yet\n");
-    exit(1);
-    (yyval.ast) = (yyvsp[-2].ast); 
+    (yyval.ast) = binary_op(pstate, COMO_AST_LEFT_SHIFT);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast)); 
   }
 
     break;
@@ -2579,9 +2579,9 @@ yyreduce:
   case 107:
 
     { 
-    printf("T_RS is not implemented yet\n");
-    exit(1);
-    (yyval.ast) = (yyvsp[-2].ast); 
+    (yyval.ast) = binary_op(pstate, COMO_AST_RIGHT_SHIFT);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast)); 
   }
 
     break;

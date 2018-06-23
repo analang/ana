@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <limits.h>
 #include <assert.h>
-#include <ana.h>
 
+#include <ana.h>
 
 COMO_OBJECT_API inline ana_object *ana_longfromlong(long lval)
 {
@@ -247,19 +247,6 @@ static ana_object *long_string(ana_object *obj)
   return retval;
 }
 
-static ana_binary_ops binops = {
-  .obj_add = long_add,
-  .obj_mul = long_mul,
-  .obj_div = long_div,
-  .obj_sub = long_sub,
-  .obj_rem = long_rem
-};
-
-static ana_unary_ops unops = { 
-  .obj_plus  = long_plus,
-  .obj_minus = long_minus
-};
-
 static ana_object *long_equals_wrap(ana_object *a, ana_object *b)
 {
   return ana_boolfromint(long_equals(a, b));
@@ -346,6 +333,56 @@ static int long_bool(ana_object *obj)
   return self->value != 0L;
 }
 
+static ana_object *long_ls(ana_object *a, ana_object *b)
+{
+  ana_long *self = ana_get_long(a);
+  ana_long *right;
+
+  if(!ana_type_is(b, ana_long_type)) {
+    Ana_SetError(AnaTypeError, "invalid type for right hand (<<)");
+    return NULL;
+  }
+
+  right = ana_get_long(b);
+
+  long value = self->value << right->value;
+
+  return ana_longfromlong(value);
+}
+
+static ana_object *long_rs(ana_object *a, ana_object *b)
+{
+  ana_long *self = ana_get_long(a);
+  ana_long *right;
+
+  if(!ana_type_is(b, ana_long_type)) {
+    Ana_SetError(AnaTypeError, "invalid type for right hand operand (>>)");
+    return NULL;
+  }
+
+  right = ana_get_long(b);
+
+  long value = self->value >> right->value;
+
+  return ana_longfromlong(value);
+}
+
+
+static ana_binary_ops binops = {
+  .obj_add = long_add,
+  .obj_mul = long_mul,
+  .obj_div = long_div,
+  .obj_sub = long_sub,
+  .obj_rem = long_rem,
+  .obj_ls  = long_ls,
+  .obj_rs  = long_rs
+};
+
+static ana_unary_ops unops = { 
+  .obj_plus  = long_plus,
+  .obj_minus = long_minus
+};
+
 static ana_comparison_ops compops = {
   .obj_eq  = long_equals_wrap,
   .obj_neq = long_neq,
@@ -368,6 +405,7 @@ ana_type ana_long_type = {
   .obj_binops  = &binops,
   .obj_unops   = &unops,
   .obj_compops = &compops,
-  .obj_seqops  = NULL
+  .obj_seqops  = NULL,
+  .obj_get_attr = NULL
 };
 

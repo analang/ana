@@ -54,4 +54,7 @@ ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol);
   vm->nobjs++; \
 } while(0)
 
+COMO_OBJECT_API void ana_array_type_init(ana_vm *vm);
+COMO_OBJECT_API void ana_array_type_finalize(ana_vm *vm);
+
 #endif

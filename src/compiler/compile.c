@@ -14,6 +14,9 @@
 #define SETUP_JMP_TARGET() \
   (ana_array_push(func->jump_targets, ana_longfromlong(-1L)), ana_array_size(func->jump_targets) - 1)
 
+#define DEFINE_JUMP() \
+  (ana_array_push(func->jump_targets, CURRENT_ADDRESS(), ana_array_size(func->jump_targets) - 1)
+
 /* represent the address of the next instruction */
 #define CURRENT_ADDRESS() \
   (ana_longfromlong((long)ana_container_size(func->code)))
@@ -352,6 +355,7 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
 
   ana_array_push(func->jump_targets, 
     ana_longfromlong((long)ana_container_size(func->code))); 
+
   int jmptargetindex_start = ana_array_size(func->jump_targets) - 1;
 
   ana_compile_unit(vm, funcobj, expression);  
@@ -370,6 +374,51 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
   EMITX(vm, func, END_LOOP, 0, 0, body);
 }
 
+static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
+{
+  ana_function_defn *func = ANA_GET_FUNCTION_DEF(funcobj);
+
+  /* expression executed only once */
+  node *init = ast->children[0];
+
+  /* before start of the loop body, if evalatues to false, jump out*/
+  node *condition = ast->children[1];
+
+  /* at the end of the block for every iteration this is executed */
+  node *loop = ast->children[2];
+
+  node *statements = ast->children[3];
+
+  ana_array_push(func->jump_targets, NULL);
+  int jmptargetindex_skiphandler = ana_array_size(func->jump_targets) - 1;
+
+  ana_compile_unit(vm, funcobj, init);
+
+  EMITX(vm, func, BEGIN_LOOP, 0, 0, init);
+
+  ana_array_push(func->jump_targets, 
+    ana_longfromlong((long)ana_container_size(func->code))); 
+
+  int jmptargetindex_start = ana_array_size(func->jump_targets) - 1;
+
+  ana_compile_unit(vm, funcobj, condition);
+
+  EMITX(vm, func, JMPZ, jmptargetindex_skiphandler, 0, condition);
+
+  ana_compile_unit(vm, funcobj, statements);
+
+  ana_compile_unit(vm, funcobj, loop);
+
+  EMITX(vm, func, EXIT_LOOP_CONTINUE, 0, 0, statements);
+
+  EMITX(vm, func, JMP, jmptargetindex_start, 0, loop);
+
+  ana_array_push_index(func->jump_targets, jmptargetindex_skiphandler,
+    ana_longfromlong((long)ana_container_size(func->code)));
+
+  EMITX(vm, func, END_LOOP, 0, 0, statements);
+}
+
 static int tracing = 0;
 static char *prefix = "";
 
@@ -384,6 +433,11 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
 
   switch(ast->kind)
   {
+    TARGET(COMO_AST_FOR)
+    {
+      compile_for(vm, funcobj, ast);
+      break;
+    }
     TARGET(COMO_AST_PROGRAM)
     {
       int i;
@@ -544,9 +598,19 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
         ana_compile_unit(vm, funcobj, args->children[i]);
       }
 
-      ana_compile_unit(vm, funcobj, callable_expression);
-      
-      EMITX(vm, func, CALL, args->nchild, callflags, callable_expression);
+      /* check if this is DOt notation */
+
+      if(callable_expression->kind == COMO_AST_PROP)
+      {
+        ana_compile_unit(vm, funcobj, callable_expression->children[0]);
+        ana_compile_unit(vm, funcobj, callable_expression);   
+        EMITX(vm, func, CALL_METHOD, args->nchild, callflags, callable_expression);
+      } 
+      else 
+      {
+        ana_compile_unit(vm, funcobj, callable_expression);   
+        EMITX(vm, func, CALL, args->nchild, callflags, callable_expression);
+      }
       
       break;
     }
@@ -599,6 +663,18 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
     TARGET(COMO_AST_BINOP) {
       prefix = "    ";
       switch(ast->attributes) {
+        TARGET(COMO_AST_LEFT_SHIFT) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, ILSHFT, 0, 0, ast);
+          break;
+        }
+        TARGET(COMO_AST_RIGHT_SHIFT) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, IRSHFT, 0, 0, ast);
+          break;
+        }
         TARGET(COMO_AST_IN) {
           ana_compile_unit(vm, funcobj, ast->children[0]);
           ana_compile_unit(vm, funcobj, ast->children[1]);
@@ -617,6 +693,28 @@ static void ana_compile_unit(ana_vm *vm, ana_object *funcobj,
           EMITX(vm, func, ILTE, 0, 0, ast);
           break;
         }
+
+        TARGET(COMO_AST_GTE) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, IGTE, 0, 0, ast);
+          break;
+        }
+
+        TARGET(COMO_AST_LT) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, ILT, 0, 0, ast);
+          break;
+        }
+
+        TARGET(COMO_AST_GT) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, IGT, 0, 0, ast);
+          break;
+        }
+
         TARGET(COMO_AST_EQUAL) {
           ana_compile_unit(vm, funcobj, ast->children[0]);
           ana_compile_unit(vm, funcobj, ast->children[1]);

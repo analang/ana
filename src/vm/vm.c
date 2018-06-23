@@ -79,6 +79,8 @@ ana_vm *ana_vm_new()
 
   ana_bool_type_init();
 
+  ana_array_type_init(vm);
+
   return vm;
 }
 
@@ -91,6 +93,7 @@ void ana_vm_finalize(ana_vm *vm)
   ana_object_dtor(vm->constants);
 
   ana_bool_type_finalize();
+  ana_array_type_finalize(vm);
 
   free(vm);
 }
@@ -214,6 +217,58 @@ static ana_object *ana_frame_eval(ana_vm *vm)
       vm_case(opcode) {
         default: {
           set_except("VMError", "Opcode %#04x is not implemented\n", opcode);
+          vm_continue();
+        }
+        vm_target(ILSHFT) {
+          ana_object *right = pop();
+          ana_object *left = pop();
+
+          if(left->type->obj_binops != NULL 
+            && left->type->obj_binops->obj_ls != NULL)
+          {
+            ana_object *res = left->type->obj_binops->obj_ls(left, right);
+
+            if(res)
+            {
+              push(res);
+            }
+            else
+            {
+              set_except(ana_except_type, ana_excep);
+            }
+          }
+          else
+          {
+
+            set_except("TypeError", "unsupported operands for << operator");
+          }
+
+          vm_continue();
+        }
+        vm_target(IRSHFT) {
+          ana_object *right = pop();
+          ana_object *left = pop();
+
+          if(left->type->obj_binops != NULL 
+            && left->type->obj_binops->obj_rs != NULL)
+          {
+            ana_object *res = left->type->obj_binops->obj_rs(left, right);
+
+            if(res)
+            {
+              push(res);
+            }
+            else
+            {
+              set_except(ana_except_type, ana_excep);
+            }
+          }
+          else
+          {
+
+            set_except("TypeError", "unsupported operands for >> operator");
+          }
+
           vm_continue();
         }
         vm_target(IUNARYNOT)
@@ -469,7 +524,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           while(oparg--)
           {
             left = pop();
+            
             ana_array_push(result, left);
+
+            left->refcount++;
           }
 
           GC_TRACK(vm, result);
@@ -509,6 +567,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *value = pop();          
           ana_object *instance = pop();
 
+          /* Todo, for all other types, do we want to let properties be 
+             defined? But make them readonly? 
+            */
+
+          /* map is special in that it will allow aribtrary properties to be defiend */
           if(ana_type_is(instance, ana_map_type))
           {
             ana_object *prev;
@@ -530,7 +593,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             goto SETPROP_leave;
           }
 
-          
+          /* prevent arbitrary properties from begin defined on non class types */
           if(!ana_type_is(instance, ana_class_type))
           {
             set_except("RuntimeError", "Can't set property on object of type %s",
@@ -571,31 +634,42 @@ SETPROP_leave:
 
             goto leave_GETPROP;
           }
-
-          /* this is a module get */
-          if(ana_type_is(instance, ana_frame_type))
+          /* runtime properties, dynamically computed */
+          else if(instance->type->obj_get_attr != NULL)
           {
-            ana_object *res = ana_map_get(
-              ana_get_frame(instance)->locals, arg);
+            ana_object *res = instance->type->obj_get_attr(instance, arg);
 
-            if(!res)
+            if(res)
             {
-              set_except("RuntimeError", "module '%s' has no property '%s'",
-                ana_cstring(ana_get_frame(instance)->name), 
-                ana_cstring(arg)
-              ); 
+              GC_TRACK(vm, res);
+
+              push(res);
+
+              goto leave_GETPROP;
             }
             else
             {
-              push(res);
-            }             
+                goto again;
+            }
           }
-          else if(!ana_type_is(instance, ana_class_type))
+          
+again:
+          if(instance->type->obj_props != NULL)
           {
-            set_except("RuntimeError", "can't get property on object of type %s"
-              ,ana_type_name(instance));
+            ana_object *res = ana_map_get(instance->type->obj_props, arg);
+
+            if(res) 
+            {
+              /* NO GC, since these are only builtin methods */
+              push(res);
+            }
+            else
+            {
+              set_except("RuntimeError", "can't get property on object of type %s"
+              ,ana_type_name(instance)); 
+            }
           }
-          else 
+          else if(ana_type_is(instance, ana_class_type))
           {
             ana_object *res = ana_map_get(
               ((ana_class *)instance)->members, arg);
@@ -608,8 +682,14 @@ SETPROP_leave:
             }
             else
             {
+              /* TODO, GC_TRACK */
               push(res);
             }
+          }
+          else 
+          {
+            set_except("RuntimeError", "can't get property on object of type %s"
+              ,ana_type_name(instance));
           }
 leave_GETPROP:
           vm_continue();
@@ -778,8 +858,14 @@ leave_GETPROP:
           }
           else
           {
-            set_except("NotImplementedError", "!= opeartion is not implemented"
-              "for type %s", ana_type_name(left));
+            if(left == right)
+            {
+              push(ana_bool_true);
+            }
+            else
+            {
+              push(ana_bool_false);
+            }
           }
 
           vm_continue();
@@ -851,6 +937,38 @@ leave_GETPROP:
           
           vm_continue();
         }
+        vm_target(ILT) {
+          TRACE(ILT, oparg, 0, 1);
+          right = pop();
+          left  = pop();
+
+          result = NULL;
+
+          if(ana_type_check_both(left, right, ana_long_type))
+          {
+            if(ana_get_long(left)->value < ana_get_long(right)->value)
+              result = ana_bool_true;
+            else
+              result = ana_bool_false;    
+          }
+          else if(left->type->obj_compops != NULL 
+              && left->type->obj_compops->obj_lt != NULL) 
+          {
+            /* this is just a boolean which only exists in a singleton */
+            /* do not add to GC */
+            result = left->type->obj_compops->obj_lt(left, right);
+          }
+
+          if(result) 
+          {
+            push(result);
+          }
+          else
+            set_except("RuntimeError", "unsupported operands for < operator");
+
+          vm_continue(); 
+        }
+
         vm_target(ILTE) {
           TRACE(ILTE, get_arg(), 0, 1);
           right = pop();
@@ -949,6 +1067,42 @@ leave_GETPROP:
           ana_map_put(frame->locals, name, code);
           vm_continue();
         }
+        vm_target(CALL_METHOD) {
+          /* TODO, this needs to be refactorted to account for language defined
+             methods too
+           */
+          TRACE(CALL_METHOD, oparg, 0, 1);
+          ana_object *res = NULL;
+          ana_object *callable = pop();
+          ana_object *self = pop();
+          ana_object *arg = pop();
+          
+          int totalargs = oparg;
+
+          assert(ana_type_is(callable, ana_function_type) && ana_get_function(callable)->flags && COMO_FUNCTION_METHOD);
+
+          ana_object *nativeargs = ana_array_new(4);
+
+          /* TODO, native methods should be able to define their arguments from the defn */
+          while(totalargs--)
+          {
+            ana_object *thearg = pop();
+
+            ana_array_push(nativeargs, thearg);
+          }
+
+          res = ana_get_function(callable)->m_handler(self, arg);
+            arg->refcount++;
+
+          /* refcount must increase since we're storing a new reference to this value inside an array */
+
+          push(res);
+
+          ana_object_dtor(nativeargs);
+
+          vm_continue();
+        }
+
         vm_target(CALL) {
           TRACE(CALL, oparg, 0, 1);
 
@@ -1446,7 +1600,7 @@ int ana_eval(ana_vm *vm, ana_function *functionobj, char *function)
 {
   ana_function_defn *func = ANA_GET_FUNCTION_DEF(functionobj);
 
-  if(function && vm->flags && COMO_VM_TRACING) 
+  if(function && (vm->flags & COMO_VM_TRACING)) 
   {
     return trace_function(vm, function);
   }

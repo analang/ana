@@ -344,6 +344,25 @@ static ana_object *map_set(ana_object *obj, ana_object *index,
 }
 
 
+static ana_object *map_equals(ana_object *a, ana_object *b)
+{
+  return ana_boolfromint(a == b);
+}
+
+static ana_object *map_not_equals(ana_object *a, ana_object *b)
+{
+  return ana_boolfromint(a != b);
+}
+
+static ana_comparison_ops compops = {
+  .obj_eq  = map_equals,
+  .obj_neq = map_not_equals,
+  .obj_gt  = NULL,
+  .obj_lt  = NULL,
+  .obj_gte = NULL,
+  .obj_lte = NULL
+};
+
 static struct _ana_seq_ops seqops = {
   map_get,
   map_set
@@ -361,8 +380,9 @@ ana_type ana_map_type = {
   .obj_deinit  = NULL,
   .obj_binops  = NULL,
   .obj_unops   = NULL,
-  .obj_compops = NULL,
-  .obj_seqops  = &seqops
+  .obj_compops = &compops,
+  .obj_seqops  = &seqops,
+  .obj_get_attr = NULL
 };
 
 

@@ -117,7 +117,8 @@ ana_type ana_function_type =
   .obj_binops  = NULL,
   .obj_unops   = NULL,
   .obj_compops = &compops,
-  .obj_seqops  = NULL
+  .obj_seqops  = NULL,
+  .obj_get_attr = NULL
 };
 
 COMO_OBJECT_API ana_object *ana_function_defn_new(char *filename, char *name)
@@ -138,4 +139,15 @@ COMO_OBJECT_API ana_object *ana_functionfromhandler(
   fn->handler = handler;
 
   return (ana_object *)fn;
+}
+
+COMO_OBJECT_API ana_object *ana_methodfromhandler(
+  char *filename, char *name, ana_method_handler handler)
+{
+
+  ana_function *fn = create_function(filename, name, COMO_FUNCTION_NATIVE | COMO_FUNCTION_METHOD);
+
+  fn->m_handler = handler;
+
+  return (ana_object *)fn;  
 }

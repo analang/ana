@@ -1,0 +1,12 @@
+function iterate(array)
+{
+  i = 0;
+  
+  while(i < array.length)
+  {
+    print(array[i++]);
+  }
+}
+
+// TODO, array creation needs to have values refcount increased 
+iterate([1,2,3,4]);

@@ -1,0 +1,6 @@
+obj = {
+};
+
+obj.count = 5;
+
+print(obj);

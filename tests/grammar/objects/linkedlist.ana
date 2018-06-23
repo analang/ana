@@ -1,0 +1,40 @@
+function malloc(size)
+{
+  data = [];
+  
+}
+
+
+
+list = {
+  data :  1,
+  next : -1
+};
+
+function insert(list, value)
+{
+  node = {
+    data : value,
+    next : list.next
+  };
+
+  list.next = node;
+}
+
+function xprint(thislist)
+{  
+  node = list;
+
+  while(node != -1)
+  {
+    print(node.data);
+    
+    node = node.next;
+  }
+}
+
+insert(list, "Ryan McCullagh");
+insert(list, "C++");
+insert(list, "Ana");
+
+xprint(list);

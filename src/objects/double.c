@@ -181,7 +181,9 @@ static ana_binary_ops binops = {
   .obj_mul = double_mul,
   .obj_div = double_div,
   .obj_sub = double_sub,
-  .obj_rem = double_rem
+  .obj_rem = double_rem,
+  .obj_ls  = NULL,
+  .obj_rs  = NULL
 };
 
 static ana_unary_ops unops = {
@@ -211,5 +213,6 @@ ana_type ana_double_type = {
   .obj_binops  = &binops,
   .obj_unops   = &unops,
   .obj_compops = &compops,
-  .obj_seqops  = NULL
+  .obj_seqops  = NULL,
+  .obj_get_attr = NULL
 };

@@ -1,0 +1,15 @@
+function LoadData()
+{
+  data = [];
+
+  for(i = 0; i < 15; i++)
+  {
+    data.push(i * 1000);
+  }
+
+  return data;
+}
+
+data = LoadData();
+
+print(data);

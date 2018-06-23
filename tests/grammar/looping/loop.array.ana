@@ -1,0 +1,6 @@
+data = [1,2,3,4];
+
+for(i = 0; i < data.length; i++)
+{
+  print(data[i]);
+}

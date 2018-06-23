@@ -39,14 +39,11 @@ COMO_OBJECT_API ana_object *ana_array_get(ana_object *, ana_size_t i);
       indexname = _i; \
       valuename = array->items[_i]; \
 
-
 #define ana_array_foreach_end() \
     } \
   } while(0); \
 } \
 
-COMO_OBJECT_API void ana__init_array_type(void);
-COMO_OBJECT_API void ana__finalize_array_type(void);
 
 extern ana_type ana_array_type;
 

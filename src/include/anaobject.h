@@ -11,12 +11,11 @@ typedef struct _ana_unary_ops ana_unary_ops;
 typedef struct _ana_comparison_ops ana_comparison_ops;
 typedef struct _ana_logical_ops ana_logical_ops;
 
-
 typedef long ana_size_t;
 
 struct _ana_object {
-  ana_size_t flags;        
-  ana_size_t refcount;       
+  ana_size_t flags;     
+  ana_size_t refcount;
   struct _ana_type   *type;
   struct _ana_object *next;
 };
@@ -30,6 +29,8 @@ struct _ana_binary_ops {
   ana_object *(*obj_div)(ana_object *, ana_object *);
   ana_object *(*obj_sub)(ana_object *, ana_object *);
   ana_object *(*obj_rem)(ana_object *, ana_object *);
+  ana_object *(*obj_ls)(ana_object *, ana_object *);
+  ana_object *(*obj_rs)(ana_object *, ana_object *);
 };
 
 struct _ana_unary_ops {
@@ -74,6 +75,8 @@ struct _ana_type {
   struct _ana_unary_ops       *obj_unops;
   struct _ana_comparison_ops  *obj_compops;
   struct _ana_seq_ops         *obj_seqops;
+  ana_object *(*obj_get_attr)(ana_object *, ana_object *);
+  ana_object *obj_props; /* readonly properties */
 };
 
 #define ana_object_init(x) ana_object_ctor(x)

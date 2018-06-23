@@ -203,7 +203,9 @@ static ana_binary_ops binops = {
   .obj_mul = NULL,
   .obj_div = NULL,
   .obj_sub = NULL,
-  .obj_rem = NULL
+  .obj_rem = NULL,
+  .obj_ls  = NULL,
+  .obj_rs  = NULL
 };
 
 ana_type ana_string_type = {
@@ -219,7 +221,8 @@ ana_type ana_string_type = {
   .obj_binops  = &binops,
   .obj_unops   = NULL,
   .obj_compops = &compops,
-  .obj_seqops  = &seqops
+  .obj_seqops  = &seqops,
+  .obj_get_attr = NULL
 };
 
 
