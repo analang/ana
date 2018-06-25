@@ -238,10 +238,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             {
               push(res);
             }
-            else
-            {
-              set_except(ana_except_type, ana_excep);
-            }
           }
           else
           {
@@ -263,10 +259,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             if(res)
             {
               push(res);
-            }
-            else
-            {
-              set_except(ana_except_type, ana_excep);
             }
           }
           else
@@ -315,7 +307,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           {
             result = arg->type->obj_unops->obj_minus(arg);
 
-            if(result) {
+            if(result) 
+            {
               GC_TRACK(vm, result);
               push(result);
             }
@@ -1275,6 +1268,7 @@ CALL_METHOD_leave:
         {
 
           ana_basic_block *block;
+          
           while(!(thisframe->exception->stack_position == 0))
           {
             block = thisframe->exception->stack[--thisframe->exception->stack_position];

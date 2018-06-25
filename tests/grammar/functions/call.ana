@@ -1,3 +1,18 @@
-data = [];
+function fill(array, value, length)
+{
+  for(i = 0; i < length; i++)
+  {
+    array.push(value);
+  }
+}
 
-data.push();
+function main()
+{
+  data = [];
+  
+  fill(data, "A", 25);
+ 
+  print(data);
+}
+
+main();

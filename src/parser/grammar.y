@@ -333,6 +333,12 @@ jump_statement:
   T_RETURN optional_assignment_expression {
     $$ = return_node(pstate, $2);
   }
+| T_BREAK {
+    $$ = break_node(pstate);
+  }
+| T_CONTINUE {
+    $$ = continue_node(pstate);
+}
 ;
   
 optional_assignment_expression:

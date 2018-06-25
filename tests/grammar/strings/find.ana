@@ -4,16 +4,27 @@ function find(source, find)
 
   for(i = 0; i < source.length(); i++)
   {
-    x = 0;
-
-    if(source[i] == find[x++])
+    if(source[i] == find[0])
     {
+      x = 0;
+      pos = i;
+      matched = true;
+
       for(j = i; j < source.length(); j++)
       {
-        if(source[j] != find[x])
+        if(x < find.length()) 
         {
-          break;
+          if(source[j] != find[x++])
+          {
+            matched = false;
+            break;
+          }
         }
+      }
+
+      if(matched)
+      {
+        break;
       }         
     }       
   }
@@ -21,4 +32,9 @@ function find(source, find)
   return pos;
 }
 
-find("Ryan", "ya");
+print("source: " + "Ryan");
+print("needle: " + "ya");
+
+pos = find("Ryan", "ya");
+
+print("pos: " + pos);

@@ -159,6 +159,8 @@ node *compound_if_node(ana_parser_state *state,
   node *if_statement,
   node *else_if_stmts,
   node *else_stmts);
+node *break_node(ana_parser_state *state);
+node *continue_node(ana_parser_state *state);
 
 node *postfix_node(ana_parser_state *state, node *left, int type);
 

@@ -646,6 +646,28 @@ node *postfix_node(ana_parser_state *state, node *left, int type)
 }
 
 
+node *break_node(ana_parser_state *state)
+{
+  node *list = list_node(state, COMO_AST_BREAK);
+  list->attribute_visit = NULL;
+  list->attributes = 0;
+  list->visit = visit;
+  list->info = "Break";
+
+  return list;  
+}
+
+node *continue_node(ana_parser_state *state)
+{
+  node *list = list_node(state, COMO_AST_CONTINUE);
+  list->attribute_visit = NULL;
+  list->attributes = 0;
+  list->visit = visit;
+  list->info = "Continue";
+
+  return list;    
+}
+
 #include "astkind.c"
 
 const char *astkind(int kind)
