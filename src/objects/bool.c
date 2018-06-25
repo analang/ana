@@ -146,5 +146,6 @@ ana_type ana_bool_type = {
   .obj_unops   = NULL,
   .obj_compops = &compops,
   .obj_seqops  = NULL,
-  .obj_get_attr = NULL
+  .obj_get_attr = NULL,
+  .obj_props    = NULL
 };

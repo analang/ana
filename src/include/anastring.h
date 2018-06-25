@@ -13,6 +13,8 @@ typedef struct _ana_string {
 } ana_string;
 
 COMO_OBJECT_API ana_object *ana_stringfromstring(char *val);
+COMO_OBJECT_API void ana_string_type_init(ana_vm *vm);
+COMO_OBJECT_API void ana_string_type_finalize(ana_vm *vm);
 
 #define ana_get_string(o) ((ana_string *)(o))
 #define ana_cstring(o) (((ana_string *)(o))->value)

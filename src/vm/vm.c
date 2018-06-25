@@ -79,7 +79,10 @@ ana_vm *ana_vm_new()
 
   ana_bool_type_init();
 
+  /* TODO, make a InitTabe with these setup/shutdown functions */
   ana_array_type_init(vm);
+  
+  ana_string_type_init(vm);
 
   return vm;
 }
@@ -93,7 +96,10 @@ void ana_vm_finalize(ana_vm *vm)
   ana_object_dtor(vm->constants);
 
   ana_bool_type_finalize();
+
   ana_array_type_finalize(vm);
+  
+  ana_string_type_finalize(vm);
 
   free(vm);
 }
@@ -452,21 +458,44 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           vm_continue();
         }
-        vm_target(SETUP_CATCH) {
+        vm_target(SETUP_CATCH) 
+        {
           int cindex = get_arg();
+          
           TRACE(SETUP_CATCH, cindex, 0, 1);
-          assert(ex != NULL);
+          
+          if(ex == NULL) {
+            assert(ana_excep != NULL);
+          }
+
           arg = get_const(cindex);
+          
           assert(arg != NULL);
-          ana_object *exvalue = ana_stringfromstring(ex);
+          
+          ana_object *exvalue = ana_stringfromstring(ex == NULL ? ana_excep : ex);
+          
           GC_TRACK(vm, exvalue);
           ana_map_put(frame->locals, arg, exvalue);
-          free(ex);
-          ex = NULL;
-          ex_type = NULL;
+          
+          if(ex) {
+            free(ex);
+          }
+          
+          if(ex)
+          {
+            ex = NULL;
+            ex_type = NULL;
+          }
+          else
+          {
+            ana_excep = NULL;
+            ana_except_type = NULL;
+          }
+          
           vm_continue();
         }
-        vm_target(LOAD_SUBSCRIPT) {
+        vm_target(LOAD_SUBSCRIPT) 
+        {
           TRACE(LOAD_SUBSCRIPT, 0, 0, 0);
           ana_object *index = pop();
           ana_object *container = pop();
@@ -489,7 +518,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           vm_continue(); 
         }
-        vm_target(STORE_SUBSCRIPT) {
+        vm_target(STORE_SUBSCRIPT) 
+        {
           TRACE(STORE_SUBSCRIPT, 0, 0, 0);
           ana_object *value = pop();
           ana_object *index = pop();
@@ -660,7 +690,7 @@ again:
 
             if(res) 
             {
-              /* NO GC, since these are only builtin methods */
+              /* NO GC, since these are only builtin methods, sometimes */
               push(res);
             }
             else
@@ -963,8 +993,6 @@ leave_GETPROP:
           {
             push(result);
           }
-          else
-            set_except("RuntimeError", "unsupported operands for < operator");
 
           vm_continue(); 
         }
@@ -1075,15 +1103,25 @@ leave_GETPROP:
           ana_object *res = NULL;
           ana_object *callable = pop();
           ana_object *self = pop();
-          ana_object *arg = pop();
           
           int totalargs = oparg;
 
-          assert(ana_type_is(callable, ana_function_type) && ana_get_function(callable)->flags && COMO_FUNCTION_METHOD);
+          assert(ana_type_is(callable, ana_function_type) 
+            && ana_get_function(callable)->flags && COMO_FUNCTION_METHOD);
+
+          if(ana_array_size(ana_get_function(callable)->method.m_parameters) 
+              != (ana_size_t)totalargs)
+          {
+             set_except("ArgumentError", "%s expects %ld argument(s), but %d were passed",
+              ana_cstring(ana_get_function(callable)->name), 
+              ana_array_size(ana_get_function(callable)->method.m_parameters),
+              totalargs);      
+
+            goto CALL_METHOD_leave;
+          }
 
           ana_object *nativeargs = ana_array_new(4);
 
-          /* TODO, native methods should be able to define their arguments from the defn */
           while(totalargs--)
           {
             ana_object *thearg = pop();
@@ -1091,15 +1129,32 @@ leave_GETPROP:
             ana_array_push(nativeargs, thearg);
           }
 
-          res = ana_get_function(callable)->m_handler(self, arg);
-            arg->refcount++;
-
-          /* refcount must increase since we're storing a new reference to this value inside an array */
+          res = ana_get_function(callable)->method.m_handler(self, 
+            oparg == 1 ? ana_get_array(nativeargs)->items[0] : nativeargs);
+          
+          /* TODO flag to check if it's already tracked */
+          /* this value may already be tracked */
+          if(oparg > 0)
+          {
+            /* TODO Check to make sure the returned value is not an argument */
+            /* because the arguments on the stack may either be constants
+               or already part of the GC root 
+            */
+            if(res != ana_get_array(nativeargs)->items[0]) 
+            {
+              GC_TRACK(vm, res);
+            }
+          }
+          else
+          {
+            GC_TRACK(vm, res);
+          }
 
           push(res);
 
           ana_object_dtor(nativeargs);
 
+CALL_METHOD_leave:
           vm_continue();
         }
 
@@ -1135,7 +1190,7 @@ leave_GETPROP:
                 if(ana_get_array(call->parameters)->size != totalargs)
                 {
                   set_except(
-                    "TypeError", "%s expects %lu arguments, %d given",
+                    "ArgumentError", "%s expects %lu arguments, %d given",
                     ana_get_fn_name(execframe), 
                     ana_get_array(call->parameters)->size,
                     totalargs);
@@ -1146,7 +1201,7 @@ leave_GETPROP:
               else if(totalargs != 0)
               {
                 set_except(
-                  "TypeError", "%s expects 0 arguments, %d given",
+                  "ArgumentError", "%s expects 0 arguments, %d given",
                   ana_get_fn_name(execframe), totalargs);
 
                 goto call_exit;
@@ -1208,8 +1263,11 @@ leave_GETPROP:
         }
       }
 
-      if(ex) 
+      if(ex || ana_excep) 
       {
+        char *the_message = ex ==  NULL ? ana_excep : ex;
+        char *the_type = ex_type == NULL ? ana_except_type : ex_type;
+
         ana_frame *thisframe = frame;
         ana_frame *originalframe = frame;
 
@@ -1283,8 +1341,8 @@ leave_GETPROP:
         }
 
         fprintf(stdout, "%s: %s in %s:%d\n", 
-          ex_type, 
-          ex, 
+          the_type, 
+          the_message, 
           ana_cstring(frame->filename), 
           current_line
         );

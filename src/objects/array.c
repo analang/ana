@@ -4,18 +4,45 @@
 
 #include <ana.h>
 
+ana_object *ana_array_empty;
+
+static ana_object *ana_array_push_wrap(ana_object *arrayobj, ana_object *value)
+{
+  value->refcount++;
+
+  return ana_array_push(arrayobj, value);
+}
+
+static ana_object *array_length(ana_object *arrayobj, ana_object *arg)
+{
+  COMO_UNUSED(arg);
+
+  ana_array *self = ana_get_array(arrayobj);
+
+  return ana_longfromlong(self->size);
+}
+
 COMO_OBJECT_API void ana_array_type_init(ana_vm *vm)
 {
+  /* TODO optimize array to only malloc the item pointer on first insert */
+  ana_array_empty = ana_array_new(2);
+
   ana_type *type = &ana_array_type;
-
   assert(type->obj_props == NULL);
-
   type->obj_props = ana_map_new(4);
 
-  ana_object *func = ana_methodfromhandler("<builtin>", "push", ana_array_push);
+  ana_object *parameters = ana_array_new(2);
+  ana_array_push(parameters, ana_stringfromstring("value"));
+
+  ana_object *func = ana_methodfromhandler("<builtin>", "push", 
+    ana_array_push_wrap, parameters);
 
   ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "push"), func);
-} 
+
+  ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "length"), 
+    ana_methodfromhandler("<builtin>", "length", array_length, NULL)
+  );
+}
 
 COMO_OBJECT_API void ana_array_type_finalize(ana_vm *vm)
 {
@@ -28,6 +55,7 @@ COMO_OBJECT_API void ana_array_type_finalize(ana_vm *vm)
   } ana_map_foreach_end();
 
   ana_object_dtor(ana_array_type.obj_props);
+  ana_object_dtor(ana_array_empty);
 }
 
 static inline void array_dtor(ana_object *xself)
@@ -179,17 +207,6 @@ COMO_OBJECT_API ana_object *ana_array_push_index(ana_object *xself,
   return value;
 }
 
-static ana_object *array_get_attr(ana_object *obj, ana_object *keyobj)
-{
-  ana_array *self = ana_get_array(obj);
-  char *str = ana_cstring(keyobj);
-
-  if(strcmp(str, "length") == 0)
-    return ana_longfromlong(self->size);
-
-  return NULL;
-}
-
 ana_type ana_array_type = {
   .obj_name    = "array",
   .obj_print   = array_print,
@@ -203,7 +220,7 @@ ana_type ana_array_type = {
   .obj_binops  = NULL,
   .obj_unops   = NULL,
   .obj_compops = NULL,
-  .obj_seqops  = &seqops,
-  .obj_get_attr = array_get_attr,
-  .obj_props   = NULL
+  .obj_seqops   = &seqops,
+  .obj_get_attr = NULL,
+  .obj_props    = NULL,
 };

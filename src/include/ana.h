@@ -12,10 +12,14 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+/* Order is important here */
 #include "anaexceptions.h"
 #include "utils.h"
 #include "system.h"
 #include "anaobject.h"
+#include "frame.h"
+#include "function.h"
+#include "vm.h"
 #include "anabool.h"
 #include "container.h"
 #include "class.h"
@@ -26,10 +30,7 @@
 #include "long.h"
 #include "double.h"
 #include "code.h"
-#include "frame.h"
-#include "function.h"
 #include "arena.h"
-#include "vm.h"
 
 #define LIKELY(x)       __builtin_expect(!!(x), 1)
 #define UNLIKELY(x)     __builtin_expect(!!(x), 0)

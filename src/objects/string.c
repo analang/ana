@@ -6,6 +6,38 @@
 
 #include <ana.h>
 
+static ana_object *string_length(ana_object *stringobj, ana_object *arg)
+{
+  (void)arg;
+  
+  return ana_longfromlong(ana_get_string(stringobj)->len);
+}
+
+COMO_OBJECT_API void ana_string_type_init(ana_vm *vm)
+{
+  ana_type *type = &ana_string_type;
+
+  type->obj_props = ana_map_new(4);
+
+  ana_object *func = ana_methodfromhandler("<builtin>", "length", 
+    string_length, NULL);
+
+  ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "length"), func);
+}
+
+COMO_OBJECT_API void ana_string_type_finalize(ana_vm *vm)
+{
+  COMO_UNUSED(vm);
+
+  ana_map_foreach(ana_string_type.obj_props, key, value) {
+    (void)key;
+
+    ana_object_dtor(value);
+  } ana_map_foreach_end();
+
+  ana_object_dtor(ana_string_type.obj_props);
+}
+
 static inline unsigned long hash(unsigned char *str)
 {
   unsigned long hash = 5381;
@@ -209,20 +241,21 @@ static ana_binary_ops binops = {
 };
 
 ana_type ana_string_type = {
-  .obj_name    = "string",
-  .obj_print   = string_print,
-  .obj_dtor    = string_dtor,
-  .obj_equals  = string_equals,
-  .obj_bool    = string_bool,
-  .obj_hash    = string_hash,
-  .obj_str     = string_string,
-  .obj_init    = NULL,
-  .obj_deinit  = NULL,
-  .obj_binops  = &binops,
-  .obj_unops   = NULL,
-  .obj_compops = &compops,
-  .obj_seqops  = &seqops,
-  .obj_get_attr = NULL
+  .obj_name     = "string",
+  .obj_print    = string_print,
+  .obj_dtor     = string_dtor,
+  .obj_equals   = string_equals,
+  .obj_bool     = string_bool,
+  .obj_hash     = string_hash,
+  .obj_str      = string_string,
+  .obj_init     = NULL,
+  .obj_deinit   = NULL,
+  .obj_binops   = &binops,
+  .obj_unops    = NULL,
+  .obj_compops  = &compops,
+  .obj_seqops   = &seqops,
+  .obj_get_attr = NULL,
+  .obj_props    = NULL
 };
 
 

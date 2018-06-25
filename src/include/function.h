@@ -31,7 +31,10 @@ typedef struct _ana_function
   {
     struct _ana_function_def *func;
     ana_function_handler handler;
-    ana_method_handler m_handler;
+    struct {
+      ana_object *m_parameters;
+      ana_method_handler m_handler;
+    } method;
   };
 } ana_function;
 
@@ -42,7 +45,7 @@ COMO_OBJECT_API ana_object *ana_functionfromhandler(
   char *filename, char *name, ana_function_handler handler);
 
 COMO_OBJECT_API ana_object *ana_methodfromhandler(
-  char *filename, char *name, ana_method_handler handler);
+  char *filename, char *name, ana_method_handler handler, ana_object *parameters);
 
 #define ana_get_function(obj) ((ana_function *)((obj)))
 #define ana_get_function_frame(obj) (((ana_function *)((obj)))->impl.frame)

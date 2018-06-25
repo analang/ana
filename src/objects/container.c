@@ -95,7 +95,8 @@ ana_type ana_container_type = {
   .obj_unops   = NULL,
   .obj_compops = NULL,
   .obj_seqops  = NULL,
-  .obj_get_attr = NULL
+  .obj_get_attr = NULL,
+  .obj_props    = NULL
 };
 
 

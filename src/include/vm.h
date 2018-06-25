@@ -19,7 +19,7 @@ struct ana_vm
   ana_object *symbols;
   ana_object *constants;
   ana_object *exception;
-  ana_frame  *stack[COMO_VM_STACK_MAX]; 
+  ana_frame  *stack[COMO_VM_STACK_MAX];
   ana_size_t stacksize;
   ana_size_t stackpointer;
   ana_uint32_t flags;
@@ -54,7 +54,5 @@ ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol);
   vm->nobjs++; \
 } while(0)
 
-COMO_OBJECT_API void ana_array_type_init(ana_vm *vm);
-COMO_OBJECT_API void ana_array_type_finalize(ana_vm *vm);
 
 #endif

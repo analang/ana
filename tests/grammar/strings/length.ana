@@ -1,0 +1,13 @@
+language = "Portugease";
+
+data = [];
+
+print(language.length());
+
+for(i = 0; i < language.length(); i++)
+{
+  print(i);
+  data.push(language[i]);
+}
+
+print(data);

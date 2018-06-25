@@ -13,7 +13,7 @@ static ana_function_defn *ana_new_function_defn(void)
   obj->code         = ana_code_new(COMO_CODE_SIZE);
   obj->line_mapping = ana_map_new(4);
   obj->jump_targets = ana_array_new(4);
-
+ 
   return obj;
 }
 
@@ -58,6 +58,14 @@ static void function_dtor(ana_object *obj)
     ana_object_dtor(self->func->jump_targets);
     
     free(self->func);
+  }
+
+  if((self->flags & COMO_FUNCTION_METHOD 
+    && self->method.m_parameters != NULL)
+    && self->method.m_parameters != ana_array_empty)
+  {
+    ana_array_foreach_apply(self->method.m_parameters, ana_object_dtor);
+    ana_object_dtor(self->method.m_parameters);
   }
 
   ana_object_dtor(self->name);
@@ -118,7 +126,8 @@ ana_type ana_function_type =
   .obj_unops   = NULL,
   .obj_compops = &compops,
   .obj_seqops  = NULL,
-  .obj_get_attr = NULL
+  .obj_get_attr = NULL,
+  .obj_props    = NULL
 };
 
 COMO_OBJECT_API ana_object *ana_function_defn_new(char *filename, char *name)
@@ -142,12 +151,14 @@ COMO_OBJECT_API ana_object *ana_functionfromhandler(
 }
 
 COMO_OBJECT_API ana_object *ana_methodfromhandler(
-  char *filename, char *name, ana_method_handler handler)
+  char *filename, char *name, ana_method_handler handler, ana_object *parameters)
 {
 
-  ana_function *fn = create_function(filename, name, COMO_FUNCTION_NATIVE | COMO_FUNCTION_METHOD);
+  ana_function *fn = create_function(filename, name, 
+    COMO_FUNCTION_NATIVE | COMO_FUNCTION_METHOD);
 
-  fn->m_handler = handler;
+  fn->method.m_handler    = handler;
+  fn->method.m_parameters = parameters == NULL ? ana_array_empty : parameters;
 
   return (ana_object *)fn;  
 }

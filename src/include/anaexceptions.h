@@ -1,7 +1,10 @@
 #ifndef ANA_EXCEPTIONS_H
 #define ANA_EXCEPTIONS_H
 
-#define AnaTypeError "TypeError"
+#define AnaTypeError     "TypeError"
+#define AnaArgumentError "ArgumentError"
+#define AnaRuntimeError  "RuntimeError"
+#define AnaSystemError   "SystemError"
 
 extern char **ana__excep_location(void);
 extern char **ana__except_type_location(void);

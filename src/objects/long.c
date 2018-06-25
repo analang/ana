@@ -261,8 +261,12 @@ static ana_object *long_gt(ana_object *a, ana_object *b)
 {
   ana_long *self = ana_get_long(a);
 
-  if(!ana_type_is(b, ana_long_type))
-    return ana_false;
+  if(!ana_type_is(b, ana_long_type)) 
+  {
+    Ana_SetError(AnaTypeError, "Unsupported operands for >");
+    
+    return NULL;
+  }
   else
     return ana_boolfromint(self->value > ((ana_long *)b)->value);
 }
@@ -271,8 +275,12 @@ static ana_object *long_lt(ana_object *a, ana_object *b)
 {
   ana_long *self = ana_get_long(a);
 
-  if(!ana_type_is(b, ana_long_type))
-    return ana_bool_false;
+  if(!ana_type_is(b, ana_long_type)) 
+  {
+    Ana_SetError(AnaTypeError, "Unsupported operands for <");
+  
+    return NULL;
+  }
   else
     return (self->value < ((ana_long *)b)->value) ? 
       ana_bool_true : ana_bool_false;
@@ -282,8 +290,12 @@ static ana_object *long_gte(ana_object *a, ana_object *b)
 {
   ana_long *self = ana_get_long(a);
 
-  if(!ana_type_is(b, ana_long_type))
-    return ana_false;
+  if(!ana_type_is(b, ana_long_type)) 
+  {
+    Ana_SetError(AnaTypeError, "Unsupported operands for >=");
+
+    return NULL;
+  }
   else
   {
     ana_long *right = (ana_long *)b;
@@ -310,7 +322,9 @@ static ana_object *long_lte(ana_object *a, ana_object *b)
     }
     else
     {
-      return ana_false;
+      Ana_SetError(AnaTypeError, "Unsupported operands for <");
+
+      return NULL;
     }
   }
   else
@@ -338,8 +352,10 @@ static ana_object *long_ls(ana_object *a, ana_object *b)
   ana_long *self = ana_get_long(a);
   ana_long *right;
 
-  if(!ana_type_is(b, ana_long_type)) {
+  if(!ana_type_is(b, ana_long_type)) 
+  {
     Ana_SetError(AnaTypeError, "invalid type for right hand (<<)");
+    
     return NULL;
   }
 
@@ -355,8 +371,10 @@ static ana_object *long_rs(ana_object *a, ana_object *b)
   ana_long *self = ana_get_long(a);
   ana_long *right;
 
-  if(!ana_type_is(b, ana_long_type)) {
+  if(!ana_type_is(b, ana_long_type)) 
+  {
     Ana_SetError(AnaTypeError, "invalid type for right hand operand (>>)");
+  
     return NULL;
   }
 
@@ -406,6 +424,7 @@ ana_type ana_long_type = {
   .obj_unops   = &unops,
   .obj_compops = &compops,
   .obj_seqops  = NULL,
-  .obj_get_attr = NULL
+  .obj_get_attr = NULL,
+  .obj_props    = NULL
 };
 

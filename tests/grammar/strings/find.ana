@@ -1,0 +1,24 @@
+function find(source, find)
+{
+  pos = -1;
+
+  for(i = 0; i < source.length(); i++)
+  {
+    x = 0;
+
+    if(source[i] == find[x++])
+    {
+      for(j = i; j < source.length(); j++)
+      {
+        if(source[j] != find[x])
+        {
+          break;
+        }
+      }         
+    }       
+  }
+
+  return pos;
+}
+
+find("Ryan", "ya");
