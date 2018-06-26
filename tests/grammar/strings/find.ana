@@ -38,3 +38,6 @@ print("needle: " + "ya");
 pos = find("Ryan", "ya");
 
 print("pos: " + pos);
+
+
+print(find("adfadfadf", "Ryan"));

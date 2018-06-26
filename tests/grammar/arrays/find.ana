@@ -1,0 +1,19 @@
+function search(list, value)
+{  
+  found = -1;
+
+  for(i = 0; i < list.length(); i++)
+  {
+
+    if(list[i] == value)
+    {
+      found = list[i];
+
+      break;
+    }
+  }
+
+  return found;
+}
+
+print(search(["Ryan", "Ana"], "Ana"));

@@ -537,7 +537,7 @@ relational_expression:
     add_child(pstate, $$, $1);
     add_child(pstate, $$, $3);
   }
-| relational_expression '>'   shift_expression { 
+| relational_expression '>' shift_expression { 
     $$ = binary_op(pstate, COMO_AST_GT);
     add_child(pstate, $$, $1);
     add_child(pstate, $$, $3);

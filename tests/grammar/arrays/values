@@ -1,9 +1,0 @@
-array = [
-  1,
-  5 * 5
-];
-
-array[1] = [array[1] * 2];
-array[1] = [array[0] = 5 * 10];
-
-print(array);

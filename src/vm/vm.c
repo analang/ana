@@ -847,16 +847,21 @@ leave_GETPROP:
               bool 
              */
             result = left->type->obj_compops->obj_eq(left, right);
-          }
-
-          if(result)
-          {
-            push(result);
+            if(result)
+            {
+              push(result);
+            }
           }
           else
           {
-            set_except("NotImplementedError", "== operation is not implemented"
-              " for type %s", ana_type_name(left));
+            if(left == right)
+            {
+              push(ana_bool_true);
+            }
+            else
+            {
+              push(ana_bool_false);
+            }
           }
 
           vm_continue();
@@ -881,7 +886,7 @@ leave_GETPROP:
           }
           else
           {
-            if(left == right)
+            if(left != right)
             {
               push(ana_bool_true);
             }
@@ -960,7 +965,8 @@ leave_GETPROP:
           
           vm_continue();
         }
-        vm_target(ILT) {
+        vm_target(ILT) 
+        {
           TRACE(ILT, oparg, 0, 1);
           right = pop();
           left  = pop();
@@ -973,6 +979,8 @@ leave_GETPROP:
               result = ana_bool_true;
             else
               result = ana_bool_false;    
+
+            push(result);
           }
           else if(left->type->obj_compops != NULL 
               && left->type->obj_compops->obj_lt != NULL) 
@@ -980,17 +988,61 @@ leave_GETPROP:
             /* this is just a boolean which only exists in a singleton */
             /* do not add to GC */
             result = left->type->obj_compops->obj_lt(left, right);
-          }
+            
+            if(result) 
+            {
+              push(result);
+            }
 
-          if(result) 
+            vm_continue();
+          }
+          else
           {
-            push(result);
+            set_except("TypeError", "unsupported operands for < operator");
           }
 
           vm_continue(); 
         }
+        vm_target(IGT) 
+        {
+          TRACE(IGT, oparg, 0, 1);
+          right = pop();
+          left  = pop();
 
-        vm_target(ILTE) {
+          result = NULL;
+
+          if(ana_type_check_both(left, right, ana_long_type))
+          {
+            if(ana_get_long(left)->value > ana_get_long(right)->value)
+              result = ana_bool_true;
+            else
+              result = ana_bool_false; 
+
+            push(result);
+          }
+          else if(left->type->obj_compops != NULL 
+              && left->type->obj_compops->obj_lt != NULL) 
+          {
+            /* this is just a boolean which only exists in a singleton */
+            /* do not add to GC */
+            result = left->type->obj_compops->obj_lt(left, right);
+
+            if(result)
+            {
+              push(result);
+            }
+
+            vm_continue();
+          }
+          else
+          {
+            set_except("TypeError", "unsupported operands for < operator");
+          }
+
+          vm_continue(); 
+        }
+        vm_target(ILTE) 
+        {
           TRACE(ILTE, get_arg(), 0, 1);
           right = pop();
           left  = pop();
@@ -1003,6 +1055,8 @@ leave_GETPROP:
               result = ana_bool_true;
             else
               result = ana_bool_false;    
+
+            push(result);
           }
           else if(left->type->obj_compops != NULL 
               && left->type->obj_compops->obj_lte != NULL) 
@@ -1010,27 +1064,68 @@ leave_GETPROP:
             /* this is just a boolean which only exists in a singleton */
             /* do not add to GC */
             result = left->type->obj_compops->obj_lte(left, right);
-          }
 
-          if(result) {
-            /* bool objects aren't GC'd, there are only 2 instances throught 
-               the entire run 
-             */
-            push(result);
+            if(result) 
+            {
+              /* bool objects aren't GC'd, there are only 2 instances throught 
+                 the entire run 
+               */
+              push(result);
+            }
           }
-          else
+          else 
+          {
             set_except("RuntimeError", "unsupported operands for <= operator");
+          }
 
           vm_continue(); 
         }
-        vm_target(ITIMES) {
+        vm_target(IGTE)
+        {
+          TRACE(IGTE, get_arg(), 0, 1);
+          right = pop();
+          left  = pop();
+
+          result = NULL;
+
+          if(ana_type_check_both(left, right, ana_long_type))
+          {
+            if(ana_get_long(left)->value >= ana_get_long(right)->value)
+              result = ana_bool_true;
+            else
+              result = ana_bool_false;
+
+            push(result);
+          }
+          else if(left->type->obj_compops != NULL 
+              && left->type->obj_compops->obj_lte != NULL) 
+          {
+            /* this is just a boolean which only exists in a singleton */
+            /* do not add to GC */
+            result = left->type->obj_compops->obj_gte(left, right);
+
+            if(result)
+            {
+              push(result);
+            }
+          }
+          else 
+          {
+            set_except("RuntimeError", "unsupported operands for >= operator");
+          }
+
+          vm_continue();
+        }
+        vm_target(ITIMES) 
+        {
           TRACE(ITIMES, get_arg(), 0, 1);
           right = pop();
           left  = pop();
 
           result = mul(vm, left, right);
 
-          if(result) {
+          if(result) 
+          {
             push(result);
           }
           else

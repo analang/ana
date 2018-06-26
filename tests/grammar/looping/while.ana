@@ -1,0 +1,12 @@
+str = "Ana";
+i = 0;
+
+while(1)
+{
+  if(i >= str.length())
+  {
+    break;
+  }
+
+  i++;
+}

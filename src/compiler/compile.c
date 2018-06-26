@@ -359,6 +359,12 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
   ana_array_push(func->jump_targets, NULL);
   int jmptargetindex_skiphandler = ana_array_size(func->jump_targets) - 1;
   
+  ana_array_push(func->jump_targets, NULL);
+  int break_address_index = ana_array_size(func->jump_targets) - 1;
+
+  ana_array_push(func->jump_targets, NULL);
+  int continue_address_index = ana_array_size(func->jump_targets) - 1;
+
   EMITX(vm, func, BEGIN_LOOP, 0, 0, body);
 
   ana_array_push(func->jump_targets, 
@@ -370,7 +376,8 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
 
   EMITX(vm, func, JMPZ, jmptargetindex_skiphandler, 0, body);
 
-  ana_compile_unit(vm, funcobj, body);
+  ana_compile_unit_ex(vm, funcobj, body, 
+    &break_address_index, &continue_address_index);
 
   EMITX(vm, func, EXIT_LOOP_CONTINUE, 0, 0, body);
   
@@ -379,7 +386,16 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
   ana_array_push_index(func->jump_targets, jmptargetindex_skiphandler,
     ana_longfromlong((long)ana_container_size(func->code)));
 
+  ana_size_t end = ana_container_size(func->code);
+
   EMITX(vm, func, END_LOOP, 0, 0, body);
+
+  ana_array_push_index(func->jump_targets, break_address_index,
+    ana_longfromlong((long)end));
+
+  ana_array_push_index(func->jump_targets, continue_address_index,
+    ana_longfromlong((long)jmptargetindex_start));
+
 }
 
 static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
@@ -396,7 +412,6 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
   node *loop = ast->children[2];
 
   node *statements = ast->children[3];
-
 
   ana_array_push(func->jump_targets, NULL);
   int break_address_index = ana_array_size(func->jump_targets) - 1;
@@ -551,13 +566,23 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       break;
     }
     TARGET(COMO_AST_BREAK) {
-      assert(break_address != NULL);
+      if(break_address == NULL)
+      {
+        fprintf(stderr, "SyntaxError: break statement outside of loop\n");
+        exit(1);
+      }
+
       EMITX(vm, func, JMP, *break_address, 0, ast);
       break;
     }
     TARGET(COMO_AST_CONTINUE)
     {
-      assert(continue_address != NULL);
+      if(continue_address == NULL)
+      {
+        fprintf(stderr, "SyntaxError: continue statement outside of loop\n");
+        exit(1);
+      }
+
       EMITX(vm, func, JMP, *continue_address, 0, ast);
       break;
     }
