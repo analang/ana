@@ -1,0 +1,5 @@
+callback = function() {
+  return 1;
+};
+
+callback(1);

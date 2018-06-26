@@ -1,0 +1,3 @@
+Optimization Opportunity:
+  Remove ana_container object, and embed ana_code directly into the 
+  function object. 

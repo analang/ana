@@ -225,6 +225,53 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           set_except("VMError", "Opcode %#04x is not implemented\n", opcode);
           vm_continue();
         }
+        vm_target(ILAND) {
+          ana_object *right = pop();
+          ana_object *left = pop();
+
+          if(!left->type->obj_bool(left))
+          {
+            /* This was falsy, so put this on the stack */
+            push(left);
+          }
+          else if(!right->type->obj_bool(right))
+          {
+            push(right);
+          }
+          else
+          {
+            push(right);
+          }
+
+          vm_continue();
+        }
+        vm_target(ILOR)
+        {
+          // // operator, returns the first value that was true,
+          // else the right value is returned
+          //
+          ana_object *right = pop();
+          ana_object *left = pop();
+
+          /* left is true */
+          if(left->type->obj_bool(left))
+          {
+            push(left);
+
+            vm_continue();
+          }
+
+          if(right->type->obj_bool(right))
+          {
+            push(right);
+
+            vm_continue();
+          }   
+
+          push(right);
+
+          vm_continue();
+        }
         vm_target(ILSHFT) {
           ana_object *right = pop();
           ana_object *left = pop();
@@ -1650,13 +1697,13 @@ static void sweep(ana_vm *vm)
       }
       else
       {
-        //#ifdef ANA_GC_DEBUG
+        #ifdef ANA_GC_DEBUG
         ana_object *str = ana_object_tostring(unreached);
         printf("not releasing %p(%s, %s), it's reference count is %ld\n", 
             (void *)unreached, ana_type_name(unreached), ana_cstring(str), unreached->refcount);
         ana_object_dtor(str);
-        //#endif
-
+        #endif
+        
         root = &(*root)->next;
       }
     } 

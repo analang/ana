@@ -1,0 +1,9 @@
+if("" && 5)
+{
+  print('"" && 5 returned truthy');
+}
+
+if("Ryan" && "World")
+{
+  print("Ryan" && "World"); 
+}

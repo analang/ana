@@ -1,0 +1,28 @@
+function test_if_else_if_statement(value)
+{
+  if(value == "Ana")
+  {
+    return value;
+  }
+  else if(value == "Ryan")
+  {
+    return value;
+  }
+  else if(value == "Vim")
+  {
+    return value;
+  }
+}
+
+function expect(value, expected)
+{   
+  if(!value)
+  {
+    throw "Unexpected result, got " + value + ",expected " + expected;
+  }
+}
+
+expect(
+  test_if_else_if_statement("Ana"),
+  "Ana"
+);

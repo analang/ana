@@ -4,6 +4,7 @@
 #include "ana_ast.h"
 #include "opcodes.h"
 #include "vm.h"
+#include "compiler.h"
 #include "builtin.h"
 
 #define PACK_INSTRUCTION(opcode, argument, flag) \
@@ -317,7 +318,6 @@ static void compile_if(ana_vm *vm, ana_object *funcobj,
     assert(else_statement->nchild == 1);
     else_statement = else_statement->children[0];
   }
-
 
   ana_array_push(func->jump_targets, NULL);
   int jmptargetindex_skiphandler = ana_array_size(func->jump_targets) - 1;
@@ -739,6 +739,18 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
     TARGET(COMO_AST_BINOP) {
       prefix = "    ";
       switch(ast->attributes) {
+        TARGET(COMO_AST_AND) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, ILAND, 0, 0, ast);
+          break;
+        }
+        TARGET(COMO_AST_OR) {
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, ILOR, 0, 0, ast);
+          break;
+        }
         TARGET(COMO_AST_LEFT_SHIFT) {
           ana_compile_unit(vm, funcobj, ast->children[0]);
           ana_compile_unit(vm, funcobj, ast->children[1]);
@@ -1114,13 +1126,13 @@ static void ana_compile_builtins(ana_vm *vm, ana_function *funcobj, node *ast)
 }
 
 
-ana_function *ana_compileast(char *filename, ana_vm *vm, node *ast)
+ana_function *ana_compileast(ana_vm *vm, ana_compile_state *state)
 {
-  ana_object *func = ana_function_defn_new(filename, "__main__");
+  ana_object *func = ana_function_defn_new(state->filename, "__main__");
 
-  ana_compile_builtins(vm, ANA_GET_FUNCTION(func), ast);
+  ana_compile_builtins(vm, ANA_GET_FUNCTION(func), state->ast);
 
-  ana_compile_unit(vm, func, ast);
+  ana_compile_unit(vm, func, state->ast);
 
   ana_compile_return_statement(vm, ANA_GET_FUNCTION_DEF(func));
   

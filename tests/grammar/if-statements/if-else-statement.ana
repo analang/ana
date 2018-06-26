@@ -1,0 +1,29 @@
+function test_if_else_statement(value)
+{
+  if(value)
+  {
+    return 1;
+  }
+  else
+  {
+    return "else";
+  }
+}
+
+function expect(value, expected)
+{   
+  if(!value)
+  {
+    throw "Unexpected result, got " + value + ",expected " + expected;
+  }
+}
+
+expect(
+  test_if_else_statement(1),
+  1
+);
+
+expect(
+  test_if_else_statement(2),
+  "else"
+);

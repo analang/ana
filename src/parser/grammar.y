@@ -161,6 +161,11 @@ selection_stmt:
   }
 |
   T_IF '(' assignment_expression ')' '{' if_statements '}' else_if_stmts {
+    printf("broken\n");
+    /*
+      This is currently broken, see tests/grammar/if-statements/if-else-if-statement.ana
+    */
+
     $$ = list_node(pstate, COMO_AST_IF);
     add_child(pstate, $$, $3);
     add_child(pstate, $$, $6);  
@@ -363,6 +368,8 @@ function_def:
 
 function_expression:
   T_FUNCTION '(' optional_parameter_list ')' '{' function_statements '}' { 
+    printf("function expression are not implemented yet\n");
+    exit(1);
     $$ = function_node(pstate, "<anonymous>", $3, $6);
   }
 ;
@@ -449,7 +456,7 @@ keyvpair:
 
 key:
   T_ID       { $$ = string_node(pstate, $1); }
-| T_STR_LIT  { $$ = string_node(pstate, $1); } 
+| T_STR_LIT  { $$ = string_node(pstate, $1); }
 ;
 
 optional_parameter_list:
@@ -488,27 +495,47 @@ basic_expression:
 
 logical_or_expression:
   logical_and_expression { $$ = $1; }
-| logical_or_expression T_LO logical_and_expression { $$ = $1; }
+| logical_or_expression T_LO logical_and_expression { 
+    $$ = binary_op(pstate, COMO_AST_OR);
+    add_child(pstate, $$, $1);
+    add_child(pstate, $$, $3);
+  }
 ;
 
 logical_and_expression:
   inclusive_or_expression { $$ = $1; }
-| logical_and_expression T_LA inclusive_or_expression { $$ = $1; }
+| logical_and_expression T_LA inclusive_or_expression { 
+    $$ = binary_op(pstate, COMO_AST_AND);
+    add_child(pstate, $$, $1);
+    add_child(pstate, $$, $3);
+  }
 ;
 
 inclusive_or_expression:
   exclusive_or_expression { $$ = $1; }
-| inclusive_or_expression '|' exclusive_or_expression { $$ = $1; }
+| inclusive_or_expression '|' exclusive_or_expression { 
+    printf("| operator is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
 ;
 
 exclusive_or_expression:
   and_expression { $$ = $1; }
-| exclusive_or_expression '^' and_expression { $$ = $1; }
+| exclusive_or_expression '^' and_expression { 
+    printf("binary ^ operator is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
 ;
 
 and_expression:
   equality_expression { $$ = $1; }
-| and_expression '&' equality_expression { $$ = $1; }
+| and_expression '&' equality_expression { 
+    printf("binary & operator is not implemented yet\n");
+    exit(1);
+    $$ = $1; 
+  }
 ;
 
 equality_expression:
@@ -532,7 +559,7 @@ equality_expression:
 
 relational_expression:
   shift_expression { $$ = $1; }
-| relational_expression '<'   shift_expression { 
+| relational_expression '<' shift_expression { 
     $$ = binary_op(pstate, COMO_AST_LT);
     add_child(pstate, $$, $1);
     add_child(pstate, $$, $3);

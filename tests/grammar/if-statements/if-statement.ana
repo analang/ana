@@ -1,0 +1,28 @@
+function test_if_statement(value)
+{
+  if(value)
+  {
+    return 1;
+  }
+
+  return -1;
+}
+
+function expect(value, expected)
+{   
+  if(!value)
+  {
+    throw "Unexpected result, got " + value + ",expected " + expected;
+  }
+}
+
+expect(
+  test_if_statement(1),
+  1
+);
+
+
+expect(
+  test_if_statement(0),
+  -1
+);

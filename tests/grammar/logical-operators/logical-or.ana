@@ -1,0 +1,6 @@
+function main()
+{
+  print(-1 || "Ana");
+}
+
+main();

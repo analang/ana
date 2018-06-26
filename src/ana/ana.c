@@ -300,6 +300,7 @@ static int run_file(ana_options *opts)
   else 
   {
     fclose(fp);
+
     ana_vm *vm = ana_vm_new();
 
     if(opts->livetracing)
@@ -316,10 +317,16 @@ static int run_file(ana_options *opts)
     }
     else 
     {
-      ana_function *code = ana_compileast((char *)filename, vm, state.ast);
+      ana_compile_state compile_state;
+      compile_state.ast = state.ast;
+      compile_state.filename = (char *)filename;
+
+      ana_function *code = ana_compileast(vm, &compile_state);
 
       if(!code) 
+      {
         fprintf(stderr, PROGRAM_NAME ": compile error\n");
+      }
       else
         if(opts->function)
           ana_eval(vm, code, opts->function);

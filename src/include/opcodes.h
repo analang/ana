@@ -43,6 +43,8 @@
 #define IGT               0x26
 #define ILT               0x27
 #define CALL_METHOD       0x28
-#define ANA_LAST_OPCODE 0x29
+#define ILAND             0x29
+#define ILOR              0x30
+#define ANA_LAST_OPCODE 0x31
 
 #endif

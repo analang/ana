@@ -566,19 +566,19 @@ static const yytype_uint8 yytranslate[] =
 static const yytype_uint16 yyrline[] =
 {
        0,   137,   137,   141,   142,   146,   147,   148,   149,   150,
-     151,   155,   163,   170,   180,   198,   204,   212,   221,   225,
-     232,   242,   249,   252,   257,   258,   259,   260,   261,   265,
-     274,   277,   280,   281,   282,   283,   284,   288,   297,   301,
-     308,   315,   319,   325,   326,   327,   328,   329,   333,   336,
-     339,   345,   346,   350,   353,   359,   365,   371,   374,   377,
-     383,   387,   392,   398,   404,   407,   410,   413,   416,   419,
-     423,   426,   432,   436,   443,   451,   452,   456,   457,   461,
-     465,   472,   478,   479,   480,   481,   482,   486,   490,   491,
-     495,   496,   500,   501,   505,   506,   510,   511,   515,   516,
-     521,   526,   534,   535,   540,   545,   550,   558,   559,   564,
-     572,   573,   578,   586,   587,   592,   597,   605,   606,   614,
-     617,   620,   623,   626,   629,   632,   638,   639,   643,   647,
-     654,   658,   661,   664,   667,   670,   673
+     151,   155,   163,   175,   185,   203,   209,   217,   226,   230,
+     237,   247,   254,   257,   262,   263,   264,   265,   266,   270,
+     279,   282,   285,   286,   287,   288,   289,   293,   302,   306,
+     313,   320,   324,   330,   331,   332,   333,   334,   338,   341,
+     344,   350,   351,   355,   358,   364,   370,   378,   381,   384,
+     390,   394,   399,   405,   411,   414,   417,   420,   423,   426,
+     430,   433,   439,   443,   450,   458,   459,   463,   464,   468,
+     472,   479,   485,   486,   487,   488,   489,   493,   497,   498,
+     506,   507,   515,   516,   524,   525,   533,   534,   542,   543,
+     548,   553,   561,   562,   567,   572,   577,   585,   586,   591,
+     599,   600,   605,   613,   614,   619,   624,   632,   633,   641,
+     644,   647,   650,   653,   656,   659,   665,   666,   670,   674,
+     681,   685,   688,   691,   694,   697,   700
 };
 #endif
 
@@ -1822,6 +1822,11 @@ yyreduce:
   case 12:
 
     {
+    printf("broken\n");
+    /*
+      This is currently broken, see tests/grammar/if-statements/if-else-if-statement.ana
+    */
+
     (yyval.ast) = list_node(pstate, COMO_AST_IF);
     add_child(pstate, (yyval.ast), (yyvsp[-5].ast));
     add_child(pstate, (yyval.ast), (yyvsp[-2].ast));  
@@ -2184,6 +2189,8 @@ yyreduce:
   case 56:
 
     { 
+    printf("function expression are not implemented yet\n");
+    exit(1);
     (yyval.ast) = function_node(pstate, "<anonymous>", (yyvsp[-4].ast), (yyvsp[-1].ast));
   }
 
@@ -2430,7 +2437,11 @@ yyreduce:
 
   case 89:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    (yyval.ast) = binary_op(pstate, COMO_AST_OR);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
+  }
 
     break;
 
@@ -2442,7 +2453,11 @@ yyreduce:
 
   case 91:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    (yyval.ast) = binary_op(pstate, COMO_AST_AND);
+    add_child(pstate, (yyval.ast), (yyvsp[-2].ast));
+    add_child(pstate, (yyval.ast), (yyvsp[0].ast));
+  }
 
     break;
 
@@ -2454,7 +2469,11 @@ yyreduce:
 
   case 93:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("| operator is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
@@ -2466,7 +2485,11 @@ yyreduce:
 
   case 95:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("binary ^ operator is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
@@ -2478,7 +2501,11 @@ yyreduce:
 
   case 97:
 
-    { (yyval.ast) = (yyvsp[-2].ast); }
+    { 
+    printf("binary & operator is not implemented yet\n");
+    exit(1);
+    (yyval.ast) = (yyvsp[-2].ast); 
+  }
 
     break;
 
