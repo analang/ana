@@ -2,6 +2,7 @@ import os
 import sys
 import signal
 
+
 def usage():
   print("testrunner: <program> <args>")
   sys.exit(1)
