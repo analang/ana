@@ -1,0 +1,10 @@
+data = {
+  "date": "12/12/12",
+  "name": "iteration",
+  "type": "map"
+};
+
+foreach(key, value in data)
+{
+  print(key + "=> " + value);
+}

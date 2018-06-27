@@ -214,6 +214,13 @@ selection_stmt:
     add_child(pstate, $$, $5);
     add_child(pstate, $$, $8);
   }
+| T_FOREACH '(' T_ID ',' T_ID T_IN assignment_expression ')' '{' if_statements '}' {
+    $$ = list_node(pstate, COMO_AST_FOREACH);
+    add_child(pstate, $$, id_node(pstate, $3));
+    add_child(pstate, $$, id_node(pstate, $5));
+    add_child(pstate, $$, $7);
+    add_child(pstate, $$, $10);
+  }
 ;
 
 else_if_stmts:
