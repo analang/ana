@@ -194,6 +194,8 @@ static int run_file(ana_options *opts)
 
     if(!resolved_path)
     {
+      retval = 1;
+      
       fprintf(stderr, PROGRAM_NAME ": Can't resolve file \"%s\" (%d)\n", 
         filename, errno);
 
@@ -347,6 +349,7 @@ exit:
     free(resolved_path);
 
   ana_free_opts(opts);
+
   return retval;
 }
 
