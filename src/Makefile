@@ -152,10 +152,11 @@ class.o: objects/class.c
 	$(CC) $(CFLAGS) -c $< -o ../bin/$@
 
 install:
-	cp ../bin/ana /home/ryan/bin
+	mkdir -p $(HOME)/bin
+	cp ../bin/ana $(HOME)/bin
 
 install_ana_mem:
-	mkdir $(HOME)/bin
+	mkdir -p $(HOME)/bin
 	cp ../bin/anamem $(HOME)/bin
 
 clean:
