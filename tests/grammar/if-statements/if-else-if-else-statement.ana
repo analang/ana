@@ -12,13 +12,17 @@ function test_if_else_if_statement(value)
   {
     return value;
   }
+  else
+  {
+    return "";
+  }
 }
 
 function expect(value, expected)
 {   
-  if(!value)
+  if(value != expected)
   {
-    throw "Unexpected result, got " + value + ",expected " + expected;
+    throw "Unexpected result, got '" + value + "', expected '" + expected + "'";
   }
 }
 
@@ -36,3 +40,17 @@ expect(
   test_if_else_if_statement("Vim"),
   "Vim"
 );
+
+expect(
+  test_if_else_if_statement("Not here"),
+  ""
+)
+
+
+
+
+
+
+
+
+;

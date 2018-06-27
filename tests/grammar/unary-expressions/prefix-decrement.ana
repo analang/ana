@@ -1,0 +1,7 @@
+//
+// Expect:
+// Invalid Left Hand operand, cannot assign to a literal
+// Explain: name = 4 - 3 - 2 returns a literal on the stack
+//
+
+print(--(name = 4 - 3 -2));

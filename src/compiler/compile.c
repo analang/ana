@@ -13,7 +13,7 @@
     ((uint8_t)(flag)))
 
 #define SETUP_JMP_TARGET() \
-  (ana_array_push(func->jump_targets, ana_longfromlong(-1L)), ana_array_size(func->jump_targets) - 1)
+  (ana_array_push(func->jump_targets, NULL), ana_array_size(func->jump_targets) - 1)
 
 #define DEFINE_JUMP() \
   (ana_array_push(func->jump_targets, CURRENT_ADDRESS(), ana_array_size(func->jump_targets) - 1)
@@ -219,9 +219,11 @@ static void compile_compound_if(ana_vm *vm, ana_object *funcobj,
 
   ana_compile_unit(vm, funcobj, expression);
     /* first_jmp_address is guaranteed to be start of an else if statemet */
-    EMITX(vm, func, JMPZ, first_jmp_address, 0, expression);
+  EMITX(vm, func, JMPZ, first_jmp_address, 0, expression);
+  
   ana_compile_unit(vm, funcobj, if_statement);
-    EMITX(vm, func, JMP, exit_address, 0, if_statement);
+  
+  EMITX(vm, func, JMP, exit_address, 0, if_statement);
 
   ana_array_push_index(func->jump_targets,
     first_jmp_address, CURRENT_ADDRESS());
@@ -232,7 +234,6 @@ static void compile_compound_if(ana_vm *vm, ana_object *funcobj,
     node *else_if_expression = else_if_statement->children[0];
     node *else_if_body       = else_if_statement->children[1];
   
-
     if(i != 0)
       ana_array_push(jmp_targets, CURRENT_ADDRESS()); 
 
@@ -262,16 +263,28 @@ static void compile_compound_if(ana_vm *vm, ana_object *funcobj,
     EMITX(vm, func, JMP, exit_address, 0, if_statement);
   }
 
-  ana_array_push_index(func->jump_targets,
-    else_address, CURRENT_ADDRESS());
-
-  ana_compile_unit(vm, funcobj, else_statement->children[0]);
-
-  EMITX(vm, func, JMP, exit_address, 0, else_statement->children[0]);
+  ana_object *else_addr = CURRENT_ADDRESS();
 
   ana_array_push_index(func->jump_targets,
-    exit_address, CURRENT_ADDRESS());
+    else_address, else_addr);
 
+  if(else_statement)
+  {
+    ana_compile_unit(vm, funcobj, else_statement->children[0]);
+
+    EMITX(vm, func, JMP, exit_address, 0, else_statement->children[0]);
+  }
+
+  if(else_statement != NULL) 
+  {
+    ana_array_push_index(func->jump_targets,
+      exit_address, CURRENT_ADDRESS()); 
+  }
+  else
+  {
+    ana_array_push_index(func->jump_targets,
+      exit_address, ana_longfromlong(ana_get_long(else_addr)->value));     
+  }
 
   if(!(ana_array_size(jmp_map) == ana_array_size(jmp_targets)))
   { 
@@ -291,13 +304,19 @@ static void compile_compound_if(ana_vm *vm, ana_object *funcobj,
   ana_array_foreach(jmp_map, index, value) {
     (void)index;
     long jmp_target_index = ana_get_long(value)->value;
-    ana_get_long(
-      ana_get_array(func->jump_targets)->items[jmp_target_index]
-    )->value = ana_get_long(ana_get_array(jmp_targets)->items[--current_index])->value;
+
+    ana_get_array(func->jump_targets)->items[jmp_target_index] =
+      ana_get_array(jmp_targets)->items[--current_index];
+
   } ana_array_foreach_end();
 
 
   /* todo free, jmp_targets, jmp_map */
+
+  ana_array_foreach_apply(jmp_map, ana_object_dtor);
+  ana_object_dtor(jmp_map);
+
+  ana_object_dtor(jmp_targets);
 }
 
 static void compile_if(ana_vm *vm, ana_object *funcobj, 
@@ -960,7 +979,7 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       else 
       {
         assert(left->kind == COMO_AST_ID);
-
+        
         node_id *name = (node_id *)left;
 
         EMITX(vm, func, LOAD_NAME,  NEW_SYMBOL(vm, name->value), 1, left);

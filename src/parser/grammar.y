@@ -123,6 +123,7 @@ typedef void* yyscan_t;
 %type<ast> inclusive_or_expression shift_expression equality_expression
 %type<ast> additive_expression multiplicative_expression and_expression exclusive_or_expression
 %type<ast> function_params function_param optional_parameter_list jump_statement
+%type<ast> throw_stmt
 
 %type<token> access_modifier
 
@@ -149,6 +150,7 @@ statement:
 | class_def                            { $$ = $1; }
 | trycatch_stmt                        { $$ = $1; }
 | selection_stmt                       { $$ = $1; }
+| throw_stmt ';'                       { $$ = $1; }
 ;
 
 selection_stmt:
@@ -161,15 +163,7 @@ selection_stmt:
   }
 |
   T_IF '(' assignment_expression ')' '{' if_statements '}' else_if_stmts {
-    printf("broken\n");
-    /*
-      This is currently broken, see tests/grammar/if-statements/if-else-if-statement.ana
-    */
-
-    $$ = list_node(pstate, COMO_AST_IF);
-    add_child(pstate, $$, $3);
-    add_child(pstate, $$, $6);  
-    add_child(pstate, $$, $8);
+    $$ = compound_if_node(pstate, $3, $6, $8, NULL);
   }
 |
   T_IF '(' assignment_expression ')' '{' if_statements '}' else_stmt { 
@@ -264,6 +258,13 @@ if_statement:
 | trycatch_stmt             { $$ = $1; }
 | selection_stmt            { $$ = $1; }
 | jump_statement ';'        { $$ = $1; }
+| throw_stmt ';'            { $$ = $1; }
+;
+
+throw_stmt:
+  T_THROW assignment_expression { 
+    $$ = throw_node(pstate, $2); 
+  }
 ;
 
 trycatch_stmt:
@@ -287,6 +288,7 @@ stmt:
 | trycatch_stmt             { $$ = $1; }
 | selection_stmt            { $$ = $1; }
 | jump_statement ';'        { $$ = $1; }
+| throw_stmt ';'            { $$ = $1; }
 ;
 
 import_stmt:
@@ -332,6 +334,7 @@ function_statement:
 | trycatch_stmt             { $$ = $1; }
 | selection_stmt            { $$ = $1; }
 | jump_statement ';'        { $$ = $1; }
+| throw_stmt ';'            { $$ = $1; }
 ;
 
 jump_statement:
@@ -641,13 +644,11 @@ unary_expression:
   postfix_expression { 
     $$ = $1; 
   }
-| T_THROW unary_expression { 
-    $$ = throw_node(pstate, $2); 
-  }
-| T_DEC   unary_expression { 
+|
+ T_DEC unary_expression { 
     $$ = unary_node(pstate, $2, COMO_AST_PREFIXDEC);
   }
-| T_INC   unary_expression { 
+| T_INC unary_expression { 
     $$ = unary_node(pstate, $2, COMO_AST_PREFIXINC);
   }
 | '-' unary_expression { 
