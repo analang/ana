@@ -73,6 +73,7 @@ def main():
           if os.WIFSIGNALED(status) and expecation != 'FAIL':
             
             print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
+            
             failed += 1
 
           # ana runtime sets exit status to 1 in case of an exception
