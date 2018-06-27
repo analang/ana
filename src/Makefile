@@ -41,7 +41,6 @@ ana: $(OBJECTS)
 	../bin/module.o \
 	../bin/anaruntime.o \
 	$(LDLIBS)
-	make install
 
 anamem: $(MEM_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o ../bin/$@ \
