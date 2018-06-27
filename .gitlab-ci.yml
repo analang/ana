@@ -10,7 +10,8 @@ build:
   before_script: 
     - apt update && apt -y install make autoconf bison flex python3
   script: 
-    - make ana
+    - ls
+    - make
   artifacts:
     paths:
       - bin/ana
