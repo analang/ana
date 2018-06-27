@@ -35,6 +35,8 @@ def run(path, args):
     else:
       print('\033[0;32m' + "PASS: " + '\033[0m' + path + " " + args)
 
+      # next check valgrind
+
 def main():
   if len(sys.argv) < 3:
     usage()
