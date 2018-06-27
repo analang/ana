@@ -1,7 +1,3 @@
-//
-// Expect:
-// Invalid Left Hand operand, cannot assign to a literal
-// Explain: name = 4 - 3 - 2 returns a literal on the stack
-//
+//{"Expect" : "FAIL", "Reason" : "Cannot assign to a literal"}
 
 print(--(name = 4 - 3 -2));

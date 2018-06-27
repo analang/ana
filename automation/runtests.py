@@ -3,6 +3,7 @@
 import os
 import sys
 import signal
+import json
 
 TIMEOUT = 30
 FAIL = '\033[91m' + "FAIL: " + '\033[0m'
@@ -28,14 +29,25 @@ def main():
   print("Test Suite Parent Directory: %s" % basepath)
 
   for dir in files:
+
     for testcase in os.listdir(os.path.join(basepath, dir)):
-      
+
       fullpath = os.path.join(os.path.join(basepath, dir), testcase)
-      
+
       if not os.path.isfile(fullpath):
         
         print("warning: skipping %s/%s, as it's not a regular file" % (dir, testcase))
         continue
+
+      contents = open(fullpath).read().split(os.linesep)
+      expecation = "PASS"
+
+      if contents[0][:2] == '//':
+        try:
+          spec = json.loads(contents[0][2:])
+          expecation = spec['Expect'].upper()
+        except json.JSONDecodeError as e:
+          print(e)
 
       pid = os.fork()
 
@@ -52,18 +64,22 @@ def main():
         stdout.close()
 
       else:
-        # returns (pid, exit status)
+
         while True:
+
           childpid, status = os.waitpid(pid, 0)
 
-          if os.WIFSIGNALED(status):
+          # This might be for SIGGSEV, but in any case any signal is fatal
+          if os.WIFSIGNALED(status) and expecation != 'FAIL':
             
-            print("%s: %s " % (FAIL, fullpath.split("/").pop()))
+            print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
             failed += 1
 
-          elif os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
+          # ana runtime sets exit status to 1 in case of an exception
+          elif os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0 and expecation != 'FAIL':
 
             print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
+            
             failed += 1
 
           else:
@@ -71,14 +87,13 @@ def main():
             print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))
             passed +=1
 
-
           break;
 
   print("")
   print("Failures: %d" % failed)
   print("Passed: %d" % passed)
 
-
+  return failed > 0
 
 if __name__ == "__main__":
-  main()
+  sys.exit(main())

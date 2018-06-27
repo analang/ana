@@ -1,3 +1,4 @@
+//{"Expect" : "FAIL", "Reason" : "Function expressions not implemented yet"}
 callback = function() {
   return 1;
 };

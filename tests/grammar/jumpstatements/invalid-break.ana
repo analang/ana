@@ -1,3 +1,4 @@
+//{"Expect" : "FAIL", "Reason" : "Break outside a loop"}
 function main()
 {
   break;

@@ -1,3 +1,4 @@
+//{"Expect" : "FAIL", "Reason" : "Cotinue outside a loop"}
 function main()
 {
   continue; 
