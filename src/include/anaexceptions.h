@@ -12,9 +12,9 @@ extern char **ana__except_type_location(void);
 #define ana_excep (*ana__excep_location())
 #define ana_except_type (*ana__except_type_location())
 
-#define Ana_SetError(type, error) do { \
+#define Ana_SetError(type, fmt, ...) do { \
   ana_except_type = (type); \
-  ana_excep = (error); \
+  ana_excep = ana_build_str(fmt,  ##__VA_ARGS__); \
 } while(0)
 
 #endif

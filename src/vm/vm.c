@@ -504,7 +504,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           
           TRACE(SETUP_CATCH, cindex, 0, 1);
           
-          if(ex == NULL) {
+          if(ex == NULL) 
+          {
             assert(ana_excep != NULL);
           }
 
@@ -517,7 +518,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           GC_TRACK(vm, exvalue);
           ana_map_put(frame->locals, arg, exvalue);
           
-          if(ex) {
+          if(ex) 
+          {
             free(ex);
           }
           
@@ -528,6 +530,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
           else
           {
+            free(ana_excep);
             ana_excep = NULL;
             ana_except_type = NULL;
           }

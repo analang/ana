@@ -41,7 +41,7 @@ ana: $(OBJECTS)
 	../bin/module.o \
 	../bin/anaruntime.o \
 	$(LDLIBS)
-
+	make install
 anamem: $(MEM_OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o ../bin/$@ \
 	../bin/ana_parser.o \
@@ -155,7 +155,8 @@ install:
 	cp ../bin/ana /home/ryan/bin
 
 install_ana_mem:
-	cp ../bin/anamem /home/ryan/bin
+	mkdir $(HOME)/bin
+	cp ../bin/anamem $(HOME)/bin
 
 clean:
 	rm -f ../bin/* parser/ana_parser.c include/ana_parser.h include/ana_lexer.h \

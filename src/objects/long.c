@@ -277,8 +277,9 @@ static ana_object *long_lt(ana_object *a, ana_object *b)
 
   if(!ana_type_is(b, ana_long_type)) 
   {
-    Ana_SetError(AnaTypeError, "Unsupported operands for <");
-  
+    Ana_SetError(AnaTypeError, 
+      "Unsupported right hand operand for < operator, got type %s", ana_type_name(b));
+
     return NULL;
   }
   else
@@ -322,7 +323,8 @@ static ana_object *long_lte(ana_object *a, ana_object *b)
     }
     else
     {
-      Ana_SetError(AnaTypeError, "Unsupported operands for <");
+      Ana_SetError(AnaTypeError, 
+        "Unsupported operands for <=");
 
       return NULL;
     }

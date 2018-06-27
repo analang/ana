@@ -77,6 +77,33 @@ done:
   return buffer;
 }
 
+static inline char *ana_build_str_l(size_t length, char *buffer, const char *fmt, ...)
+{
+  va_list ap;
+
+  va_start(ap, fmt);
+  int ret = vsnprintf(buffer, length, fmt, ap);
+  va_end(ap);
+
+  if(ret < 0) 
+  {
+    return NULL;
+  }
+  else if((size_t)ret < length)
+  {
+    goto done;
+  }
+  if((size_t)ret >= length)
+  {
+    buffer[length - 1] = '\0';
+  }
+
+done:
+  return buffer;
+}
+
+
+
 #define ANA_AUTO_RELEASE(val, block) do { \
   char *value = val; \
   assert(value); \
