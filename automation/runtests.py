@@ -4,6 +4,7 @@ import os
 import sys
 import signal
 import json
+from xml.dom import minidom
 
 TIMEOUT = 30
 FAIL = '\033[91m' + "FAIL: " + '\033[0m'
@@ -12,9 +13,81 @@ PASS = '\033[0;32m' + "PASS: " + '\033[0m'
 def get_files(basepath, basedir):
   return [dir for dir in os.listdir(basepath) if os.path.isdir(os.path.join(basepath, dir))]
 
-def valgrind_test(fullpath):
+def valgrind_test(anapath, fullpath):
+  success = False
   valgrind = os.environ.get("PATH_TO_VALGRIND")
-  
+  #print("valgrind path is {0}".format(valgrind))
+
+  args = [valgrind, "--xml-fd=2", "--xml=yes", "--leak-check=summary", anapath, fullpath]
+
+  #print(args)
+
+  pipefds = os.pipe()
+  readfd = pipefds[0]
+  writefd = pipefds[1]
+  childex = None
+  os.set_blocking(readfd, False)
+  devnull = open("/dev/null");
+
+  pid = os.fork()
+
+  if pid == 0:
+    # In the child  
+
+    # Stdout    
+    # Ignore Ana language output
+    os.dup2(devnull.fileno(), 1)
+    # Stderr
+    # This has the valgrind output
+    os.dup2(writefd, 2)
+
+    try:
+      os.execv(valgrind, args)
+    except Exception as e:
+      os._exit(1)
+  else:
+
+    while True:
+      childpid, status = os.waitpid(pid, os.WNOHANG)
+
+      if childpid == 0:
+        continue
+
+      if os.WIFEXITED(status):
+        if os.WEXITSTATUS(status) == 0:
+          #print("%s: %s: status is %d " % (PASS, fullpath.split("/").pop(), 
+          #  os.WEXITSTATUS(status))) 
+          while 1:
+            try:
+              contents = os.read(readfd, 4096)
+
+            except BlockingIOError:
+              break;
+              
+            #
+            # Todo, parse XML, and return False if this has errors
+            # Output the leak
+            #
+            xmlcontent = minidom.parseString(contents)
+
+            print(xmlcontent)
+
+            fd = open("valgrind.output%d.xml" % pid, "wb")
+            fd.write(contents);
+            fd.close()
+
+          success = True
+        else:
+          print("exit status was %d" % os.WEXITSTATUS(status))
+          success = False
+
+        break
+
+  os.close(writefd)
+  os.close(readfd)
+  devnull.close()
+
+  return success
 
 
 def main():
@@ -29,8 +102,10 @@ def main():
   failed = 0
   passed = 0
 
+  print("Ana Runtime Test Suite");
   print("Path to Ana Runtime: %s" % ana)
-  print("Test Suite Parent Directory: %s" % basepath)
+  print("Test Suite Parent Directory: %s\n" % basepath);
+
 
   for dir in files:
 
@@ -88,14 +163,12 @@ def main():
             failed += 1
 
           else:
-
-            print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))
-
-            # now fork the valgrind process
-              
-            if not valgrind_test(fullpath):
-              failed +=1     
+            if expecation != 'FAIL':
+              if not valgrind_test(ana, fullpath):
+                print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
+                failed +=1     
             else:
+              print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))
               passed +=1
 
           break;

@@ -1,7 +1,0 @@
-class List 
-{
-	public function List()
-	{
-		self._items = [];
-	}
-}
