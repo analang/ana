@@ -1,10 +1,25 @@
-data = {
-  "date": "12/12/12",
-  "name": "iteration",
-  "type": "map"
+payload = {
+  length : 25,
+  contents : "This is a content",
+  type: "binary",
+  other_values: [1, 2, 3, 4, 5, 6]
 };
 
-foreach(key, value in data)
+function do_print(value)
 {
-  print(key + "=> " + value);
+  try {
+    if(value.getType() == "array") {
+      for(i = 0; i < value.length(); i++)
+      {
+        print(value[i]);
+      }
+    }   
+  }
+  catch(e) {
+    print(value);
+  }
+}
+
+foreach(key in payload) {
+  do_print(payload[key]);
 }

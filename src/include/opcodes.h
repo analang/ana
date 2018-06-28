@@ -45,6 +45,8 @@
 #define CALL_METHOD       0x28
 #define ILAND             0x29
 #define ILOR              0x30
-#define ANA_LAST_OPCODE 0x31
+#define ITER              0x31
+#define ITER_MV           0x32
+#define ANA_LAST_OPCODE   0x33
 
 #endif

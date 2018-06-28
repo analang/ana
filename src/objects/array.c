@@ -22,6 +22,11 @@ static ana_object *array_length(ana_object *arrayobj, ana_object *arg)
   return ana_longfromlong(self->size);
 }
 
+static ana_object *array_getType(ana_object *arrayobj, ana_object *arg)
+{
+  return ana_stringfromstring("array");
+}
+
 COMO_OBJECT_API void ana_array_type_init(ana_vm *vm)
 {
   /* TODO optimize array to only malloc the item pointer on first insert */
@@ -41,6 +46,10 @@ COMO_OBJECT_API void ana_array_type_init(ana_vm *vm)
 
   ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "length"), 
     ana_methodfromhandler("<builtin>", "length", array_length, NULL)
+  );
+
+  ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "getType"), 
+    ana_methodfromhandler("<builtin>", "getType", array_getType, NULL)
   );
 }
 
@@ -62,6 +71,11 @@ static inline void array_dtor(ana_object *xself)
 { 
   free(((ana_array *)xself)->items);
   free(xself);
+}
+
+static void array_iterator_print(ana_object *obj)
+{
+  printf("<array.iterator at %p>", (void *)obj);
 }
 
 static void array_print(ana_object *ob)
@@ -141,6 +155,18 @@ static ana_object *array_string(ana_object *obj)
   return retval;
 }
 
+static ana_object *array_iterator_string(ana_object *obj)
+{
+  char *val = ana_build_str("<array.iterator at %p>", (void *)obj);
+
+  ana_object *retval = ana_stringfromstring(val);
+
+  free(val);
+
+  return retval;
+}
+
+
 static struct _ana_seq_ops seqops = {
   array_get,
   array_set
@@ -207,6 +233,34 @@ COMO_OBJECT_API ana_object *ana_array_push_index(ana_object *xself,
   return value;
 }
 
+static ana_object *ana_array_iterator_next(ana_array_iterator *iter)
+{
+  if(iter->position == iter->array->size)
+    return NULL;
+
+  return iter->array->items[iter->position++];
+}
+
+static ana_object *array_iterator_get(ana_object *obj)
+{
+  ana_array_iterator *iter = malloc(sizeof(*iter));
+
+  iter->base.flags = 0;
+  iter->base.refcount = 0;
+  iter->base.type = &ana_array_iterator_type;
+  iter->base.next = NULL;
+
+  iter->array = (ana_array *)obj;
+  iter->position = 0;
+
+  return (ana_object *)iter;
+}
+
+static void array_iterator_dtor(ana_object *obj)
+{
+  free(obj);
+}
+
 ana_type ana_array_type = {
   .obj_name    = "array",
   .obj_print   = array_print,
@@ -219,8 +273,30 @@ ana_type ana_array_type = {
   .obj_deinit  = NULL,
   .obj_binops  = NULL,
   .obj_unops   = NULL,
+  .obj_compops  = NULL,
+  .obj_seqops    = &seqops,
+  .obj_get_attr  = NULL,
+  .obj_props     = NULL,
+  .obj_iter      = array_iterator_get,
+  .obj_iter_next = NULL
+};
+
+ana_type ana_array_iterator_type = {
+  .obj_name    = "array.iterator",
+  .obj_print   = array_iterator_print,
+  .obj_dtor    = array_iterator_dtor,
+  .obj_equals  = NULL,
+  .obj_bool    = NULL,
+  .obj_hash    = NULL,
+  .obj_str     = array_iterator_string,
+  .obj_init    = NULL,
+  .obj_deinit  = NULL,
+  .obj_binops  = NULL,
+  .obj_unops   = NULL,
   .obj_compops = NULL,
-  .obj_seqops   = &seqops,
-  .obj_get_attr = NULL,
-  .obj_props    = NULL,
+  .obj_seqops  = NULL,
+  .obj_get_attr  = NULL,
+  .obj_props     = NULL,
+  .obj_iter      = NULL,
+  .obj_iter_next = (ana_iterator_function)ana_array_iterator_next
 };

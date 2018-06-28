@@ -214,15 +214,60 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
     for(;;) {
       top:
-      /* this is for exceptions, we need to be able to store the line that
-         was active prior to exception handling. The PC will have changed in
-         the case of a function call because it's actually a new code object
-       */
       fetch();
 
       vm_case(opcode) {
         default: {
           set_except("VMError", "Opcode %#04x is not implemented\n", opcode);
+          vm_continue();
+        }
+
+        vm_target(ITER)
+        {
+          TRACE(ITER, oparg, 0, 1);
+
+          ana_object *iterable = pop();
+
+          if(iterable->type->obj_iter == NULL)
+          {
+            set_except("TypeError", "%s object is not iterable",
+              ana_type_name(iterable));
+          }
+          else
+          {
+            ana_object *iterator = iterable->type->obj_iter(iterable);
+            
+            GC_TRACK(vm, iterator);
+
+            push(iterator);
+
+          }
+
+          vm_continue();   
+        }
+        vm_target(ITER_MV) {
+          TRACE(ITER_MV, oparg, 0, 1);
+          
+          ana_object *iterator = pop();
+          
+          assert(iterator);
+          assert(iterator->type->obj_iter_next != NULL);
+
+          ana_object *next = iterator->type->obj_iter_next(iterator);
+
+          if(!next)
+          {
+            frame->pc = (*(jmptargets + oparg))->value;
+            
+            goto top;          
+          }
+          else
+          {
+            push(iterator);
+
+            push(next);
+          }
+
           vm_continue();
         }
         vm_target(ILAND) {
@@ -802,6 +847,7 @@ leave_GETPROP:
         vm_target(STORE_NAME) 
         {
           TRACE(STORE_NAME, oparg, 0, 1);
+
           ana_object *thename = ana_array_get(vm->symbols, oparg);
           result = pop();
 

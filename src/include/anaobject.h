@@ -6,6 +6,7 @@
 /* We're modeling the object system with all of C's operators */
 typedef struct _ana_type   ana_type;
 typedef struct _ana_object ana_object;
+typedef struct _ana_iterator ana_iterator;
 typedef struct _ana_binary_ops ana_binary_ops;
 typedef struct _ana_unary_ops ana_unary_ops;
 typedef struct _ana_comparison_ops ana_comparison_ops;
@@ -19,6 +20,8 @@ struct _ana_object {
   struct _ana_type   *type;
   struct _ana_object *next;
 };
+
+typedef ana_object*(*ana_iterator_function)(struct _ana_object *);
 
 #define ana_object_add(self, x) \
   ((ana_object *)self)->type->obj_binops->obj_add((self), (x))
@@ -77,6 +80,8 @@ struct _ana_type {
   struct _ana_seq_ops         *obj_seqops;
   ana_object *(*obj_get_attr)(ana_object *, ana_object *);
   ana_object *obj_props; /* readonly properties */
+  ana_object*(*obj_iter)(ana_object *);
+  ana_object*(*obj_iter_next)(ana_object *);
 };
 
 #define ana_object_init(x) ana_object_ctor(x)

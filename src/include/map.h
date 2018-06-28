@@ -20,14 +20,16 @@ typedef struct _ana_map
   ana_usize_t      capacity;
 } ana_map;
 
-typedef struct ana_iterator {
+
+typedef struct _ana_map_iterator {
+  ana_object base;
   ana_map *container;
   ana_usize_t     current_bucket_position;
   ana_map_bucket *current_bucket;
   ana_object *current_key;
   ana_object *current_value;
   int        has_next;
-} ana_iterator;
+} ana_map_iterator;
 
 COMO_OBJECT_API ana_object *ana_map_new(ana_size_t size);
 COMO_OBJECT_API ana_object *ana_map_put(ana_object *obj, ana_object *key, 
@@ -88,5 +90,7 @@ COMO_OBJECT_API ana_object *ana_put_local_ex(
 #define ANA_KEY_NOT_FOUND ((void*)-1)
 
 extern ana_type ana_map_type;
+extern ana_type ana_map_iterator_type;
+
 
 #endif

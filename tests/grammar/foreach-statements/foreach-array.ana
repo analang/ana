@@ -1,0 +1,11 @@
+function main()
+{
+  names = ["Ryan", "Ana"];
+
+  foreach(name in names)
+  {
+    print(name);
+  }
+}
+
+main();

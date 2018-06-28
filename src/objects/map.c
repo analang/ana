@@ -368,6 +368,93 @@ static struct _ana_seq_ops seqops = {
   map_set
 };
 
+static ana_object *map_iterator_get(ana_object *obj)
+{
+  ana_map *map = (ana_map *)obj;
+  ana_map_iterator *iter = malloc(sizeof(*iter));
+
+  iter->base.flags = 0;
+  iter->base.refcount = 0;
+  iter->base.type = &ana_map_iterator_type;
+  iter->base.next = NULL;
+
+  iter->container = map;
+  iter->current_bucket_position = 0;
+  iter->current_bucket = NULL;
+  iter->current_key = NULL;
+  iter->current_value = NULL;
+  iter->has_next = 1;
+
+  return (ana_object *)iter;
+}
+
+static ana_object *map_iterator_string(ana_object *obj)
+{
+  char *val = ana_build_str("<map.iterator at %p>", (void *)obj);
+
+  ana_object *retval = ana_stringfromstring(val);
+
+  free(val);
+
+  return retval;
+}
+
+static void map_iterator_dtor(ana_object *obj)
+{
+  free(obj);
+}
+
+static void map_iterator_print(ana_object *obj)
+{
+  printf("<map.iterator at %p>", (void *)obj);
+}
+
+static ana_object *map_array_iterator_next(ana_map_iterator *iterator)
+{
+  ana_map *map = iterator->container;
+
+  for(; iterator->current_bucket_position < map->capacity; iterator->current_bucket_position++)
+  {
+    /* first bucket at this index */
+    if(!iterator->current_bucket)
+    {
+      iterator->current_bucket =
+        iterator->container->buckets[iterator->current_bucket_position];
+    }
+
+    ana_map_bucket *bucket = iterator->current_bucket;
+
+    if(!bucket) 
+    {
+
+      if(iterator->current_bucket_position + 1 == map->capacity)
+        goto done;
+
+      continue;
+    }
+
+    while(bucket)
+    {
+
+      iterator->current_key  = bucket->key;
+      iterator->current_value = bucket->value;
+
+      iterator->current_bucket = bucket->next;
+
+      if(iterator->current_bucket == NULL)
+      {
+        iterator->current_bucket_position++;
+      }
+
+      /* Yield this */
+      return iterator->current_key;
+    }
+  }
+
+done:
+  return NULL;
+}
+
 ana_type ana_map_type = {
   .obj_name    = "map",
   .obj_print   = map_print,
@@ -383,11 +470,30 @@ ana_type ana_map_type = {
   .obj_compops = &compops,
   .obj_seqops  = &seqops,
   .obj_get_attr = NULL,
-  .obj_props    = NULL
+  .obj_props    = NULL,
+  .obj_iter     = map_iterator_get,
+  .obj_iter_next = NULL
 };
 
-
-
+ana_type ana_map_iterator_type = {
+  .obj_name    = "map.iterator",
+  .obj_print   = map_iterator_print,
+  .obj_dtor    = map_iterator_dtor,
+  .obj_equals  = NULL,
+  .obj_bool    = NULL,
+  .obj_hash    = NULL,
+  .obj_str     = map_iterator_string,
+  .obj_init    = NULL,
+  .obj_deinit  = NULL,
+  .obj_binops  = NULL,
+  .obj_unops   = NULL,
+  .obj_compops = NULL,
+  .obj_seqops  = NULL,
+  .obj_get_attr  = NULL,
+  .obj_props     = NULL,
+  .obj_iter      = NULL,
+  .obj_iter_next = (ana_iterator_function)map_array_iterator_next
+};
 
 
 

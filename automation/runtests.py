@@ -12,6 +12,10 @@ PASS = '\033[0;32m' + "PASS: " + '\033[0m'
 def get_files(basepath, basedir):
   return [dir for dir in os.listdir(basepath) if os.path.isdir(os.path.join(basepath, dir))]
 
+def valgrind_test(fullpath):
+  valgrind = os.environ.get("PATH_TO_VALGRIND")
+  
+
 
 def main():
   if len(sys.argv) < 3:
@@ -86,7 +90,13 @@ def main():
           else:
 
             print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))
-            passed +=1
+
+            # now fork the valgrind process
+              
+            if not valgrind_test(fullpath):
+              failed +=1     
+            else:
+              passed +=1
 
           break;
 

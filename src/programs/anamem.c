@@ -33,8 +33,6 @@ static void ana_iterator_move(
 
     if(!bucket) 
     {
-     // printf("no bucket at index %lu\n",
-     //   iterator->current_bucket_position);
 
       if(iterator->current_bucket_position + 1 == map->capacity)
         goto done;
@@ -78,7 +76,6 @@ int main(void)
   value = ana_longfromlong(27);
 
   ana_map_put(map, key, value);
-
 
   ana_iterator iterator;
 

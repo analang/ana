@@ -11,6 +11,7 @@
 #define COMO_VM_TRACING_ANY    (COMO_VM_TRACING | COMO_VM_LIVE_TRACING)
 
 #define COMO_VM_STACK_MAX 255
+#define COMO_VM_REG_MAX   15
 
 typedef struct ana_vm ana_vm;
 
@@ -23,13 +24,13 @@ struct ana_vm
   ana_size_t stacksize;
   ana_size_t stackpointer;
   ana_uint32_t flags;
-
   ana_size_t nobjs;
   ana_size_t mxobjs;
   ana_object *root; 
 
   ana_frame *base_frame;
   ana_object *frameroot;
+  /* registers */
   void(*do_gc)(ana_vm *);
 };
 

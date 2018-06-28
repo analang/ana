@@ -16,7 +16,7 @@
   (ana_array_push(func->jump_targets, NULL), ana_array_size(func->jump_targets) - 1)
 
 #define DEFINE_JUMP() \
-  (ana_array_push(func->jump_targets, CURRENT_ADDRESS(), ana_array_size(func->jump_targets) - 1)
+  (ana_array_push(func->jump_targets, CURRENT_ADDRESS()), ana_array_size(func->jump_targets) - 1)
 
 /* represent the address of the next instruction */
 #define CURRENT_ADDRESS() \
@@ -477,6 +477,46 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
     ana_longfromlong((long)jmptargetindex_start));
 }
 
+
+static void compile_foreach(ana_vm *vm, ana_object *funcobj, node *ast)
+{ 
+  ana_function_defn *func = ANA_GET_FUNCTION_DEF(funcobj);
+
+  char *id = (((node_id *)(ast->children[0])))->value;
+
+  node *iterable   = ast->children[1];
+  node *statements = ast->children[2];
+
+  int exit_address = SETUP_JMP_TARGET();
+
+  ana_compile_unit(vm, funcobj, iterable);
+
+
+  /* ITER takes the JUMP address after it is done */
+  EMITX(vm, func, ITER,       0, 0, iterable);
+  EMITX(vm, func, BEGIN_LOOP, 0, 0, iterable);
+  int start_address = DEFINE_JUMP();
+
+  EMITX(vm, func, ITER_MV,    0, exit_address, iterable);
+  EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, id), 0, 
+    ast->children[0]);
+
+  ana_compile_unit(vm, funcobj, statements);
+
+  EMITX(vm, func, EXIT_LOOP_CONTINUE, 0, 0, statements);
+
+  EMITX(vm, func, JMP, start_address, 0, statements);
+
+  EMITX(vm, func, END_LOOP, 0, 0, statements);
+
+  ana_array_push_index(func->jump_targets, exit_address,
+    ana_longfromlong(
+      (long)ana_container_size(func->code)
+    )
+  );
+}
+
+
 static int tracing = 0;
 static char *prefix = "";
 
@@ -504,6 +544,12 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
 
   switch(ast->kind)
   {
+    TARGET(COMO_AST_FOREACH)
+    {
+      compile_foreach(vm, funcobj, ast);
+      break;
+    }
+
     TARGET(COMO_AST_FOR)
     {
       compile_for(vm, funcobj, ast);

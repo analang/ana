@@ -5,11 +5,6 @@
 #   error "Please do not include array.h directly"
 #endif
 
-/* Inheritence:
- *  ana_object
- *      ana_container
- *          ana_array
- */
 typedef struct _ana_array 
 {
   ana_object base;
@@ -17,6 +12,15 @@ typedef struct _ana_array
   ana_size_t capacity;
   ana_object **items;
 } ana_array;
+
+
+typedef struct _ana_array_iterator ana_array_iterator;
+
+struct _ana_array_iterator {
+  ana_object base;
+  ana_array *array;
+  ana_size_t position;
+};
 
 COMO_OBJECT_API ana_object *ana_array_new(ana_size_t);
 COMO_OBJECT_API ana_object *ana_array_push(ana_object *, ana_object *);
@@ -45,7 +49,8 @@ COMO_OBJECT_API void ana_array_type_finalize(ana_vm *vm);
   } while(0); \
 } \
 
-extern ana_type    ana_array_type;
-extern ana_object *ana_array_empty;
+extern ana_type     ana_array_type;
+extern ana_object  *ana_array_empty;
+extern ana_type ana_array_iterator_type;
 
 #endif

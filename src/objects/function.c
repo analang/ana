@@ -127,7 +127,9 @@ ana_type ana_function_type =
   .obj_compops = &compops,
   .obj_seqops  = NULL,
   .obj_get_attr = NULL,
-  .obj_props    = NULL
+  .obj_props    = NULL,
+  .obj_iter     = NULL,
+  .obj_iter_next = NULL
 };
 
 COMO_OBJECT_API ana_object *ana_function_defn_new(char *filename, char *name)

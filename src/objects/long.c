@@ -427,6 +427,8 @@ ana_type ana_long_type = {
   .obj_compops = &compops,
   .obj_seqops  = NULL,
   .obj_get_attr = NULL,
-  .obj_props    = NULL
+  .obj_props    = NULL,
+  .obj_iter     = NULL,
+  .obj_iter_next = NULL
 };
 
