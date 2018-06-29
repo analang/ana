@@ -4,6 +4,7 @@ import os
 import sys
 import signal
 import json
+import platform
 import traceback
 from xml.dom import minidom
 import valgrindparser
@@ -72,9 +73,12 @@ def valgrind_test(valgrind, anapath, fullpath):
             # Output the leak
             #
             output = valgrindparser.parseValgrindOutput(contents)
-
+            success = '';
             if len(output) > 0:
-              success = output
+              for error in valgrindresult:
+                success += "  %s\n" % error['kind']
+                success += "  %s\n" % error['message']
+              success = success.encode()
             else:
               success = None
         else:
@@ -87,7 +91,6 @@ def valgrind_test(valgrind, anapath, fullpath):
               break;
           
           success = contents.decode("utf-8");
-          #"valgrind returned %d" % os.WEXITSTATUS(status)
 
         break
 
@@ -113,6 +116,7 @@ def main():
   print("Ana Runtime Test Suite");
   print("Path to Ana Runtime: %s" % ana)
   print("Valgrind Path: %s" % valgrind)
+  print("Python version: %s" % platform.python_version())
   print("Test Suite Parent Directory: %s\n" % basepath);
 
 
@@ -127,7 +131,11 @@ def main():
         print("warning: skipping %s/%s, as it's not a regular file" % (dir, testcase))
         continue
 
+      if testcase[:1] == '.':
+        continue
+
       contents = open(fullpath).read().split(os.linesep)
+      
       expecation = "PASS"
 
       if contents[0][:2] == '//':
@@ -176,9 +184,7 @@ def main():
               valgrindresult = valgrind_test(valgrind, ana, fullpath)
               if valgrindresult:
                 print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
-                for error in valgrindresult:
-                  print("  %s" % error['kind'])
-                  print("  %s" % error['message'])
+                print(valgrindresult)
                 failed +=1  
               else:
                 print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))

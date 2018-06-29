@@ -1,0 +1,13 @@
+function main()
+{
+  names = ["Ryan", "Ana"];
+
+  names.push(names);
+
+  return names;
+}
+
+data = main();
+data.push(main());
+
+print(data);
