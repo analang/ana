@@ -486,6 +486,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           loop->next = frame->loop->root;
           frame->loop->root = loop;
 
+          assert(frame->loop->stack_position < frame->loop->stack_capacity);
+          
           frame->loop->stack[frame->loop->stack_position++] = loop;
           frame->loop->stack_size++;
 

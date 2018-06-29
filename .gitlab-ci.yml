@@ -24,6 +24,6 @@ build:
 test:
   stage: test
   before_script:
-    chmod +x automation/test-launcher.sh
+    - chmod +x automation/test-launcher.sh
   script:
     - automation/test-launcher.sh
