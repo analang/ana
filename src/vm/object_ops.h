@@ -76,8 +76,8 @@ static inline ana_object *setindex(ana_vm *vm, ana_object *container,
     {
       decref_recursively(prev);
     }
-      
-    incref_recurisvely(res);
+
+    incref_recursively(res);
     //->refcount++;
 
     return res;
