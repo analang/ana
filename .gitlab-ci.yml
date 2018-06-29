@@ -9,6 +9,7 @@ build:
   # install the necessary build tools when needed
   before_script: 
     - apt update && apt -y install make autoconf bison flex python3 valgrind
+    - export PATH_TO_VALGRIND=`which valgrind`
   script: 
     - ls
     - make

@@ -169,7 +169,8 @@ def main():
           if os.WIFSIGNALED(status) and expecation != 'FAIL':
             
             print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
-            
+            print("    Exited with Signal %d, %s" % (os.WTERMSIG(status), \
+                signal.Signals(os.WTERMSIG(status)).name)) 
             failed += 1
 
           # ana runtime sets exit status to 1 in case of an exception

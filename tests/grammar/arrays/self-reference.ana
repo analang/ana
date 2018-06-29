@@ -10,4 +10,25 @@ function main()
 data = main();
 data.push(main());
 
+maps = {};
+maps['data'] = data;
+
+print(maps['data']);
+
+maps['data'] = 1;
+
+print(maps['data']);
+
+foreach(key in maps)
+{
+  print(maps[key]);
+}
+
+foreach(key in data)
+{
+  print(data[0]);
+  //print(key);
+  //print(data);
+}
+
 print(data);
