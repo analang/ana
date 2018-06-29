@@ -271,6 +271,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(ILAND) {
+          TRACE(ILAND, oparg, 0, 1);
           ana_object *right = pop();
           ana_object *left = pop();
 
@@ -292,6 +293,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(ILOR)
         {
+          TRACE(ILOR, oparg, 0, 1);
           // // operator, returns the first value that was true,
           // else the right value is returned
           //
@@ -318,6 +320,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(ILSHFT) {
+          TRACE(ILSHFT, oparg, 0, 1);
           ana_object *right = pop();
           ana_object *left = pop();
 
@@ -480,6 +483,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(BEGIN_LOOP)
         {
+          TRACE(BEGIN_LOOP, oparg, 0, 1);
+
           /* TODO need to check if need resize */
           ana_basic_block *loop = malloc(sizeof(*loop));
           loop->stack_obj_count = 0;
@@ -487,14 +492,16 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           frame->loop->root = loop;
 
           assert(frame->loop->stack_position < frame->loop->stack_capacity);
-          
+
           frame->loop->stack[frame->loop->stack_position++] = loop;
           frame->loop->stack_size++;
 
           vm_continue();
         }
         vm_target(EXIT_LOOP_CONTINUE)
-        {       
+        {      
+          TRACE(EXIT_LOOP_CONTINUE, oparg, 0, 1);
+ 
           /* all of pushs to this tack inside the block, need to be poped 
              if they weren't already
             */
@@ -518,6 +525,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(END_LOOP)
         {
+          TRACE(END_LOOP, oparg, 0, 1);
           /* now we must pop this loop block */
           --frame->loop->stack_position;
           --frame->loop->stack_size;

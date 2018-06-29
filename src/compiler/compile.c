@@ -496,8 +496,7 @@ static void compile_foreach(ana_vm *vm, ana_object *funcobj, node *ast)
   EMITX(vm, func, ITER,       0, 0, iterable);
   EMITX(vm, func, BEGIN_LOOP, 0, 0, iterable);
   int start_address = DEFINE_JUMP();
-
-  EMITX(vm, func, ITER_MV,    0, exit_address, iterable);
+  EMITX(vm, func, ITER_MV,    exit_address, 0, iterable);
   EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, id), 0, 
     ast->children[0]);
 
@@ -507,13 +506,13 @@ static void compile_foreach(ana_vm *vm, ana_object *funcobj, node *ast)
 
   EMITX(vm, func, JMP, start_address, 0, statements);
 
-  EMITX(vm, func, END_LOOP, 0, 0, statements);
-
   ana_array_push_index(func->jump_targets, exit_address,
     ana_longfromlong(
       (long)ana_container_size(func->code)
     )
   );
+
+  EMITX(vm, func, END_LOOP, 0, 0, statements);
 }
 
 

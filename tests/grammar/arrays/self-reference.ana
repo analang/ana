@@ -13,22 +13,25 @@ data.push(main());
 maps = {};
 maps['data'] = data;
 
-print(maps['data']);
+//print(maps['data']);
 
 maps['data'] = 1;
 
-print(maps['data']);
+//print(maps['data']);
 
 foreach(key in maps)
 {
-  print(maps[key]);
+  //print(maps[key]);
 }
+
+print("----");
+print(data);
+print("----");
 
 foreach(key in data)
 {
-  print(data[0]);
+  print(key);
   //print(key);
   //print(data);
 }
 
-print(data);
