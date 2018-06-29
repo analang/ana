@@ -52,16 +52,14 @@ static inline ana_object *getindex(ana_vm *vm, ana_object *container,
 static inline ana_object *setindex(ana_vm *vm, ana_object *container, 
   ana_object *idx, ana_object *val)
 {
+
   if(container->type->obj_seqops != NULL && container->type->obj_seqops->set != NULL)
   {
+    ana_object *prev = NULL;
+
     if(container->type->obj_seqops != NULL && container->type->obj_seqops->get != NULL)
     {
-      ana_object *prev = container->type->obj_seqops->get(container, idx);
-
-      if(prev && prev->refcount > 0) 
-      {
-        decref_recursively(prev);
-      }
+      prev = container->type->obj_seqops->get(container, idx);
     }
 
     ana_object *res = container->type->obj_seqops->set(container, idx, val);
@@ -74,7 +72,13 @@ static inline ana_object *setindex(ana_vm *vm, ana_object *container,
       && !ana_type_is(container, ana_map_type))
         GC_TRACK(vm, res);
 
-    res->refcount++;
+    if(prev && prev->refcount > 0) 
+    {
+      decref_recursively(prev);
+    }
+      
+    incref_recurisvely(res);
+    //->refcount++;
 
     return res;
   }

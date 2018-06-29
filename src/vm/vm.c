@@ -665,7 +665,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           
           vm_continue();
         }
-        vm_target(INITOBJ) {
+        vm_target(INITOBJ) 
+        {
           int arg = get_arg();
           TRACE(INITOBJ, arg, 0, 1);
           ana_object *obj = ana_map_new(arg > 0 ? arg : 2);
@@ -679,7 +680,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
             ana_map_put(obj, key, val);
 
-            val->refcount++;
+            incref_recursively(val);
           }
 
           GC_TRACK(vm, obj);
