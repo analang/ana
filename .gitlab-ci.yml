@@ -9,7 +9,6 @@ build:
   # install the necessary build tools when needed
   before_script: 
     - apt update && apt -y install make autoconf bison flex python3 valgrind
-    - export PATH_TO_VALGRIND=`which valgrind`
   script: 
     - ls
     - make
@@ -24,5 +23,7 @@ build:
 # run tests using the binary built before
 test:
   stage: test
+  before_script:
+    chmod +x automation/test-launcher.sh
   script:
-    - python3 automation/runtests.py ./bin/ana ./tests/grammar
+    - automation/test-launcher.sh
