@@ -1,7 +1,0 @@
-valgrind \
---xml-fd=1 \
---xml=yes \
---leak-check=summary \
---child-silent-after-fork=yes \
--q \
-ana throwcatch
