@@ -1,0 +1,6 @@
+function square(value)
+{
+  return value * value;
+}
+
+print(square(5));

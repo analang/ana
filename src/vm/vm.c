@@ -20,6 +20,7 @@ static void trace_frame(ana_vm *vm, ana_frame *frame);
 static void ana_print_backtrace(ana_frame *frame);
 static void gc(ana_vm *vm);
 static void decref_recursively(ana_object *obj);
+static void incref_recursively(ana_object *obj);
 
 static ana_frame *BASE_FRAME;
 
@@ -655,7 +656,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             
             ana_array_push(result, left);
 
-            left->refcount++;
+            incref_recursively(left);
           }
 
           GC_TRACK(vm, result);
@@ -838,8 +839,10 @@ leave_GETPROP:
           {
             ana_frame *caller = vm->stack[vm->stackpointer - 1];
 
-            if(arg->refcount > 0)
-              arg->refcount--;
+            if(arg->refcount > 0) 
+            {
+              //decref_recursively(arg);
+            }
             
             frame->retval = arg;
 
@@ -1575,13 +1578,13 @@ CALL_METHOD_leave:
 
         if(value->refcount > 0) 
         {
-          if(value != frame->retval) 
-          {
+         // if(value != frame->retval) 
+         // {
             /* the return value is always going to need to be kept around */
             /* the caller can worry about it*/
 
             decref_recursively(value);
-          }
+         // }
         }
       } ana_map_foreach_end();
       
@@ -1619,6 +1622,45 @@ static void ana_print_backtrace(ana_frame *frame)
       fm = fm->caller;
   }
 }
+
+static void incref_recursively(ana_object *obj)
+{
+
+  obj->refcount++;
+
+  if(ana_type_is(obj, ana_array_type))
+  {
+    ana_array *array = ana_get_array(obj);
+
+    ana_size_t i;
+
+    for(i = 0; i < array->size; i++)
+    {
+      incref_recursively(array->items[i]);
+    }
+  }
+  else if(ana_type_is(obj, ana_map_type))
+  {
+    ana_map_foreach(obj, key, value) {
+      
+      (void)key;
+
+      incref_recursively(value);
+
+    } ana_map_foreach_end();
+  }
+  else if(ana_type_is(obj, ana_array_type))
+  {
+    ana_array_foreach(obj, index, value) {
+
+      (void)index;
+
+      incref_recursively(value);
+
+    } ana_array_foreach_end();
+  }
+}
+
 
 static void decref_recursively(ana_object *obj)
 {
@@ -1659,7 +1701,6 @@ static void decref_recursively(ana_object *obj)
 
     } ana_array_foreach_end();
   }
- 
 }
 
 static void mark_ex(ana_object *obj)
