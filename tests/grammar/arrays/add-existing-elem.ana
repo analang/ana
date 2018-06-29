@@ -1,0 +1,10 @@
+function main()
+{
+  data = [1 * 5, 5 * 10];
+
+  data[0] = data[1];
+
+  return data;
+}
+
+print(main());
