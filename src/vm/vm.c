@@ -1341,6 +1341,13 @@ leave_GETPROP:
           }
           else
           {
+            /* If this is already tracked this can be a bug */
+            /* for example:
+             *
+             * a search method, which takes a key and returns a value in an array
+               that was already tracked, here we would track it twice.
+               TODO make a flag where we say if it is already tracked
+             */
             GC_TRACK(vm, res);
           }
 

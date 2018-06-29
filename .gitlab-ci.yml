@@ -23,9 +23,8 @@ build:
 # run tests using the binary built before
 test:
   stage: test
-  before_script: 
-    - apt update && apt -y install python3 valgrind
   before_script:
+    - apt update && apt -y install python3 valgrind
     - chmod +x automation/test-launcher.sh
     - env
   script:
