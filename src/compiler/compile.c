@@ -457,6 +457,9 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
   ana_compile_unit_jumps(vm, funcobj, statements, 
     &break_address_index, &continue_address_index);
 
+  ana_array_push_index(func->jump_targets, continue_address_index,
+    ana_longfromlong((long)ana_container_size(func->code)));
+
   ana_compile_unit(vm, funcobj, loop);
 
   EMITX(vm, func, EXIT_LOOP_CONTINUE, 0, 0, statements);
@@ -468,13 +471,10 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
 
   ana_size_t end = ana_container_size(func->code);
 
-  EMITX(vm, func, END_LOOP, 0, 0, statements);
-
   ana_array_push_index(func->jump_targets, break_address_index,
     ana_longfromlong((long)end));
 
-  ana_array_push_index(func->jump_targets, continue_address_index,
-    ana_longfromlong((long)jmptargetindex_start));
+  EMITX(vm, func, END_LOOP, 0, 0, statements);
 }
 
 
