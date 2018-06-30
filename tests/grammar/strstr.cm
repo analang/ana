@@ -6,6 +6,5 @@ function main()
   start = strstr(haystack, need);
 
   printf("%s\n", start + strlen(need));
-
 }
 

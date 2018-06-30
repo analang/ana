@@ -14,15 +14,18 @@ function split(str)
       continue;
     }    
   
-    if (str[i] == '\r' && i + i < str.length() && str[i + 1] == '\n')
-    {
-      //print(i);
-    }
-
     print("i is now " + i);
 
+    // TODO, these AND expressions need to be dynamic, in that the right hand
+    // side is only executed if the left side is true
+    // If left is false, jump to past the end of the block
+    //
+    if (str[i] == '\r' && (i + i < str.length() && str[i + 1] == '\n'))
+    {
+      print(i);
+    }
+
     buffer = buffer + str[i];
-    
   }
 
   return lines;
@@ -30,5 +33,5 @@ function split(str)
 
 
 print(
-  split("Hey\nHi\nWhat's up?\nNot much, you?\n")
+  split("Hey\nHi\nWhat's up?\nNot much, you?\n\r")
 );

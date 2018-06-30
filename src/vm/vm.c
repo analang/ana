@@ -1619,6 +1619,8 @@ static void ana_print_backtrace(ana_frame *frame)
       fm->activation_line_number
     );
 
+    free(fnname);
+
     next:
       fm = fm->caller;
   }
