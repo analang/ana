@@ -226,6 +226,8 @@ void yyfree (void * ,yyscan_t yyscanner );
 #ifdef YY_HEADER_EXPORT_START_CONDITIONS
 #define INITIAL 0
 #define SINGLE_LINE_COMMENT 1
+#define DOUBLE_QUOTED_STRING_LITERAL 2
+#define SINGLE_QUOTED_STRING_LITERAL 3
 
 #endif
 
@@ -352,6 +354,6 @@ extern int yylex \
 #undef YY_DECL
 #endif
 
-#line 356 "include/ana_lexer.h"
+#line 358 "include/ana_lexer.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

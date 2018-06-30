@@ -1,0 +1,34 @@
+function split(str)
+{
+  print("str.length()=" + str.length());
+
+  lines = [];
+  buffer = "";
+
+  for(i = 0; i < str.length(); i++)
+  {
+    if(str[i] == '\n')
+    {
+      lines.push(buffer);
+      buffer = '';
+      continue;
+    }    
+  
+    if (str[i] == '\r' && i + i < str.length() && str[i + 1] == '\n')
+    {
+      //print(i);
+    }
+
+    print("i is now " + i);
+
+    buffer = buffer + str[i];
+    
+  }
+
+  return lines;
+}
+
+
+print(
+  split("Hey\nHi\nWhat's up?\nNot much, you?\n")
+);
