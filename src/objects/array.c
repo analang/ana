@@ -245,9 +245,7 @@ static ana_object *ana_array_iterator_next(ana_array_iterator *iter)
 }
 
 static ana_object *array_iterator_get(ana_object *obj)
-{
-  printf("array_iterator_get: obj refcount is at %ld\n", obj->refcount);
- 
+{ 
   obj->refcount++;
 
   ana_array_iterator *iter = malloc(sizeof(*iter));
@@ -267,13 +265,7 @@ static void array_iterator_dtor(ana_object *iterobj)
 { 
   ana_array_iterator *iter = (ana_array_iterator *)iterobj;
 
-  printf("array_iterator_dtor: obj refcount is at %ld\n", 
-    ana_get_base(iter->array)->refcount);
-
   ana_get_base(iter->array)->refcount--;
-
-  printf("now array container has refcount of %ld\n", 
-    ana_get_base(iter->array)->refcount);
 
   free(iter);
 }

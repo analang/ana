@@ -401,19 +401,33 @@ int main(int argc, char **argv)
   ana_options opts = parse_argv(argc, argv);
 
   if(opts.error) 
+  {
     return usage(1);
-  else if(opts.interactive)
+  }
+  else if(opts.interactive) 
+  {
     return printf("running an eval loop\n");
+  }
   else if(opts.command)
+  {
     return run_command(&opts);
-  else if(opts.version)  
+  }
+  else if(opts.version) 
+  {
     return printf("version\n");
-  else if(opts.help)   
+  }
+  else if(opts.help) 
+  {
     return usage(0);
-  else if(opts.argc == 0)   
+  }
+  else if(opts.argc == 0)
+  {
     return usage(1);
-  else
+  }
+  else 
+  {
     return run_file(&opts);
+  }
 
   return 0;
 }

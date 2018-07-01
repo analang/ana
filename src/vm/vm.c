@@ -230,8 +230,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           /* This is the container */
           ana_object *iterable = pop();
 
-          printf("ITER: refcount is %ld\n", iterable->refcount);
-
           /* the container is already part of the GC root*/
 
           if(iterable->type->obj_iter == NULL)
@@ -270,9 +268,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           {
             frame->pc = (*(jmptargets + oparg))->value;
             
-            printf("ITER_MV: container refcount is at %ld\n",
-              ((ana_array_iterator *)iterator)->array->base.refcount);
-
             /* release lock on the iterator */
             iterator->refcount--;
 
