@@ -112,6 +112,7 @@ COMO_OBJECT_API ana_object *ana_map_new(ana_size_t size)
   map->base.next = NULL;
   map->base.flags = 0;
   map->base.refcount = 0;
+  map->base.is_tracked = 0;
 
   map->capacity = size;
   map->size = 0;

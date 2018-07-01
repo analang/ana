@@ -1,0 +1,29 @@
+function atoi(str)
+{
+  result = 0;
+  
+  if(str.length() == 0)
+  {
+    throw "str argument must not be null";
+  }
+
+  for(i = 0; i < str.length(); i++)
+  {
+    digit = str[i];
+
+    if(! (digit <= '9' && digit >= '0'))
+    {
+      throw "Unexpected non numeric character at position " + i;
+    }  
+
+    result = result * 10 + (str[i].getBytes().first() 
+                - '0'.getBytes().first()); 
+  }
+
+  return result;
+}
+
+result = atoi("1234");
+print(result, result.getType());
+
+print(atoi("1234"));

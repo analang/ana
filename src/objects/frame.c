@@ -17,6 +17,7 @@ ana_frame *ana_frame_new(
   obj->base.next = NULL;
   obj->base.flags = 0;
   obj->base.refcount = 0;
+  obj->base.is_tracked = 0;
 
   obj->code             = code;
   obj->pc               = 0;

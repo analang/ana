@@ -19,7 +19,8 @@ def get_files(basepath, basedir):
 
 def valgrind_test(valgrind, anapath, fullpath):
   success = False
-  args = [valgrind, "--xml-fd=2", "--xml=yes", "--leak-check=summary", "-q", anapath, fullpath]
+  args = [valgrind, "--xml-fd=2", "--xml=yes", "--leak-check=summary", "--show-leak-kinds=all", \
+          "-q", anapath, fullpath]
   pipefds = os.pipe()
   readfd = pipefds[0]
   writefd = pipefds[1]

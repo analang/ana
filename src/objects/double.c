@@ -14,6 +14,7 @@ COMO_OBJECT_API ana_object *ana_doublefromdouble(double dval)
   obj->base.next = NULL; 
   obj->base.flags = 0;
   obj->base.refcount = 0;
+  obj->base.is_tracked = 0;
   obj->value = dval;
 
   return (ana_object *)obj;

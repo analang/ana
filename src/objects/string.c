@@ -10,8 +10,51 @@ static ana_object *string_length(ana_object *stringobj, ana_object *arg)
 {
   (void)arg;
   
-  return ana_longfromlong(ana_get_string(stringobj)->len);
+  ana_object *retval = ana_longfromlong(ana_get_string(stringobj)->len);
+
+  return retval;
 }
+
+static ana_object *string_getBytes(ana_object *stringobj, ana_object *arg)
+{
+  COMO_UNUSED(arg);
+  
+  ana_string *self = ana_get_string(stringobj);
+
+  if(self->len == 0)
+  {
+    ana_object *retval = ana_array_new(2);
+
+    return retval;
+  }
+
+  ana_object *bytes = ana_array_new(self->len);
+  ana_size_t i;
+
+  for(i = 0; i < self->len; i++)
+  {
+    int c = (int)self->value[i];
+
+    ana_object *byte = ana_longfromlong((int)c);
+
+    ana_array_push(bytes, byte);
+  }
+
+  stringobj->refcount--;
+
+  return bytes;
+}
+
+static ana_object *string_getType(ana_object *stringobj, ana_object *arg)
+{
+  COMO_UNUSED(stringobj);
+  COMO_UNUSED(arg);
+
+  ana_object *res = ana_stringfromstring("string");
+
+  return res;
+}
+
 
 COMO_OBJECT_API void ana_string_type_init(ana_vm *vm)
 {
@@ -23,6 +66,16 @@ COMO_OBJECT_API void ana_string_type_init(ana_vm *vm)
     string_length, NULL);
 
   ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "length"), func);
+
+  func = ana_methodfromhandler("<builtin>", "getBytes", 
+    string_getBytes, NULL);
+
+  ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "getBytes"), func);
+
+
+  ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "getType"), 
+    ana_methodfromhandler("<builtin>", "getType", string_getType, NULL)
+  );
 }
 
 COMO_OBJECT_API void ana_string_type_finalize(ana_vm *vm)
@@ -72,7 +125,8 @@ static ana_object *ana_stringfromstringandlen(char *val, size_t len)
   obj->base.next = NULL;
   obj->base.flags = 0;
   obj->base.refcount = 0;
-  
+  obj->base.is_tracked = 0;
+
   obj->len = (ana_size_t)len;
   
   obj->hash = hashlen((unsigned char*)val, len);
@@ -96,7 +150,8 @@ COMO_OBJECT_API ana_object *ana_stringfromstring(char *val)
   obj->base.next = NULL;
   obj->base.flags = 0;
   obj->base.refcount = 0;
-  
+  obj->base.is_tracked = 0;
+
   obj->len = (ana_size_t)len;
   
   obj->hash = hash((unsigned char*)val);
@@ -202,7 +257,7 @@ static ana_object *str_get(ana_object *obj, ana_object *index)
     if(value >= 0 && value < self->len)
       return ana_stringfromstringandlen(self->value + value, 1);
   }
-
+  
   return NULL;
 }
 

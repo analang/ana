@@ -40,8 +40,10 @@ static inline ana_object *getindex(ana_vm *vm, ana_object *container,
 
     /* array values and map values, are already part of the GC root */
     if(!ana_type_is(container, ana_array_type) 
-      && !ana_type_is(container, ana_map_type))
+      && !ana_type_is(container, ana_map_type)) 
+      {
         GC_TRACK(vm, res);
+      }
 
     return res;
   }

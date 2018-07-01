@@ -8,6 +8,7 @@ COMO_OBJECT_API ana_object *ana_class_new(ana_object *base, ana_object *name)
   obj->base.next = NULL;  
   obj->base.flags = 0;
   obj->base.refcount = 0;  
+  obj->base.is_tracked = 0;
   obj->c_base = base;
   obj->members = ana_map_new(4);
   obj->name = name;

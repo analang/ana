@@ -8,6 +8,38 @@
 
 #include <ana.h>
 
+static ana_object *long_getType(ana_object *longobj, ana_object *arg)
+{
+  COMO_UNUSED(longobj);
+  COMO_UNUSED(arg);
+
+  ana_object *res = ana_stringfromstring("long");
+
+  return res;
+}
+
+COMO_OBJECT_API void ana_long_type_init(ana_vm *vm)
+{
+  ana_long_type.obj_props = ana_map_new(4);
+
+  ana_map_put(ana_long_type.obj_props, ana_vm_new_symbol(vm, "getType"), 
+    ana_methodfromhandler("<builtin>", "getType", long_getType, NULL)
+  );
+}
+
+COMO_OBJECT_API void ana_long_type_finalize(ana_vm *vm)
+{
+  COMO_UNUSED(vm);
+
+  ana_map_foreach(ana_long_type.obj_props, key, value) {
+    (void)key;
+
+    ana_object_dtor(value);
+  } ana_map_foreach_end();
+
+  ana_object_dtor(ana_long_type.obj_props);
+}
+
 COMO_OBJECT_API inline ana_object *ana_longfromlong(long lval)
 {
   ana_long *obj = malloc(sizeof(*obj));
@@ -16,6 +48,7 @@ COMO_OBJECT_API inline ana_object *ana_longfromlong(long lval)
   obj->base.next = NULL;
   obj->base.flags = 0;
   obj->base.refcount = 0;
+  obj->base.is_tracked = 0;
   obj->value = lval;
 
   return (ana_object *)obj;

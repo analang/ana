@@ -17,6 +17,7 @@ typedef long ana_size_t;
 struct _ana_object {
   ana_size_t flags;     
   ana_size_t refcount;
+  ana_size_t is_tracked;
   struct _ana_type   *type;
   struct _ana_object *next;
 };

@@ -50,10 +50,41 @@ ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol);
   { \
     vm->do_gc(vm); \
   } \
+  ana_get_base(obj)->is_tracked = 1; \
   ana_get_base(obj)->next = vm->root; \
   vm->root = ana_get_base(obj); \
   vm->nobjs++; \
 } while(0)
 
+#define GC_TRACK_NO_SWEEP(vm, obj) do { \
+  ana_get_base(obj)->is_tracked = 1; \
+  ana_get_base(obj)->next = vm->root; \
+  vm->root = ana_get_base(obj); \
+  vm->nobjs++; \
+} while(0)
+
+/* Todo, this isn't recursive for now */
+#define GC_TRACK_DIMENSIONAL(vm, obj) do { \
+  if (vm->nobjs == vm->mxobjs) \
+  { \
+    vm->do_gc(vm); \
+  } \
+  ana_get_base(obj)->next = vm->root; \
+  vm->root = ana_get_base(obj); \
+  vm->nobjs++; \
+  \
+  if(ana_type_is(obj, ana_array_type)) { \
+    ana_array_foreach(obj, index, value) { \
+      (void)index; \
+      GC_TRACK_NO_SWEEP(vm, value); \
+    } ana_array_foreach_end(); \
+  } \
+  else if(ana_type_is(obj, ana_map_type)) { \
+    ana_map_foreach(obj, key, value) { \
+      (void)key; \
+      GC_TRACK_NO_SWEEP(vm, value); \
+    } ana_map_foreach_end(); \
+  } \
+} while(0)
 
 #endif

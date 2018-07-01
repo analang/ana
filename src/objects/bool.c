@@ -11,6 +11,7 @@ void ana_bool_type_init()
   xbool_true->base.next = NULL;
   xbool_true->base.flags = 0;
   xbool_true->base.refcount = 0;
+  xbool_true->base.is_tracked = 0;
   xbool_true->value = 1;
 
   ana_bool *xbool_false = malloc(sizeof(ana_bool));
@@ -19,6 +20,7 @@ void ana_bool_type_init()
   xbool_false->base.next = NULL;
   xbool_false->base.flags = 0;
   xbool_false->base.refcount = 0;
+  xbool_false->base.is_tracked = 0;
   xbool_false->value = 0;
 
   ana_bool_true = (ana_object *)xbool_true;

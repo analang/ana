@@ -10,8 +10,11 @@ static ana_object *ana_array_push_wrap(ana_object *arrayobj, ana_object *value)
 {
   value->refcount++;
 
-  return ana_array_push(arrayobj, value);
+  ana_object *res = ana_array_push(arrayobj, value);
+
+  return res;
 }
+
 
 static ana_object *array_length(ana_object *arrayobj, ana_object *arg)
 {
@@ -19,7 +22,9 @@ static ana_object *array_length(ana_object *arrayobj, ana_object *arg)
 
   ana_array *self = ana_get_array(arrayobj);
 
-  return ana_longfromlong(self->size);
+  ana_object *result = ana_longfromlong(self->size);
+
+  return result;
 }
 
 static ana_object *array_getType(ana_object *arrayobj, ana_object *arg)
@@ -27,7 +32,25 @@ static ana_object *array_getType(ana_object *arrayobj, ana_object *arg)
   COMO_UNUSED(arrayobj);
   COMO_UNUSED(arg);
 
-  return ana_stringfromstring("array");
+  ana_object *res = ana_stringfromstring("array");
+
+  return res;
+}
+
+static ana_object *array_first(ana_object *arrayobj, ana_object *arg)
+{
+  COMO_UNUSED(arg);
+
+  ana_array *self = ana_get_array(arrayobj);
+
+  if(self->size == 0)
+  {
+    Ana_SetError(InvalidOperation, "Empty array");
+
+    return NULL;
+  }
+
+  return self->items[0];
 }
 
 COMO_OBJECT_API void ana_array_type_init(ana_vm *vm)
@@ -53,6 +76,10 @@ COMO_OBJECT_API void ana_array_type_init(ana_vm *vm)
 
   ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "getType"), 
     ana_methodfromhandler("<builtin>", "getType", array_getType, NULL)
+  );
+
+  ana_map_put(type->obj_props, ana_vm_new_symbol(vm, "first"), 
+    ana_methodfromhandler("<builtin>", "first", array_first, NULL)
   );
 }
 
@@ -187,6 +214,7 @@ COMO_OBJECT_API ana_object *ana_array_new(ana_size_t capacity)
   obj->base.next = NULL;  
   obj->base.flags = 0;  
   obj->base.refcount = 0;
+  obj->base.is_tracked = 0;
   obj->size = 0;
   obj->capacity = capacity;
   obj->items = malloc(sizeof(ana_object *) * capacity);

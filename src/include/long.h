@@ -12,6 +12,9 @@ typedef struct _ana_long {
 
 COMO_OBJECT_API ana_object *ana_longfromlong(long lval);
 
+COMO_OBJECT_API void ana_long_type_init(ana_vm *vm);
+COMO_OBJECT_API void ana_long_type_finalize(ana_vm *vm);
+
 #define ana_get_long(o) ((ana_long *)(o))
 
 extern ana_type ana_long_type;

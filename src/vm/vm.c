@@ -24,6 +24,15 @@ static void incref_recursively(ana_object *obj);
 
 static ana_frame *BASE_FRAME;
 
+static ana_vm *AnaVM = NULL;
+
+ana_vm *ana_vm_location(void)
+{
+  assert(AnaVM != NULL);
+
+  return AnaVM;
+}
+
 static char *make_except(const char *fmt, ...)
 {
   char *buffer = NULL;
@@ -85,6 +94,8 @@ ana_vm *ana_vm_new()
   
   ana_string_type_init(vm);
 
+  ana_long_type_init(vm);
+
   return vm;
 }
 
@@ -101,6 +112,8 @@ void ana_vm_finalize(ana_vm *vm)
   ana_array_type_finalize(vm);
   
   ana_string_type_finalize(vm);
+
+  ana_long_type_finalize(vm);
 
   free(vm);
 }
@@ -1380,9 +1393,25 @@ leave_GETPROP:
             /* because the arguments on the stack may either be constants
                or already part of the GC root 
             */
-            if(res != ana_get_array(nativeargs)->items[0]) 
+            int found_reflected = 0;
+            int i;
+            for(i = 0; i < oparg; i++)
             {
-              GC_TRACK(vm, res);
+              /* To do this is single dimensional, will have bugs later */
+              if(res == ana_get_array(nativeargs)->items[i])
+              {
+                found_reflected = 1;
+                break;
+              }
+            }
+
+            if(!found_reflected) 
+            {
+              if(!res->is_tracked) 
+              {
+                GC_TRACK_DIMENSIONAL(vm, res);
+              }
+              //GC_TRACK(vm, res);
             }
           }
           else
@@ -1394,10 +1423,21 @@ leave_GETPROP:
                that was already tracked, here we would track it twice.
                TODO make a flag where we say if it is already tracked
              */
-            GC_TRACK(vm, res);
+
+            /* is_this_tracked? */
+            
+            if(!res->is_tracked)
+            {
+              GC_TRACK_DIMENSIONAL(vm, res);
+            }
+
+            //GC_TRACK(vm, res);
           }
 
-          push(res);
+          if(res)
+          {
+            push(res);
+          }
 
           ana_object_dtor(nativeargs);
 
@@ -1907,6 +1947,8 @@ static void gc(ana_vm *vm)
 
 static int trace_function(ana_vm *vm, char *function_name)
 {
+  AnaVM = vm;
+
   ana_size_t i;
   ana_array *constants = ana_get_array(vm->constants);
   ana_object *function_name_obj = ana_stringfromstring(function_name);
@@ -1961,6 +2003,8 @@ static int trace_function(ana_vm *vm, char *function_name)
 
 int ana_eval(ana_vm *vm, ana_function *functionobj, char *function)
 {
+  AnaVM = vm;
+
   ana_function_defn *func = ANA_GET_FUNCTION_DEF(functionobj);
 
   if(function && (vm->flags & COMO_VM_TRACING)) 

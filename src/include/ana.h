@@ -37,6 +37,12 @@
 #define LIKELY(x)       __builtin_expect(!!(x), 1)
 #define UNLIKELY(x)     __builtin_expect(!!(x), 0)
 
+
 COMO_OBJECT_API char *ana_get_fn_name(ana_frame * frame);
+
+extern ana_vm *ana_vm_location(void);
+
+#define ana_VM (ana_vm_location())
+
 
 #endif

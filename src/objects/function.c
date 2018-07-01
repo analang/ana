@@ -8,6 +8,7 @@ static ana_function_defn *ana_new_function_defn(void)
   obj->base.next  = NULL;
   obj->base.flags = 0;
   obj->base.refcount = 0;
+  obj->base.is_tracked = 0;
 
   obj->parameters   = ana_array_new(4);
   obj->code         = ana_code_new(COMO_CODE_SIZE);

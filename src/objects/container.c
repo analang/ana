@@ -11,6 +11,7 @@ COMO_OBJECT_API void ana_container_init(ana_object *obj,
   obj->type = &ana_container_type;
   obj->flags = 0;
   obj->refcount = 0;
+  obj->is_tracked = 0;
   obj->next = NULL;
  
   /* Initialize self */ 
