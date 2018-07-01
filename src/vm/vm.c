@@ -456,9 +456,39 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           frame->pc = (*(jmptargets + oparg))->value;
           goto top;
         }
+        vm_target(JMPF) {
+          TRACE(JMPF, oparg, 0, 1);
+          result = pop();
+          push(result);
+
+          if(result->type->obj_bool(result) == 0)
+          {     
+            frame->pc = (*(jmptargets + oparg))->value;
+            goto top;
+          }
+
+          vm_continue();
+        }
+        vm_target(JMPT)
+        {
+          TRACE(JMPT, oparg, 0, 1);
+          result = pop();
+          push(result);
+
+          if(result->type->obj_bool(result) != 0)
+          {     
+            frame->pc = (*(jmptargets + oparg))->value;
+            goto top;
+          }
+
+          vm_continue();
+        }
+
         vm_target(JMPZ) {
           TRACE(JMPZ, oparg, 0, 1);
           result = pop();
+          
+          assert(result);
 
           if(LIKELY(result->type == &ana_bool_type))
           {

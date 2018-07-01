@@ -3,35 +3,35 @@ function split(str)
   print("str.length()=" + str.length());
 
   lines = [];
-  buffer = "";
+  buffer = '';
 
   for(i = 0; i < str.length(); i++)
   {
-    if(str[i] == '\n')
+    if(str[i] == '\n' || (str[i] == '\r' && 
+          (i + 1 < str.length() && str[i + 1] == '\n'))
+      )
     {
+      if(str[i] == '\r' && i + 1 < str.length() && str[i + 1] == '\n')
+      {
+        ++i;
+      }
+
       lines.push(buffer);
       buffer = '';
-      continue;
-    }    
-  
-    print("i is now " + i);
-
-    // TODO, these AND expressions need to be dynamic, in that the right hand
-    // side is only executed if the left side is true
-    // If left is false, jump to past the end of the block
-    //
-    if (str[i] == '\r' && (i + i < str.length() && str[i + 1] == '\n'))
-    {
-      print(i);
+    }
+    else
+    {    
+      buffer = buffer + str[i];
     }
 
-    buffer = buffer + str[i];
   }
+
+  lines.push(buffer);
 
   return lines;
 }
 
 
 print(
-  split("Hey\nHi\nWhat's up?\nNot much, you?\n\r")
+  split("Hey\r\nHi\nWhat's up?\nNot much, you?")
 );

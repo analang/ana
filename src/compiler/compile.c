@@ -804,15 +804,32 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       prefix = "    ";
       switch(ast->attributes) {
         TARGET(COMO_AST_AND) {
+          
+          int exit_address = SETUP_JMP_TARGET();
+         
           ana_compile_unit(vm, funcobj, ast->children[0]);
+          EMITX(vm, func, JMPF, exit_address, 0, ast->children[0]);
+          
           ana_compile_unit(vm, funcobj, ast->children[1]);
-          EMITX(vm, func, ILAND, 0, 0, ast);
+          EMITX(vm, func, JMPF, exit_address, 0, ast->children[0]);
+
+          ana_array_push_index(func->jump_targets,
+            exit_address, CURRENT_ADDRESS());
+
           break;
         }
         TARGET(COMO_AST_OR) {
+          int exit_address = SETUP_JMP_TARGET();
+         
           ana_compile_unit(vm, funcobj, ast->children[0]);
+          EMITX(vm, func, JMPT, exit_address, 0, ast->children[0]);
+          
           ana_compile_unit(vm, funcobj, ast->children[1]);
-          EMITX(vm, func, ILOR, 0, 0, ast);
+          EMITX(vm, func, JMPT, exit_address, 0, ast->children[0]);
+
+          ana_array_push_index(func->jump_targets,
+            exit_address, CURRENT_ADDRESS());
+
           break;
         }
         TARGET(COMO_AST_LEFT_SHIFT) {

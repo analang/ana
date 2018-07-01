@@ -47,6 +47,8 @@
 #define ILOR              0x30
 #define ITER              0x31
 #define ITER_MV           0x32
-#define ANA_LAST_OPCODE   0x33
+#define JMPF              0x33
+#define JMPT              0x34
+#define ANA_LAST_OPCODE   0x35
 
 #endif
