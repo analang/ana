@@ -1,5 +1,6 @@
-bin/*
+bin/*.o
 bin/ana
+bin/*
 m4/*
 *.[ao]
 *.exe
