@@ -1,0 +1,15 @@
+function isNumeric(value)
+{
+  for(i = 0; i < value.length(); i++)
+  {
+    if(! (value[i] >= '0' && value[i] <= '9'))
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+print(isNumeric("123456"));
+print(isNumeric("44555aaa"));

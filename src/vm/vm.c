@@ -1559,13 +1559,13 @@ CALL_METHOD_leave:
 
                 if(value->refcount > 0) 
                 {
-                  if(value != frame->retval) 
-                  {
+                  //if(value != frame->retval) 
+                  //{
                     /* the return value is always going to need to be kept around */
                     /* the caller can worry about it*/
 
                     decref_recursively(value);
-                  }
+                  //}
                 }
               } ana_map_foreach_end();
 

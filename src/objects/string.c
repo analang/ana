@@ -216,13 +216,86 @@ static ana_object *string_not_equals_wrap(ana_object *a, ana_object *b)
   return ana_boolfromint(!string_equals(a, b));
 }
 
+static ana_object *string_greater_than(ana_object *strobj, ana_object *right)
+{
+  ana_string *str = ana_get_string(strobj);
+  int result;
+
+  if(!ana_type_is(right, ana_string_type))
+  {
+    Ana_SetError(AnaTypeError, "unsupported right hand operand for string.> operator, got %s",
+      ana_type_name(right));
+
+    return NULL;
+  }
+
+  result = strcmp(str->value, ana_get_string(right)->value);
+
+  return ana_boolfromint(result > 0 ? 1 : 0);
+}
+
+static ana_object *string_less_than(ana_object *strobj, ana_object *right)
+{
+  ana_string *str = ana_get_string(strobj);
+  int result;
+
+  if(!ana_type_is(right, ana_string_type))
+  {
+    Ana_SetError(AnaTypeError, "unsupported right hand operand for string.< operator, got %s",
+      ana_type_name(right));
+
+    return NULL;
+  }
+
+  result = strcmp(str->value, ana_get_string(right)->value);
+
+  return ana_boolfromint(result < 0 ? 1 : 0);
+}
+
+static ana_object *string_greater_than_or_equal(ana_object *strobj, ana_object *right)
+{
+  ana_string *str = ana_get_string(strobj);
+  int result;
+
+  if(!ana_type_is(right, ana_string_type))
+  {
+    Ana_SetError(AnaTypeError, "unsupported right hand operand for string.>= operator, got %s",
+      ana_type_name(right));
+
+    return NULL;
+  }
+
+  result = strcmp(str->value, ana_get_string(right)->value);
+
+  return ana_boolfromint(result >= 0 ? 1 : 0);
+}
+
+static ana_object *string_less_than_or_equal(ana_object *strobj, ana_object *right)
+{
+  ana_string *str = ana_get_string(strobj);
+  int result;
+
+  if(!ana_type_is(right, ana_string_type))
+  {
+    Ana_SetError(AnaTypeError, "unsupported right hand operand for string.<= operator, got %s",
+      ana_type_name(right));
+
+    return NULL;
+  }
+
+  result = strcmp(str->value, ana_get_string(right)->value);
+
+  return ana_boolfromint(result <= 0 ? 1 : 0);
+}
+
+
 static ana_comparison_ops compops = {
   .obj_eq  = string_equals_wrap,
   .obj_neq = string_not_equals_wrap,
-  .obj_gt  = NULL,
-  .obj_lt  = NULL,
-  .obj_gte = NULL,
-  .obj_lte = NULL
+  .obj_gt  = string_greater_than,
+  .obj_lt  = string_less_than,
+  .obj_gte = string_greater_than_or_equal,
+  .obj_lte = string_less_than_or_equal
 };
 
 static struct _ana_seq_ops seqops = {
