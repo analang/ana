@@ -227,7 +227,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         {
           TRACE(ITER, oparg, 0, 1);
 
+          /* This is the container */
           ana_object *iterable = pop();
+
+          /* the container is already part of the GC root*/
 
           if(iterable->type->obj_iter == NULL)
           {
@@ -238,7 +241,12 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           {
             ana_object *iterator = iterable->type->obj_iter(iterable);
             
+            /* The iterator is tracked */
             GC_TRACK(vm, iterator);
+
+            /* We must hold a reference to it because it will be 
+               reachable for the entire duration of this loop */
+            iterator->refcount++;
 
             push(iterator);
 
@@ -260,17 +268,20 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           {
             frame->pc = (*(jmptargets + oparg))->value;
             
+            /* release lock on the container */
+            iterator->refcount--;
+
             goto top;          
           }
           else
           {
             push(iterator);
-
             push(next);
           }
 
           vm_continue();
         }
+
         vm_target(ILAND) {
           TRACE(ILAND, oparg, 0, 1);
           ana_object *right = pop();
@@ -686,6 +697,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             
             ana_array_push(result, left);
 
+            left->refcount++;
+            
             incref_recursively(left);
           }
 
@@ -1669,7 +1682,14 @@ static void incref_recursively(ana_object *obj)
 
     for(i = 0; i < array->size; i++)
     {
-      incref_recursively(array->items[i]);
+      if(array->items[i] != obj)
+      { 
+        incref_recursively(array->items[i]);
+      }
+      else
+      {
+        array->items[i]->refcount++;
+      }
     }
   }
   else if(ana_type_is(obj, ana_map_type))
@@ -1678,19 +1698,15 @@ static void incref_recursively(ana_object *obj)
       
       (void)key;
 
-      incref_recursively(value);
-
+      if(value != obj)
+      { 
+        incref_recursively(value);
+      }
+      else
+      {
+        value->refcount++;
+      }
     } ana_map_foreach_end();
-  }
-  else if(ana_type_is(obj, ana_array_type))
-  {
-    ana_array_foreach(obj, index, value) {
-
-      (void)index;
-
-      incref_recursively(value);
-
-    } ana_array_foreach_end();
   }
 }
 
@@ -1723,16 +1739,6 @@ static void decref_recursively(ana_object *obj)
       decref_recursively(value);
 
     } ana_map_foreach_end();
-  }
-  else if(ana_type_is(obj, ana_array_type))
-  {
-    ana_array_foreach(obj, index, value) {
-
-      (void)index;
-
-      decref_recursively(value);
-
-    } ana_array_foreach_end();
   }
 }
 

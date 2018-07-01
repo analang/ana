@@ -75,7 +75,7 @@ def valgrind_test(valgrind, anapath, fullpath):
             output = valgrindparser.parseValgrindOutput(contents)
             success = '';
             if len(output) > 0:
-              for error in valgrindresult:
+              for error in output:
                 success += "  %s\n" % error['kind']
                 success += "  %s\n" % error['message']
               success = success.encode()
@@ -185,7 +185,7 @@ def main():
               valgrindresult = valgrind_test(valgrind, ana, fullpath)
               if valgrindresult:
                 print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
-                print(valgrindresult)
+                print(valgrindresult.decode())
                 failed +=1  
               else:
                 print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))
