@@ -230,6 +230,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           /* This is the container */
           ana_object *iterable = pop();
 
+          printf("ITER: refcount is %ld\n", iterable->refcount);
+
           /* the container is already part of the GC root*/
 
           if(iterable->type->obj_iter == NULL)
@@ -268,7 +270,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           {
             frame->pc = (*(jmptargets + oparg))->value;
             
-            /* release lock on the container */
+            printf("ITER_MV: container refcount is at %ld\n",
+              ((ana_array_iterator *)iterator)->array->base.refcount);
+
+            /* release lock on the iterator */
             iterator->refcount--;
 
             goto top;          
@@ -276,6 +281,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           else
           {
             push(iterator);
+
             push(next);
           }
 
@@ -696,8 +702,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             left = pop();
             
             ana_array_push(result, left);
-
-            left->refcount++;
             
             incref_recursively(left);
           }
@@ -772,7 +776,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             set_except("RuntimeError", "Can't set property on object of type %s",
               ana_type_name(instance));
           } 
-          else 
+          else  
           {
             ana_class *theclass = (ana_class*)instance;
             ana_object *res = ana_map_put(theclass->members, arg, value);
@@ -1604,6 +1608,9 @@ CALL_METHOD_leave:
       }
     }
     exit:
+    /* wait, if we have a value on the stack, that was also the
+       same value as a local, won't we decrement the reference count twice? 
+       */
       while(!empty()) 
       {
         ana_object *temp = pop();
@@ -1706,6 +1713,7 @@ static void incref_recursively(ana_object *obj)
       {
         value->refcount++;
       }
+
     } ana_map_foreach_end();
   }
 }
@@ -1727,7 +1735,14 @@ static void decref_recursively(ana_object *obj)
 
     for(i = 0; i < array->size; i++)
     {
-      decref_recursively(array->items[i]);
+      if(array->items[i] != obj) 
+      {
+        decref_recursively(array->items[i]);
+      }
+      else
+      {
+        array->items[i]->refcount--;
+      }
     }
   }
   else if(ana_type_is(obj, ana_map_type))
@@ -1736,7 +1751,14 @@ static void decref_recursively(ana_object *obj)
       
       (void)key;
 
-      decref_recursively(value);
+      if(value != obj) 
+      {
+        decref_recursively(value);
+      }
+      else
+      {
+        value->refcount--;
+      }
 
     } ana_map_foreach_end();
   }
@@ -1833,7 +1855,13 @@ static void sweep(ana_vm *vm)
             
       assert(!ana_type_is(unreached, ana_function_type));
 
-      if(unreached->refcount == 0) 
+      /* it's possible that at the end of the frame
+         a value on the stack is also the same value as a local
+         in that moment the reference count can become 0,
+         however, if a value on the stack contains a reference to this
+         value, and also does the decrement, we would get to less than zero
+       */
+      if(unreached->refcount <= 0) 
       {
         *root = unreached->next;
 

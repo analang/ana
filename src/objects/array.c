@@ -24,6 +24,9 @@ static ana_object *array_length(ana_object *arrayobj, ana_object *arg)
 
 static ana_object *array_getType(ana_object *arrayobj, ana_object *arg)
 {
+  COMO_UNUSED(arrayobj);
+  COMO_UNUSED(arg);
+
   return ana_stringfromstring("array");
 }
 
@@ -243,6 +246,10 @@ static ana_object *ana_array_iterator_next(ana_array_iterator *iter)
 
 static ana_object *array_iterator_get(ana_object *obj)
 {
+  printf("array_iterator_get: obj refcount is at %ld\n", obj->refcount);
+ 
+  obj->refcount++;
+
   ana_array_iterator *iter = malloc(sizeof(*iter));
 
   iter->base.flags = 0;
@@ -256,9 +263,19 @@ static ana_object *array_iterator_get(ana_object *obj)
   return (ana_object *)iter;
 }
 
-static void array_iterator_dtor(ana_object *obj)
-{
-  free(obj);
+static void array_iterator_dtor(ana_object *iterobj)
+{ 
+  ana_array_iterator *iter = (ana_array_iterator *)iterobj;
+
+  printf("array_iterator_dtor: obj refcount is at %ld\n", 
+    ana_get_base(iter->array)->refcount);
+
+  ana_get_base(iter->array)->refcount--;
+
+  printf("now array container has refcount of %ld\n", 
+    ana_get_base(iter->array)->refcount);
+
+  free(iter);
 }
 
 ana_type ana_array_type = {
