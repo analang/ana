@@ -1384,6 +1384,7 @@ leave_GETPROP:
           ana_object *self = pop();
           
           int totalargs = oparg;
+          ana_function *func = ana_get_function(callable);
 
           if((ana_get_function(callable)->flags & COMO_FUNCTION_LANG) 
               == COMO_FUNCTION_LANG)
@@ -1547,6 +1548,29 @@ leave_GETPROP:
             if(res)
             {
               push(res);
+            }
+
+            ana_object_dtor(nativeargs);
+          }
+          else if( (ana_get_function(callable)->flags & COMO_FUNCTION_NATIVE)
+            == COMO_FUNCTION_NATIVE)
+          {
+            /* this is a just a native function wrapper into a variable */
+          
+            ana_object *nativeargs = ana_array_new(4);
+
+            while(totalargs--)
+            {
+              ana_object *thearg = pop();
+
+              ana_array_push(nativeargs, thearg);
+            }       
+
+            ana_object *res = func->handler(nativeargs); 
+
+            if(res) 
+            {
+              GC_TRACK(vm, res);
             }
 
             ana_object_dtor(nativeargs);
