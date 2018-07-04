@@ -1,6 +1,8 @@
 #include <ana.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h>
+#include <stdio.h>
 
 ana_object *ana__builtin_readline(ana_object *args)
 {
@@ -12,7 +14,13 @@ ana_object *ana__builtin_readline(ana_object *args)
     int c;
     ana_object *retval;
 
-    while((c = fgetc(stdin)) != EOF) {
+    if(!isatty(STDIN_FILENO))
+    {
+      printf("ana: warning, stdin is not a TTY\n");
+    }
+
+    while(read(STDIN_FILENO, &c, 1) != 0) 
+    {
       if(i == buffersize) {
         buffer = realloc(buffer, buffersize * 2);
         buffersize = buffersize * 2;

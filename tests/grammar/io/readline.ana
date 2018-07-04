@@ -1,0 +1,10 @@
+//{"Skip": true, "Expect": "PASS", "Input": ["Hello", "World", "Q"]}
+function main()
+{
+  while((line = readline()) != 'Q')
+  {
+    print(line);
+  }
+}
+
+main();

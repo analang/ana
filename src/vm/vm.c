@@ -1663,7 +1663,7 @@ CALL_METHOD_leave:
                 ana_array_push(nativeargs, thearg);
               }       
 
-              ana_object *res = fn->handler(nativeargs); 
+              res = fn->handler(nativeargs); 
 
               if(res) 
               {
