@@ -29,7 +29,7 @@ static ana_function *create_function(char *filename, char *name, int type)
   obj->base.refcount = 0;
   obj->name = ana_stringfromstring(name);
   obj->filename = ana_stringfromstring(filename);
-
+  
   return obj;
 }
 
@@ -61,8 +61,8 @@ static void function_dtor(ana_object *obj)
     free(self->func);
   }
 
-  if((self->flags & COMO_FUNCTION_METHOD 
-    && self->method.m_parameters != NULL)
+  if( (self->flags & COMO_FUNCTION_NATIVE_METHOD) == COMO_FUNCTION_NATIVE_METHOD
+    && self->method.m_parameters != NULL
     && self->method.m_parameters != ana_array_empty)
   {
     ana_array_foreach_apply(self->method.m_parameters, ana_object_dtor);

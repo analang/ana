@@ -461,7 +461,7 @@ node *object_node(ana_parser_state *state, node *init)
   return list;
 }
 
-node *class_node(ana_parser_state *state, char *name, node *init)
+node *class_node(ana_parser_state *state, char *name, node *baseclass, node *init)
 {
   node *list = list_node(state, COMO_AST_CLASS);
   list->attribute_visit = NULL;
@@ -469,12 +469,12 @@ node *class_node(ana_parser_state *state, char *name, node *init)
   list->info = "ClassDefn";
 
   add_child(state, list, id_node(state, name));
+  add_child(state, list, baseclass);
   add_child(state, list, init);
-
   return list;
 }
 
-node *return_node(ana_parser_state *state, node *expression  )
+node *return_node(ana_parser_state *state, node *expression)
 {
   node *list = list_node_sized(state, COMO_AST_RETURN, 1);
   list->attribute_visit = NULL;

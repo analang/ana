@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define ANA_RUNTIME_MSG_MAX 1024UL
 

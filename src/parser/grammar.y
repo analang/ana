@@ -124,6 +124,7 @@ typedef void* yyscan_t;
 %type<ast> additive_expression multiplicative_expression and_expression exclusive_or_expression
 %type<ast> function_params function_param optional_parameter_list jump_statement
 %type<ast> throw_stmt
+%type<ast> optional_extends
 
 %type<token> access_modifier
 
@@ -363,6 +364,14 @@ optional_as_modifier:
   }
 ;
 
+optional_extends:
+  ':' T_ID {
+    $$ = id_node(pstate, $2);
+  }
+| %empty {
+  $$ = NULL;
+}
+
 function_def:
   T_FUNCTION T_ID '(' optional_parameter_list ')' '{' function_statements '}' { ;
     $$ = function_node(pstate, $2, $4, $7); 
@@ -405,8 +414,8 @@ class_statement:
 ;
 
 class_def:
-  T_CLASS T_ID '{' class_statements '}' { 
-    $$ = class_node(pstate, $2, $4); 
+  T_CLASS T_ID optional_extends '{' class_statements '}' { 
+    $$ = class_node(pstate, $2, $3, $5); 
   }
 ;
 

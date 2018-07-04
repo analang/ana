@@ -1,0 +1,32 @@
+class Object {
+  public function toString() 
+  {
+    return "" + self;
+  }
+}
+
+class Runtime : Object {
+  public function Runtime()
+  {
+    self._state = -1;
+    self._self = self;  
+  }
+  
+  public function getState()
+  {
+    return self._state;
+  }
+}
+
+function main()
+{
+  rt = Runtime();
+  rt.rt = rt;
+  state = rt.getState();
+  print(
+    rt.toString()
+  );
+}
+
+
+main();

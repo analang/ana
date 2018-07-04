@@ -62,6 +62,77 @@ static void class_init(ana_object *obj)
   COMO_UNUSED(obj);
 }
 
+
+COMO_OBJECT_API ana_object *ana_instance_new(ana_object *class_defn)
+{
+  assert(ana_type_is(class_defn, ana_class_type));
+
+  ana_instance *obj = malloc(sizeof(*obj));
+
+  obj->base.type = &ana_instance_type;
+  obj->base.next = NULL;  
+  obj->base.flags = 0;
+  obj->base.refcount = 0;  
+  obj->base.is_tracked = 0;
+
+  obj->base_instance = NULL;
+  obj->self          = (ana_class *)class_defn;
+  obj->properties    = ana_map_new(4);
+
+  return (ana_object *)obj; 
+}
+
+static int instance_equals(ana_object *a, ana_object *b)
+{
+  return a == b;
+}
+
+static ana_object *instance_string(ana_object *obj)
+{
+  ana_instance *inst = (ana_instance *)obj;
+
+  char *str = ana_build_str("<instance of type '%s' at %p>", 
+        ana_cstring(inst->self->name), (void *)inst);
+  
+  ana_object *retval = ana_stringfromstring(str);
+
+  free(str);
+
+  return retval;
+}
+
+static void instance_print(ana_object *obj)
+{
+  ana_instance *inst = (ana_instance *)obj;
+
+  fprintf(stdout, "<instance of type `%s` at %p>", 
+    ana_cstring(inst->self->name), (void *)obj);
+}
+
+static void instance_dtor(ana_object *obj)
+{  
+  ana_instance *self = (ana_instance *)obj;
+
+  ana_object_dtor(self->properties);
+
+  if(self->base_instance)
+    instance_dtor(self->base_instance);
+  
+  free(self);
+}
+
+static int instance_bool(ana_object *obj)
+{
+  COMO_UNUSED(obj);
+
+  return 1;
+}
+
+static void instance_init(ana_object *obj)
+{
+  COMO_UNUSED(obj);
+}
+
 static ana_comparison_ops compops = {
   .obj_eq  = class_equals_wrap,
   .obj_neq = NULL,
@@ -89,4 +160,24 @@ ana_type ana_class_type = {
   .obj_props    = NULL,
   .obj_iter     = NULL,
   .obj_iter_next = NULL
+};
+
+ana_type ana_instance_type = {
+  .obj_name    = "instance",
+  .obj_print   = instance_print,
+  .obj_dtor    = instance_dtor,
+  .obj_equals  = instance_equals,
+  .obj_bool    = instance_bool,
+  .obj_hash    = NULL,
+  .obj_str     = instance_string,
+  .obj_init    = instance_init,
+  .obj_deinit  = NULL,
+  .obj_binops  = NULL,
+  .obj_unops   = NULL,
+  .obj_compops = NULL,
+  .obj_seqops  = NULL,
+  .obj_get_attr = NULL,
+  .obj_props    = NULL,
+  .obj_iter     = NULL,
+  .obj_iter_next = NULL 
 };

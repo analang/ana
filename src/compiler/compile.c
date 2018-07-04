@@ -106,8 +106,9 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
 {
   ana_function_defn *parentfunc = ANA_GET_FUNCTION_DEF(parentfuncobj);
   node_id *classname = (node_id *)(ast->children[0]);
-  node *functions = ast->children[1];
-  ana_size_t i;
+  node_id *baseclassname = (node_id *)(ast->children[1]);
+  node *functions = ast->children[2];
+  ana_size_t i, j;
   
   for(i = 0; i < functions->nchild; i++)
   {
@@ -125,9 +126,11 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
 
     ana_function_defn *func = ANA_GET_FUNCTION_DEF(funcobj);
 
-    for(i = 0; i < params->nchild; i++)
+    assert(params);
+
+    for(j = 0; j < params->nchild; j++)
     {
-      node *node = params->children[i];
+      node *node = params->children[j];
 
       assert(node->kind == COMO_AST_ID);
 
@@ -137,6 +140,13 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
     }
 
     ana_compile_unit(vm, funcobj, body);
+
+    // if(strcmp(name->value, classname->value) == 0)
+    // {
+    //   /* compile the return self */
+    //   EMIT(func, LOAD_NAME, NEW_STR_CONST(vm, "self"), 0);
+    //   EMIT(func, IRETURN, 0, 0);
+    // }
 
     if(body->nchild > 0) 
     {
@@ -156,7 +166,17 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
 
   EMITX(vm, parentfunc, LOAD_CONST, NEW_INT_CONST(vm, functions->nchild), 0, ast);
   EMITX(vm, parentfunc, LOAD_CONST, NEW_STR_CONST(vm, classname->value), 0,  ast);
-  EMITX(vm, parentfunc, DEFINE_CLASS, 0, 0, ast);
+  
+  if(baseclassname)
+  {
+    EMITX(vm, parentfunc, LOAD_CONST, NEW_STR_CONST(vm, baseclassname->value), \
+      0, ast);
+    EMITX(vm, parentfunc, DEFINE_CLASS, 0, 1, ast);
+  }
+  else
+  {
+    EMITX(vm, parentfunc, DEFINE_CLASS, 0, 0, ast);
+  }
 }
 
 static void compile_try(ana_vm *vm, ana_object *parentfuncobj, node *stmt)

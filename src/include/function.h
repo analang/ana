@@ -8,6 +8,8 @@
 #define COMO_FUNCTION_LANG    (1 << 0)
 #define COMO_FUNCTION_NATIVE  (1 << 1)
 #define COMO_FUNCTION_METHOD  (1 << 2)
+#define COMO_FUNCTION_NATIVE_METHOD \
+    (COMO_FUNCTION_NATIVE | COMO_FUNCTION_METHOD)
 
 typedef ana_object*(*ana_function_handler)(ana_object *);
 typedef ana_object*(*ana_method_handler)(ana_object *, ana_object *);
@@ -24,7 +26,7 @@ typedef struct _ana_function_def {
 typedef struct _ana_function 
 {
   ana_object base;
-  ana_size_t flags;
+  int flags;
   ana_object *name;
   ana_object *filename;
   union 
@@ -38,7 +40,6 @@ typedef struct _ana_function
   };
 } ana_function;
 
-
 COMO_OBJECT_API ana_object *ana_function_defn_new(char *filename, char *name);
 COMO_OBJECT_API ana_object *ana_functionfromframe(ana_frame *frame);
 COMO_OBJECT_API ana_object *ana_functionfromhandler(
@@ -50,6 +51,7 @@ COMO_OBJECT_API ana_object *ana_methodfromhandler(
 #define ana_get_function(obj) ((ana_function *)((obj)))
 #define ana_get_function_frame(obj) (((ana_function *)((obj)))->impl.frame)
 #define ana_get_function_flags(obj) (ana_get_function((obj))->flags)
+#define ana_get_function_defn(obj) (ana_get_function(obj)->func)
 
 #define ANA_GET_FUNCTION_DEF(obj) (((ana_function *)((obj)))->func)
 #define ANA_GET_FUNCTION(obj) ((ana_function *)((obj)))

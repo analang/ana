@@ -139,7 +139,7 @@ node *array_node(ana_parser_state *state, node *args);
 node *function_node(ana_parser_state *state, char *name, node *params, 
   node *body);
 node *object_node(ana_parser_state *state, node *init);
-node *class_node(ana_parser_state *state, char *name, node *init);
+node *class_node(ana_parser_state *state, char *name, node *baseclass, node *init);
 node *return_node(ana_parser_state *state, node *expression);
 node *import_node(ana_parser_state *state, node *expression);
 node *call_node(ana_parser_state *state, node *expr, node *args);

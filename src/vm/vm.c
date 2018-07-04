@@ -83,6 +83,8 @@ ana_vm *ana_vm_new()
   vm->root = NULL;
   vm->symbols   = ana_array_new(8);
   vm->constants = ana_array_new(16);
+  vm->self_symbol = ana_stringfromstring("self");
+
   vm->base_frame = NULL;
 
   vm->frameroot = NULL;
@@ -103,6 +105,8 @@ void ana_vm_finalize(ana_vm *vm)
 {
   ana_array_foreach_apply(vm->symbols, ana_object_dtor);
   ana_object_dtor(vm->symbols);
+
+  ana_object_dtor(vm->self_symbol);
 
   ana_array_foreach_apply(vm->constants, ana_object_dtor);
   ana_object_dtor(vm->constants);
@@ -431,6 +435,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             if(result) 
             {
               GC_TRACK(vm, result);
+
               push(result);
             }
             else
@@ -769,8 +774,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             }
 
             ana_map_put(instance, arg, value);
+
+
+            incref_recursively(value);
             
-            if(!opflag) 
+            if(!opflag)  
             {              
               push(value);
             }
@@ -779,15 +787,25 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
 
           /* prevent arbitrary properties from begin defined on non class types */
-          if(!ana_type_is(instance, ana_class_type))
+          if(!ana_type_is(instance, ana_instance_type))
           {
             set_except("RuntimeError", "Can't set property on object of type %s",
               ana_type_name(instance));
           } 
           else  
           {
-            ana_class *theclass = (ana_class*)instance;
-            ana_object *res = ana_map_put(theclass->members, arg, value);
+            ana_instance *theinstance = (ana_instance*)instance;
+
+            ana_object *prev = ana_map_get(theinstance->properties, arg);
+
+            if(prev)
+            {
+              decref_recursively(prev);
+            }
+
+            ana_object *res = ana_map_put(theinstance->properties, arg, value);
+
+            incref_recursively(value);
 
             if(!res)
               assert(res);
@@ -819,27 +837,7 @@ SETPROP_leave:
 
             goto leave_GETPROP;
           }
-          /* runtime properties, dynamically computed */
-          else if(instance->type->obj_get_attr != NULL)
-          {
-            ana_object *res = instance->type->obj_get_attr(instance, arg);
-
-            if(res)
-            {
-              GC_TRACK(vm, res);
-
-              push(res);
-
-              goto leave_GETPROP;
-            }
-            else
-            {
-                goto again;
-            }
-          }
-          
-again:
-          if(instance->type->obj_props != NULL)
+          else if(instance->type->obj_props != NULL)
           {
             ana_object *res = ana_map_get(instance->type->obj_props, arg);
 
@@ -854,20 +852,46 @@ again:
               ,ana_type_name(instance)); 
             }
           }
-          else if(ana_type_is(instance, ana_class_type))
+          else if(ana_type_is(instance, ana_instance_type))
           {
+            /* Method resolution for GETPROP on instances
+             * 
+             * class definition, functions 
+             * properties
+             * locals
+             */
             ana_object *res = ana_map_get(
-              ((ana_class *)instance)->members, arg);
+              ((ana_instance *)instance)->self->members, arg);
+
+            if(!res)
+            {
+              res = ana_map_get(ana_get_instance(instance)->properties, arg);
+            }
+
+            if(!res)
+            {
+              res = ana_map_get(
+                ana_get_instance(
+                  ana_get_instance(instance)->base_instance
+                )->self->members, arg);          
+            }
+
+            if(!res)
+            {
+              res = ana_map_get(
+                ana_get_instance(
+                  ana_get_instance(instance)->base_instance
+                )->properties, arg);          
+            }
 
             if(!res)
             {
               set_except("RuntimeError", "%s is not defined on %s instance",
                 ((ana_string *)arg)->value, 
-                ana_cstring(ana_get_class(instance)->name));
+                ana_cstring(ana_get_instance(instance)->self->name));
             }
             else
             {
-              /* TODO, GC_TRACK */
               push(res);
             }
           }
@@ -894,11 +918,6 @@ leave_GETPROP:
           if(!COMO_VM_HAS_FRAMES())
           {
             ana_frame *caller = vm->stack[vm->stackpointer - 1];
-
-            if(arg->refcount > 0) 
-            {
-              //decref_recursively(arg);
-            }
             
             frame->retval = arg;
 
@@ -1083,7 +1102,7 @@ leave_GETPROP:
           }
           else
           {
-            set_except("NotImplementedError", "%% opeartion is not implemented"
+            set_except("NotImplementedError", "%% operation is not implemented"
               "for type %s", ana_type_name(left));
           }
 
@@ -1314,17 +1333,23 @@ leave_GETPROP:
 
           vm_continue();
         }
-        vm_target(DEFINE_CLASS) {
+        vm_target(DEFINE_CLASS) 
+        {
           TRACE(DEFINE_CLASS, oparg, 0, 1);
+
+          ana_object *baseclass = NULL;
+
+          if(opflag)
+          {
+            baseclass = pop();
+          }
+
           ana_object *name = pop();
-
-          printf("defining class %s\n", ana_cstring(name));
-
           ana_object *fncount = pop();
-          ana_class *theclass = (ana_class *)ana_class_new(NULL, name);
+          ana_class *theclass = (ana_class *)ana_class_new(baseclass, name);
           long i = ana_get_long(fncount)->value;
 
-          while(--i)
+          while(i--)
           {
             ana_object *function_name = pop();
             ana_object *function_code = pop();
@@ -1348,7 +1373,8 @@ leave_GETPROP:
           ana_map_put(frame->locals, name, code);
           vm_continue();
         }
-        vm_target(CALL_METHOD) {
+        vm_target(CALL_METHOD) 
+        {
           /* TODO, this needs to be refactorted to account for language defined
              methods too
            */
@@ -1359,88 +1385,179 @@ leave_GETPROP:
           
           int totalargs = oparg;
 
-          assert(ana_type_is(callable, ana_function_type) 
-            && ana_get_function(callable)->flags && COMO_FUNCTION_METHOD);
-
-          if(ana_array_size(ana_get_function(callable)->method.m_parameters) 
-              != (ana_size_t)totalargs)
+          if((ana_get_function(callable)->flags & COMO_FUNCTION_LANG) 
+              == COMO_FUNCTION_LANG)
           {
-             set_except("ArgumentError", "%s expects %ld argument(s), but %d were passed",
-              ana_cstring(ana_get_function(callable)->name), 
-              ana_array_size(ana_get_function(callable)->method.m_parameters),
-              totalargs);      
+            int totalargs = oparg;
+            ana_function *fn = ana_get_function(callable);
+      
+            struct _ana_function_def *call = fn->func;
 
-            goto CALL_METHOD_leave;
-          }
+            ana_frame *execframe = ana_frame_new(
+              call->code,
+              call->jump_targets, 
+              call->line_mapping, 
+              BASE_FRAME->locals,
+              fn->name, 
+              frame,
+              current_line,
+              fn->filename
+            );
 
-          ana_object *nativeargs = ana_array_new(4);
-
-          while(totalargs--)
-          {
-            ana_object *thearg = pop();
-
-            ana_array_push(nativeargs, thearg);
-          }
-
-          res = ana_get_function(callable)->method.m_handler(self, 
-            oparg == 1 ? ana_get_array(nativeargs)->items[0] : nativeargs);
-          
-          /* TODO flag to check if it's already tracked */
-          /* this value may already be tracked */
-          if(oparg > 0)
-          {
-            /* TODO Check to make sure the returned value is not an argument */
-            /* because the arguments on the stack may either be constants
-               or already part of the GC root 
-            */
-            int found_reflected = 0;
-            int i;
-            for(i = 0; i < oparg; i++)
+            if(call->parameters != NULL)
             {
-              /* To do this is single dimensional, will have bugs later */
-              if(res == ana_get_array(nativeargs)->items[i])
+              if(ana_get_array(call->parameters)->size != totalargs)
               {
-                found_reflected = 1;
-                break;
+                set_except(
+                  "ArgumentError", "%s expects %lu arguments, %d given",
+                  ana_get_fn_name(execframe), 
+                  ana_get_array(call->parameters)->size,
+                  totalargs);
+                
+                goto call_exit;
               }
             }
-
-            if(!found_reflected) 
+            else if(totalargs != 0)
             {
-              if(!res->is_tracked) 
+              set_except(
+                "ArgumentError", "%s expects 0 arguments, %d given",
+                ana_get_fn_name(execframe), totalargs);
+
+              goto call_exit;
+            }
+
+            /* Make sure this isn't a module funciton */
+            if(ana_type_is(self, ana_instance_type))
+            {
+              /* figure out if this is the base or parent */
+              /* base instnace being null would mean this is the parent class
+                 , so this must be the child 
+              */
+
+              ana_instance *i = ana_get_instance(self);
+              ana_object *real_self = self;
+
+              while(i)
+              {                
+                if(ana_map_get(i->self->members, fn->name) != NULL)
+                {
+                  real_self = (ana_object *)i;
+                  break;
+                }
+
+                i = ana_get_instance(i->base_instance);
+              }
+
+              ana_map_put(execframe->locals, 
+                vm->self_symbol, real_self);
+            }
+
+            while(totalargs--)
+            {
+              ana_object *theargvalue = pop();
+
+              theargvalue->refcount++;
+
+              ana_object *paramname = ana_array_get(
+                call->parameters, (ana_size_t)totalargs);
+
+              ana_map_put(execframe->locals, paramname, theargvalue);
+            }
+            
+            COMO_VM_PUSH_FRAME(frame);
+            COMO_VM_PUSH_FRAME(execframe);
+
+            goto enter;            
+          }
+          else if( (ana_get_function(callable)->flags 
+              & COMO_FUNCTION_NATIVE_METHOD) == COMO_FUNCTION_NATIVE_METHOD)
+          {
+            if(ana_array_size(ana_get_function(callable)->method.m_parameters) 
+                != (ana_size_t)totalargs)
+            {
+               set_except("ArgumentError", "%s expects %ld argument(s), but %d were passed",
+                ana_cstring(ana_get_function(callable)->name), 
+                ana_array_size(ana_get_function(callable)->method.m_parameters),
+                totalargs);      
+
+              goto CALL_METHOD_leave;
+            }
+
+            ana_object *nativeargs = ana_array_new(4);
+
+            while(totalargs--)
+            {
+              ana_object *thearg = pop();
+
+              ana_array_push(nativeargs, thearg);
+            }
+
+            res = ana_get_function(callable)->method.m_handler(self, 
+              oparg == 1 ? ana_get_array(nativeargs)->items[0] : nativeargs);
+            
+            /* TODO flag to check if it's already tracked */
+            /* this value may already be tracked */
+            if(oparg > 0)
+            {
+              /* TODO Check to make sure the returned value is not an argument */
+              /* because the arguments on the stack may either be constants
+                 or already part of the GC root 
+              */
+              int found_reflected = 0;
+              int i;
+              for(i = 0; i < oparg; i++)
+              {
+                /* To do this is single dimensional, will have bugs later */
+                if(res == ana_get_array(nativeargs)->items[i])
+                {
+                  found_reflected = 1;
+                  break;
+                }
+              }
+
+              if(!found_reflected) 
+              {
+                if(!res->is_tracked) 
+                {
+                  GC_TRACK_DIMENSIONAL(vm, res);
+                }
+                //GC_TRACK(vm, res);
+              }
+            }
+            else
+            {
+              /* If this is already tracked this can be a bug */
+              /* for example:
+               *
+               * a search method, which takes a key and returns a value in an array
+                 that was already tracked, here we would track it twice.
+                 TODO make a flag where we say if it is already tracked
+               */
+
+              /* is_this_tracked? */
+              
+              if(!res->is_tracked)
               {
                 GC_TRACK_DIMENSIONAL(vm, res);
               }
+
               //GC_TRACK(vm, res);
             }
+
+            if(res)
+            {
+              push(res);
+            }
+
+            ana_object_dtor(nativeargs);
           }
           else
           {
-            /* If this is already tracked this can be a bug */
-            /* for example:
-             *
-             * a search method, which takes a key and returns a value in an array
-               that was already tracked, here we would track it twice.
-               TODO make a flag where we say if it is already tracked
-             */
-
-            /* is_this_tracked? */
-            
-            if(!res->is_tracked)
-            {
-              GC_TRACK_DIMENSIONAL(vm, res);
-            }
-
-            //GC_TRACK(vm, res);
+            /* At this time I don't believe this is reachable */
+            printf("unable to handle this callable type of type %s\n",
+              ana_type_name(callable));
+            abort();
           }
-
-          if(res)
-          {
-            push(res);
-          }
-
-          ana_object_dtor(nativeargs);
-
 CALL_METHOD_leave:
           vm_continue();
         }
@@ -1457,7 +1574,7 @@ CALL_METHOD_leave:
             int totalargs = oparg;
             ana_function *fn = ana_get_function(callable);
 
-            if(fn->flags & COMO_FUNCTION_LANG) 
+            if((fn->flags & COMO_FUNCTION_LANG) == COMO_FUNCTION_LANG)
             {         
               struct _ana_function_def *call = fn->func;
 
@@ -1534,7 +1651,111 @@ CALL_METHOD_leave:
           }
           else if(ana_type_is(callable, ana_class_type))
           {
-            #include "class.h"
+            /* TODO, currently only classes are defined in ana language */
+            ana_class *classdef = ana_get_class(callable);
+            ana_object *inst = ana_instance_new(callable);
+
+            GC_TRACK(vm, inst);
+
+            res = inst;
+            
+            ana_object *constructor;
+
+            constructor = ana_map_get(ana_get_instance(inst)->self->members,
+              ana_get_instance(inst)->self->name);
+
+            /* TODO, now we must call the base contructor, only if there is a
+               construct defined here. 
+             */
+
+            if(classdef->c_base)
+            {
+              ana_object *base_class = ana_map_get(frame->locals, 
+                classdef->c_base);
+
+              if(!base_class)
+              {
+                assert(frame->globals);
+                base_class = ana_map_get(frame->globals, classdef->c_base);
+              }
+
+              if(!base_class)
+              {
+                set_except("NameError", "%s", ana_cstring(classdef->c_base));
+
+                goto call_exit;
+              }
+              else
+              {
+                /* TODO, set up frame for this constructor */ 
+                ana_object *ana_base_instance = ana_instance_new(base_class);
+
+                ana_get_instance(inst)->base_instance = ana_base_instance;
+              }
+            }
+
+            if(constructor)
+            {
+              int totalargs = oparg;
+              ana_function *fn = ana_get_function(constructor);
+        
+              struct _ana_function_def *call = fn->func;
+
+              ana_frame *execframe = ana_frame_new(
+                call->code,
+                call->jump_targets, 
+                call->line_mapping, 
+                BASE_FRAME->locals,
+                fn->name, 
+                frame,
+                current_line,
+                fn->filename
+              );
+
+              if(call->parameters != NULL)
+              {
+                if(ana_get_array(call->parameters)->size != totalargs)
+                {
+                  set_except(
+                    "ArgumentError", "%s expects %lu arguments, %d given",
+                    ana_get_fn_name(execframe), 
+                    ana_get_array(call->parameters)->size,
+                    totalargs);
+                  
+                  goto call_exit;
+                }
+              }
+              else if(totalargs != 0)
+              {
+                set_except(
+                  "ArgumentError", "%s expects 0 arguments, %d given",
+                  ana_get_fn_name(execframe), totalargs);
+
+                goto call_exit;
+              }
+
+              ana_map_put(execframe->locals, 
+                vm->self_symbol, inst);
+
+              while(totalargs--)
+              {
+                ana_object *theargvalue = pop();
+
+                theargvalue->refcount++;
+
+                ana_object *paramname = ana_array_get(
+                  call->parameters, (ana_size_t)totalargs);
+
+                ana_map_put(execframe->locals, paramname, theargvalue);
+              }
+              
+              execframe->retval = inst;
+
+              COMO_VM_PUSH_FRAME(frame);              
+              COMO_VM_PUSH_FRAME(execframe);
+
+              goto enter;  
+            }
           }
           else
           {                  
@@ -1628,7 +1849,7 @@ CALL_METHOD_leave:
           }
         }
 
-        fprintf(stdout, "%s: %s in %s:%d\n", 
+        fprintf(stdout, "%s: %s\n    in %s:%d\n", 
           the_type, 
           the_message, 
           ana_cstring(frame->filename), 
@@ -1652,26 +1873,14 @@ CALL_METHOD_leave:
 
         assert(temp);
 
-        if(temp->refcount > 0) 
-        {
-          decref_recursively(temp);
-        }
+        decref_recursively(temp);
       }
 
       ana_map_foreach(frame->locals, key, value) 
       {
         (void)key;
 
-        if(value->refcount > 0) 
-        {
-         // if(value != frame->retval) 
-         // {
-            /* the return value is always going to need to be kept around */
-            /* the caller can worry about it*/
-
-            decref_recursively(value);
-         // }
-        }
+        decref_recursively(value);
       } ana_map_foreach_end();
       
 #ifdef ANA_DUMP_LOCALS_AFTER_FRAME_EXIT
@@ -1751,16 +1960,34 @@ static void incref_recursively(ana_object *obj)
 
     } ana_map_foreach_end();
   }
-}
+  else if(ana_type_is(obj, ana_instance_type))
+  {
+    ana_map_foreach(ana_get_instance(obj)->properties, key, value) {
+      
+      (void)key;
 
+      if(value != obj) 
+      {
+        incref_recursively(value);
+      }
+      else
+      {
+        value->refcount--;
+      }
+
+    } ana_map_foreach_end();
+
+    if(ana_get_instance(obj)->base_instance)
+    {
+      incref_recursively(ana_get_instance(obj)->base_instance);
+    }
+  }
+}
 
 static void decref_recursively(ana_object *obj)
 {
-
-  if(obj->refcount == 0)
-    return;
-
-  obj->refcount--;
+  if(obj->refcount > 0)
+    obj->refcount--;
 
   if(ana_type_is(obj, ana_array_type))
   {
@@ -1796,6 +2023,29 @@ static void decref_recursively(ana_object *obj)
       }
 
     } ana_map_foreach_end();
+  }
+  else if(ana_type_is(obj, ana_instance_type))
+  {
+    ana_map_foreach(ana_get_instance(obj)->properties, key, value) {
+      
+      (void)key;
+
+      if(value != obj) 
+      {
+
+        decref_recursively(value);
+      }
+      else
+      {
+        value->refcount--;
+      }
+
+    } ana_map_foreach_end();
+
+    if(ana_get_instance(obj)->base_instance)
+    {
+      decref_recursively(ana_get_instance(obj)->base_instance);
+    }
   }
 }
 
@@ -1837,6 +2087,21 @@ static void mark_ex(ana_object *obj)
       mark_ex(value);
 
     } ana_array_foreach_end();
+  }
+  else if(ana_type_is(obj, ana_instance_type))
+  {
+    ana_map_foreach(ana_get_instance(obj)->properties, key, value) {
+      
+      (void)key;
+
+      mark_ex(value);
+
+    } ana_map_foreach_end();
+
+    if(ana_get_instance(obj)->base_instance)
+    {
+      mark_ex(ana_get_instance(obj)->base_instance);
+    }
   }
 }
 
@@ -1906,7 +2171,8 @@ static void sweep(ana_vm *vm)
       }
       else
       {
-        #ifdef ANA_GC_DEBUG
+        // #ifdef ANA_GC_DEBUG
+        #if 1
         ana_object *str = ana_object_tostring(unreached);
         printf("not releasing %p(%s, %s), it's reference count is %ld\n", 
             (void *)unreached, ana_type_name(unreached), ana_cstring(str), unreached->refcount);

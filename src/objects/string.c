@@ -40,8 +40,6 @@ static ana_object *string_getBytes(ana_object *stringobj, ana_object *arg)
     ana_array_push(bytes, byte);
   }
 
-  stringobj->refcount--;
-
   return bytes;
 }
 
