@@ -1,0 +1,7 @@
+class Foo {}
+
+print(Foo());
+
+FooCopy = Foo;
+
+print(FooCopy());

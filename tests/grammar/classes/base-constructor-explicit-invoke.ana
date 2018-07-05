@@ -1,0 +1,37 @@
+class Exception {
+  public function Exception(message)
+  {
+    self.message = message;
+  }
+}
+
+class IndexOutOfBoundsException : Exception {
+  public function IndexOutOfBoundsException(message)
+  {
+    base(message); 
+  }
+}
+
+try {
+  throw IndexOutOfBoundsException(-1);
+}
+catch(e)
+{
+  print(e);
+  // This fails, since instance types for IIN does not look at it's parents
+  // TODO
+  if('message' in e)
+  {
+    print(e.message);
+  }
+
+  print(e);
+}
+
+
+
+
+
+
+
+

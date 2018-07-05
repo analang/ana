@@ -1,0 +1,14 @@
+class Stdout {
+  public function Stdout(writer)
+  {
+    self._write = writer;
+  }
+  public function write(value)
+  {
+    self._write(value);
+  }
+}
+
+stdout = Stdout(print);
+
+stdout.write("Hello, World");

@@ -141,13 +141,6 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
 
     ana_compile_unit(vm, funcobj, body);
 
-    // if(strcmp(name->value, classname->value) == 0)
-    // {
-    //   /* compile the return self */
-    //   EMIT(func, LOAD_NAME, NEW_STR_CONST(vm, "self"), 0);
-    //   EMIT(func, IRETURN, 0, 0);
-    // }
-
     if(body->nchild > 0) 
     {
       if(body->children[body->nchild - 1]->kind != COMO_AST_RETURN) 

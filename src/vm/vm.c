@@ -84,6 +84,7 @@ ana_vm *ana_vm_new()
   vm->symbols   = ana_array_new(8);
   vm->constants = ana_array_new(16);
   vm->self_symbol = ana_stringfromstring("self");
+  vm->base_symbol = ana_stringfromstring("base");
 
   vm->base_frame = NULL;
 
@@ -106,7 +107,8 @@ void ana_vm_finalize(ana_vm *vm)
   ana_array_foreach_apply(vm->symbols, ana_object_dtor);
   ana_object_dtor(vm->symbols);
 
-  ana_object_dtor(vm->self_symbol);
+  ana_object_dtor(vm->self_symbol);  
+  ana_object_dtor(vm->base_symbol);
 
   ana_array_foreach_apply(vm->constants, ana_object_dtor);
   ana_object_dtor(vm->constants);
@@ -416,10 +418,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *index = pop();
           ana_object *res = getindex(vm, container, index);
 
-          if(res == ANA_KEY_NOT_FOUND)
-            push(ana_bool_false);
-          else
-            push(ana_bool_true);
+          if(res)
+          {
+
+            push(res);
+          }
 
           vm_continue();
         }
@@ -868,20 +871,23 @@ SETPROP_leave:
               res = ana_map_get(ana_get_instance(instance)->properties, arg);
             }
 
-            if(!res)
+            if(ana_get_instance(instance)->base_instance)
             {
-              res = ana_map_get(
-                ana_get_instance(
-                  ana_get_instance(instance)->base_instance
-                )->self->members, arg);          
-            }
+              if(!res)
+              {
+                res = ana_map_get(
+                  ana_get_instance(
+                    ana_get_instance(instance)->base_instance
+                  )->self->members, arg);          
+              }
 
-            if(!res)
-            {
-              res = ana_map_get(
-                ana_get_instance(
-                  ana_get_instance(instance)->base_instance
-                )->properties, arg);          
+              if(!res)
+              {
+                res = ana_map_get(
+                  ana_get_instance(
+                    ana_get_instance(instance)->base_instance
+                  )->properties, arg);          
+              }
             }
 
             if(!res)
@@ -1415,7 +1421,7 @@ leave_GETPROP:
                   ana_get_array(call->parameters)->size,
                   totalargs);
                 
-                goto call_exit;
+                goto CALL_METHOD_leave;
               }
             }
             else if(totalargs != 0)
@@ -1424,7 +1430,7 @@ leave_GETPROP:
                 "ArgumentError", "%s expects 0 arguments, %d given",
                 ana_get_fn_name(execframe), totalargs);
 
-              goto call_exit;
+              goto CALL_METHOD_leave;
             }
 
             /* Make sure this isn't a module funciton */
@@ -1449,8 +1455,14 @@ leave_GETPROP:
                 i = ana_get_instance(i->base_instance);
               }
 
+              if(ana_get_instance(real_self)->base_instance != NULL)
+                ana_map_put(execframe->locals, 
+                  vm->base_symbol, ana_get_instance(real_self)->base_instance);
+
               ana_map_put(execframe->locals, 
                 vm->self_symbol, real_self);
+
+              execframe->self = real_self;
             }
 
             while(totalargs--)
@@ -1599,7 +1611,7 @@ CALL_METHOD_leave:
             ana_function *fn = ana_get_function(callable);
 
             if((fn->flags & COMO_FUNCTION_LANG) == COMO_FUNCTION_LANG)
-            {         
+            {
               struct _ana_function_def *call = fn->func;
 
               ana_frame *execframe = ana_frame_new(
@@ -1678,6 +1690,10 @@ CALL_METHOD_leave:
             /* TODO, currently only classes are defined in ana language */
             ana_class *classdef = ana_get_class(callable);
             ana_object *inst = ana_instance_new(callable);
+            ana_frame *base_constructor_frame = NULL;
+            ana_object *ana_base_instance = NULL;
+            ana_function *bc_func;
+            ana_function_defn *bc_funcdef;
 
             GC_TRACK(vm, inst);
 
@@ -1711,10 +1727,34 @@ CALL_METHOD_leave:
               }
               else
               {
-                /* TODO, set up frame for this constructor */ 
-                ana_object *ana_base_instance = ana_instance_new(base_class);
+                ana_base_instance = ana_instance_new(base_class);
 
                 ana_get_instance(inst)->base_instance = ana_base_instance;
+                
+                ana_object *base_constructor = ana_map_get(
+                  ana_get_class(base_class)->members, classdef->c_base);
+
+                if(base_constructor)
+                {
+                  bc_func = ana_get_function(base_constructor);
+                  bc_funcdef = bc_func->func;
+
+                  base_constructor_frame = ana_frame_new(
+                    bc_funcdef->code,
+                    bc_funcdef->jump_targets, 
+                    bc_funcdef->line_mapping, 
+                    BASE_FRAME->locals,
+                    bc_func->name, 
+                    frame,
+                    current_line,
+                    bc_func->filename
+                  );
+
+                  base_constructor_frame->self = ana_base_instance;
+
+                  ana_map_put(base_constructor_frame->locals, 
+                    vm->self_symbol, ana_base_instance);
+                }
               }
             }
 
@@ -1758,6 +1798,17 @@ CALL_METHOD_leave:
                 goto call_exit;
               }
 
+              /* TODO, if there is a base instance, put this in 
+                 as "base" variable 
+              */
+              execframe->self = inst;
+
+              if(ana_base_instance)
+              {
+                ana_map_put(execframe->locals, 
+                  vm->base_symbol, ana_base_instance);
+              }
+              
               ana_map_put(execframe->locals, 
                 vm->self_symbol, inst);
 
@@ -1773,16 +1824,134 @@ CALL_METHOD_leave:
                 ana_map_put(execframe->locals, paramname, theargvalue);
               }
               
+
               execframe->retval = inst;
+
+              /* the base constructor */
 
               COMO_VM_PUSH_FRAME(frame);              
               COMO_VM_PUSH_FRAME(execframe);
+              
+              /* Base construct only get's called if it has 0 arguments */
+              /* else, the calling class must call it explicitly */
+              if(base_constructor_frame 
+                && ana_array_size(bc_funcdef->parameters) == 0)
+              {
+                base_constructor_frame->retval = ana_base_instance;
+
+                COMO_VM_PUSH_FRAME(base_constructor_frame);
+              }
 
               goto enter;  
             }
+            else
+            {
+              if(base_constructor_frame 
+                && ana_array_size(bc_funcdef->parameters) == 0)
+              {
+                base_constructor_frame->retval = inst;
+
+                COMO_VM_PUSH_FRAME(frame);
+                /* base constructor is called first */
+                COMO_VM_PUSH_FRAME(base_constructor_frame);
+
+                goto enter;
+              }
+            }
+          }
+          else if(ana_type_is(callable, ana_instance_type))
+          {
+            int totalargs = oparg;
+            ana_instance *instance = ana_get_instance(callable);
+            ana_class *class_defn = instance->self; 
+            ana_object *instance_name = class_defn->name;
+            ana_object *constructor = NULL;
+            /* ensure that base constructors are only called from 
+               child constructors
+            */
+            if(frame->self != NULL)
+            {
+              /* todo all base constructors need to be called */
+              constructor = ana_map_get(class_defn->members, instance_name);
+
+              if(constructor == NULL)
+              {
+                Ana_SetError(AnaTypeError, 
+                  "constructor for class %s is not defined\n", 
+                  ana_cstring(class_defn->name));               
+              }
+              else
+              {
+                ana_function *c_func = ana_get_function(constructor);
+                ana_function_defn *c_func_def = c_func->func;
+        
+                ana_frame *execframe = ana_frame_new(
+                  c_func_def->code,
+                  c_func_def->jump_targets, 
+                  c_func_def->line_mapping, 
+                  BASE_FRAME->locals,
+                  c_func->name, 
+                  frame,
+                  current_line,
+                  c_func->filename
+                );
+
+                ana_map_put(execframe->locals, 
+                  vm->self_symbol, (ana_object *)instance);
+
+                if(c_func_def->parameters != NULL)
+                {
+                  if(ana_get_array(c_func_def->parameters)->size != totalargs)
+                  {
+                    set_except(
+                      "ArgumentError", "%s expects %lu arguments, %d given",
+                      ana_get_fn_name(execframe), 
+                      ana_get_array(c_func_def->parameters)->size,
+                      totalargs);
+                    
+                    goto call_exit;
+                  }
+                }
+                else if(totalargs != 0)
+                {
+                  set_except(
+                    "ArgumentError", "%s expects 0 arguments, %d given",
+                    ana_get_fn_name(execframe), totalargs);
+
+                  goto call_exit;
+                }
+
+                while(totalargs--)
+                {
+                  ana_object *theargvalue = pop();
+
+                  theargvalue->refcount++;
+
+                  ana_object *paramname = ana_array_get(
+                    c_func_def->parameters, (ana_size_t)totalargs);
+
+                  ana_map_put(execframe->locals, paramname, theargvalue);
+                }
+
+                /* TODO, if there is a base instance, put this in 
+                   as "base" variable 
+                */
+                execframe->self = (ana_object *)instance;
+
+                COMO_VM_PUSH_FRAME(frame);
+                COMO_VM_PUSH_FRAME(execframe);
+
+                goto enter;
+              }
+            }
+            else
+            {
+              Ana_SetError(InvalidOperation, 
+                "Can't call instance type outside of a class constructor");
+            }
           }
           else
-          {                  
+          { 
             set_except("RuntimeError", "value of type '%s' is not callable",
               ana_type_name(callable));
           }

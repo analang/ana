@@ -36,16 +36,16 @@ static inline ana_object *getindex(ana_vm *vm, ana_object *container,
     ana_object *res = container->type->obj_seqops->get(container, idx);
 
     if(!res)
-      return ANA_KEY_NOT_FOUND;
+    {
+      return ana_bool_false;
+    }
 
-    /* array values and map values, are already part of the GC root */
-    if(!ana_type_is(container, ana_array_type) 
-      && !ana_type_is(container, ana_map_type)) 
-      {
-        GC_TRACK(vm, res);
-      }
-
-    return res;
+    return ana_bool_true;
+  }
+  else
+  {
+    Ana_SetError(AnaTypeError, "operator `in` not supported for '%s' type",
+      ana_type_name(container));
   }
 
   return NULL; 

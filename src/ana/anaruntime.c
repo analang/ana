@@ -23,7 +23,7 @@ COMO_OBJECT_API char *ana_get_fn_name(ana_frame * frame)
 
   if(frame->self)
   {
-    base = ana_cstring(ana_get_class(frame->self)->name);
+    base = ana_cstring(ana_get_instance(frame->self)->self->name);
     sep = ".";
   }
 

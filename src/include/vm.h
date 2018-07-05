@@ -28,6 +28,7 @@ struct ana_vm
   ana_size_t mxobjs;
   ana_object *root; 
   ana_object *self_symbol;
+  ana_object *base_symbol;
   ana_frame *base_frame;
   ana_object *frameroot;
   /* registers */

@@ -1,0 +1,67 @@
+class Exception {
+  // TODO, figure out rules for base constructor calling
+  //public function Exception(message)
+  //{
+  //  self.message = message;
+  //}
+}
+
+class IndexOutOfBoundsException : Exception {
+  public function IndexOutOfBoundsExpcetion(message)
+  {
+    self.message = message;
+    // TODO figure out rules for how this will work
+    //base(message); 
+  }
+}
+
+class Container {
+  public function Container()
+  {
+    self._items = [];
+  }
+  
+  public function get(index)
+  {
+    if(index >= 0 && index < self._items.length())
+    {
+      return self._items[index];
+    }
+
+    throw IndexOutOfBoundsException();
+  }
+
+  public function put(value)
+  {
+    self._items.push(value);
+  }
+}
+
+class List : Container {
+  public function getItems() { 
+    return self._items; 
+  }
+}
+
+
+
+container = List();
+
+foreach(name in ["Ryan", "Ana", "Maxwell"])
+{
+  container.put(name);
+}
+
+foreach(name in container.getItems())
+{
+  print(name);
+}
+
+
+
+
+
+
+
+
+

@@ -1,22 +1,20 @@
-Dicussion:
-  Enforcing "module" types, whereas only a class is exported. Think package
-  like in Java. Right now, modules are no different from frames. Meaning, that 
-  upon import an import statement, the frame must be executed.
-
-  import Module(with, arguments, here)
-
-
-6/3/2018
-- For Each statements
-
-
-6/10/2018
-- Finished if else if else statement suite
-  TODO:
-    make class instances real instances in the VM. Right now properties
-    can be added to the definition frame at runtime.
+TODO: July 4, 2018
+OOP:
+  - Instance of operator
+  - Exceptions a core class type
+  - Base constructor calling rules, for when there are arguments, etc
+    - Perhaps, a base constructor is only called if it's the 
+      constructor with no arguments?
+  - Chained constructor calling. Right now it is single.
+  - Chained inhertience, right now it's only immediate parent
+  - Prevent constructor from being called twice
+      - This can happen, for example, when a child class method
+      - trys to call the base() name, but that should only work in the
+        the class construtor and only once.
 
 
-6/20
-unquoted identifiers in object literals
-object_literal.key access rather than objectliteral['key']
+Operators need to be tested, one test suite for each operator, on each type
+
+
+Import Statements:
+  - Should be straightforward
