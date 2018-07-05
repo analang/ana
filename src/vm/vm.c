@@ -1876,6 +1876,10 @@ CALL_METHOD_leave:
               }
             }
           }
+          /* TODO, to make this callable and user configurable
+             we can also provide a method that can be called
+            when an instance type is invoked
+          */
           else if(ana_type_is(callable, ana_instance_type))
           {
             // this will happen when a method calls base()
@@ -1889,9 +1893,14 @@ CALL_METHOD_leave:
             */
             if(frame->self != NULL)
             {
+              assert(ana_type_is(frame->self, ana_instance_type));
+
               /* todo all base constructors need to be called */
               constructor = ana_map_get(class_defn->members, instance_name);
-              assert(ana_type_is(frame->self, ana_instance_type));
+
+              /*TODO attempt to call base, on a base class without constructor */
+              assert(constructor);
+              
               ana_instance *current_instance = ana_get_instance(frame->self);
 
               /* prevent base constructors from being called outside
