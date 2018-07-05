@@ -1,0 +1,17 @@
+class BaseMessage {
+  public function BaseMessage(message)
+  {
+    self.message = message;
+  }
+}
+
+class TextMessage : BaseMessage {
+  public function TextMessage(message)
+  {
+    base(message); 
+  }
+}
+
+msg = TextMessage("Hello World");
+print(msg.message);
+

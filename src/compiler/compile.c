@@ -1205,14 +1205,16 @@ static void ana_compile_builtins(ana_vm *vm, ana_function *funcobj, node *ast)
   ana_function_defn *func = ANA_GET_FUNCTION_DEF(funcobj);
 
   ana_object *readline_handler = 
-    ana_functionfromhandler(ana_cstring(funcobj->filename), "readline", ana__builtin_readline);
+    ana_functionfromhandler(ana_cstring(funcobj->filename), "readline", 
+        ana__builtin_readline);
 
   EMITX(vm, func, LOAD_CONST, NEW_FUNCTION_CONST(vm, readline_handler), 0, ast);
   EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "readline"), 0,  ast);
   EMITX(vm, func, DEFINE_FUNCTION, 0, 0, ast);
 
   ana_object *print_handler =
-    ana_functionfromhandler(ana_cstring(funcobj->filename), "print", ana__builtin_print);
+    ana_functionfromhandler(ana_cstring(funcobj->filename), "print",
+        ana__builtin_print);
 
   EMITX(vm, func, LOAD_CONST, NEW_FUNCTION_CONST(vm, print_handler), 0, ast);
   EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "print"), 0,  ast);

@@ -24,9 +24,6 @@ struct _ana_object {
 
 typedef ana_object*(*ana_iterator_function)(struct _ana_object *);
 
-#define ana_object_add(self, x) \
-  ((ana_object *)self)->type->obj_binops->obj_add((self), (x))
-
 struct _ana_binary_ops {
   ana_object *(*obj_add)(ana_object *, ana_object *);
   ana_object *(*obj_mul)(ana_object *, ana_object *);
@@ -42,9 +39,6 @@ struct _ana_unary_ops {
   ana_object *(*obj_minus)(ana_object *);
 };
 
-/* Technically, we can do this with 2 operations, 
-   but let's just make it easy for now 
-*/
 struct _ana_comparison_ops {
   ana_object *(*obj_eq)(ana_object *, ana_object *);
   ana_object *(*obj_neq)(ana_object *, ana_object *);

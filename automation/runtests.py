@@ -62,17 +62,19 @@ def valgrind_test(valgrind, anapath, fullpath):
         if os.WEXITSTATUS(status) == 0:
           #print("%s: %s: status is %d " % (PASS, fullpath.split("/").pop(), 
           #  os.WEXITSTATUS(status))) 
+          contents = b''
           while 1:
             try:
-              contents = os.read(readfd, 4096)
+              contents += os.read(readfd, 4096)
 
             except BlockingIOError:
               break;
               
-            #
-            # Todo, parse XML, and return False if this has errors
-            # Output the leak
-            #
+          #
+          # Todo, parse XML, and return False if this has errors
+          # Output the leak
+          #
+          try:
             output = valgrindparser.parseValgrindOutput(contents)
             success = '';
             if len(output) > 0:
@@ -82,6 +84,13 @@ def valgrind_test(valgrind, anapath, fullpath):
               success = success.encode()
             else:
               success = None
+          except:
+            success = -1
+            print("error parsing valrgind output:")
+            print(contents)
+            print("end")
+            break
+
         else:
           contents = "error"
           while 1:
@@ -234,6 +243,8 @@ def main():
         print("%s: %s/%s " % ("SKIP", dir, fullpath.split("/").pop()))
         continue
 
+      print("%s/%s " % (dir, fullpath.split("/").pop()))
+
       stdin_pipe = os.pipe()
       stdin_readfd = stdin_pipe[0]
       stdin_writefd = stdin_pipe[1]
@@ -288,12 +299,14 @@ def main():
           else:
             if expecation != 'FAIL':
               valgrindresult = valgrind_test(valgrind, ana, fullpath)
-              if valgrindresult:
+              if valgrindresult is not None and valgrindresult is not -1:
                 print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
                 print(valgrindresult.decode())
                 failed +=1  
+              elif valgrindresult == -1:
+                print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))               
               else:
-                print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))
+                print("%s: %s/%s " % (PASS , dir, fullpath.split("/").pop()))
                 passed +=1             
             else:
               print("%s: %s/%s " % (PASS, dir, fullpath.split("/").pop()))

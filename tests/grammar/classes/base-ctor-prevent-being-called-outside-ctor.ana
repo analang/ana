@@ -1,0 +1,26 @@
+//{"Expect": "FAIL", "Reason": "Base constructor can only be called inside constructor"}
+class BaseMessage {
+  public function BaseMessage(message)
+  {
+    self.message = message;
+  }
+}
+
+class TextMessage : BaseMessage {
+  public function TextMessage(message)
+  {
+    base(message); 
+  }
+  public function setMessage()
+  {
+    base(1);
+  }
+}
+
+msg = TextMessage("Hello World");
+
+
+print(msg.message);
+
+
+msg.setMessage();

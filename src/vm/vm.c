@@ -1694,6 +1694,7 @@ CALL_METHOD_leave:
             ana_object *ana_base_instance = NULL;
             ana_function *bc_func;
             ana_function_defn *bc_funcdef;
+            ana_object *base_constructor = NULL;
 
             GC_TRACK(vm, inst);
 
@@ -1731,29 +1732,13 @@ CALL_METHOD_leave:
 
                 ana_get_instance(inst)->base_instance = ana_base_instance;
                 
-                ana_object *base_constructor = ana_map_get(
+                base_constructor = ana_map_get(
                   ana_get_class(base_class)->members, classdef->c_base);
 
                 if(base_constructor)
                 {
                   bc_func = ana_get_function(base_constructor);
                   bc_funcdef = bc_func->func;
-
-                  base_constructor_frame = ana_frame_new(
-                    bc_funcdef->code,
-                    bc_funcdef->jump_targets, 
-                    bc_funcdef->line_mapping, 
-                    BASE_FRAME->locals,
-                    bc_func->name, 
-                    frame,
-                    current_line,
-                    bc_func->filename
-                  );
-
-                  base_constructor_frame->self = ana_base_instance;
-
-                  ana_map_put(base_constructor_frame->locals, 
-                    vm->self_symbol, ana_base_instance);
                 }
               }
             }
@@ -1834,9 +1819,25 @@ CALL_METHOD_leave:
               
               /* Base construct only get's called if it has 0 arguments */
               /* else, the calling class must call it explicitly */
-              if(base_constructor_frame 
+              if(base_constructor 
                 && ana_array_size(bc_funcdef->parameters) == 0)
               {
+                base_constructor_frame = ana_frame_new(
+                  bc_funcdef->code,
+                  bc_funcdef->jump_targets, 
+                  bc_funcdef->line_mapping, 
+                  BASE_FRAME->locals,
+                  bc_func->name, 
+                  frame,
+                  current_line,
+                  bc_func->filename
+                );
+
+                base_constructor_frame->self = ana_base_instance;
+
+                ana_map_put(base_constructor_frame->locals, 
+                  vm->self_symbol, ana_base_instance);
+
                 base_constructor_frame->retval = ana_base_instance;
 
                 COMO_VM_PUSH_FRAME(base_constructor_frame);
@@ -1846,9 +1847,25 @@ CALL_METHOD_leave:
             }
             else
             {
-              if(base_constructor_frame 
+              if(base_constructor 
                 && ana_array_size(bc_funcdef->parameters) == 0)
               {
+                base_constructor_frame = ana_frame_new(
+                  bc_funcdef->code,
+                  bc_funcdef->jump_targets, 
+                  bc_funcdef->line_mapping, 
+                  BASE_FRAME->locals,
+                  bc_func->name, 
+                  frame,
+                  current_line,
+                  bc_func->filename
+                );
+
+                base_constructor_frame->self = ana_base_instance;
+
+                ana_map_put(base_constructor_frame->locals, 
+                  vm->self_symbol, ana_base_instance);
+
                 base_constructor_frame->retval = inst;
 
                 COMO_VM_PUSH_FRAME(frame);
@@ -1861,6 +1878,7 @@ CALL_METHOD_leave:
           }
           else if(ana_type_is(callable, ana_instance_type))
           {
+            // this will happen when a method calls base()
             int totalargs = oparg;
             ana_instance *instance = ana_get_instance(callable);
             ana_class *class_defn = instance->self; 
@@ -1873,11 +1891,30 @@ CALL_METHOD_leave:
             {
               /* todo all base constructors need to be called */
               constructor = ana_map_get(class_defn->members, instance_name);
+              assert(ana_type_is(frame->self, ana_instance_type));
+              ana_instance *current_instance = ana_get_instance(frame->self);
+
+              /* prevent base constructors from being called outside
+                 constructors (e.g. in methods)
+               */
+              if(!(current_instance->self->name->type->obj_equals(current_instance->self->name,
+                frame->name)))
+              {
+                Ana_SetError(InvalidOperation, 
+                  "Illegal invocation of %s.%s outside of %s.%s", 
+                   ana_cstring(instance_name),
+                   ana_cstring(instance_name),
+                   ana_cstring(ana_get_instance(frame->self)->self->name),
+                   ana_cstring(ana_get_instance(frame->self)->self->name)
+                );
+
+                goto call_exit;
+              }
 
               if(constructor == NULL)
               {
                 Ana_SetError(AnaTypeError, 
-                  "constructor for class %s is not defined\n", 
+                  "constructor for class %s is not defined", 
                   ana_cstring(class_defn->name));               
               }
               else
@@ -1996,33 +2033,21 @@ CALL_METHOD_leave:
 
                 assert(temp);
 
-                if(temp->refcount > 0) 
-                {
-                  decref_recursively(temp);
-                }
+                decref_recursively(temp);
               }
 
               ana_map_foreach(originalframe->locals, key, value) 
               {
                 (void)key;
 
-                if(value->refcount > 0) 
-                {
-                  //if(value != frame->retval) 
-                  //{
-                    /* the return value is always going to need to be kept around */
-                    /* the caller can worry about it*/
+                decref_recursively(value);
 
-                    decref_recursively(value);
-                  //}
-                }
               } ana_map_foreach_end();
-
 
               /* finalize this frame, as we won't be returning*/
               ana_object_finalize(originalframe);
               ana_object_dtor(originalframe);
-
+              vm->base_frame = NULL;
             }
 
             /* frame with the exception handler */
@@ -2364,8 +2389,7 @@ static void sweep(ana_vm *vm)
       }
       else
       {
-        // #ifdef ANA_GC_DEBUG
-        #if 1
+        #ifdef ANA_GC_DE
         ana_object *str = ana_object_tostring(unreached);
         printf("not releasing %p(%s, %s), it's reference count is %ld\n", 
             (void *)unreached, ana_type_name(unreached), ana_cstring(str), unreached->refcount);
