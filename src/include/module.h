@@ -21,6 +21,6 @@ typedef struct _ana_module
 COMO_OBJECT_API ana_object *ana_module_new(ana_object *name, 
   ana_object *members);
 
-extern ana_type ana_module_type ;
+extern ana_type ana_module_type;
 
 #endif

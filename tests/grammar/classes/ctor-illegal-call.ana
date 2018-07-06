@@ -1,0 +1,35 @@
+//{"Expect": "FAIL", "Reason": "Illegal instance call"}
+class BaseMessage {
+  public function BaseMessage(message)
+  {
+    self.message = message;
+  }
+}
+
+class TextMessage : BaseMessage {
+  public function TextMessage(message)
+  {
+    base(message); 
+  }
+}
+
+class Wrapper {
+  public function Wrapper(messageProxy)
+  {
+    msg = messageProxy(1);
+    
+    self.messageProxy = messageProxy;
+  }
+  public function call()
+  {
+    self.messageProxy();
+  }
+}
+msg = TextMessage("Hello World");
+print(msg);
+print(msg.message);
+
+wrapper = Wrapper(msg);
+
+//wrapper.call();
+

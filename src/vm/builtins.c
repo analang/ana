@@ -11,7 +11,7 @@ ana_object *ana__builtin_readline(ana_object *args)
     char *buffer = malloc(8);
     size_t buffersize = 8;
     size_t i = 0;
-    int c;
+    int c = (int)'\0';
     ana_object *retval;
 
     while(read(STDIN_FILENO, &c, 1) != 0) 

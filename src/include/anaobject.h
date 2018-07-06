@@ -87,6 +87,9 @@ struct _ana_type {
 #define ana_object_ctor(o) \
   (((ana_object *)(o))->type->obj_init((ana_object *)(o)))
 
+#define ana_object_equals(o, b) \
+  (((ana_object *)(o))->type->obj_equals((ana_object *)(o), (ana_object *)(b)))
+
 #define ana_type_is(ob, tp) \
   (((ana_object *)(ob))->type == &tp)
 

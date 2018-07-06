@@ -5,6 +5,9 @@
 
 #define COMO_COMPILE_ERROR_BUFFER 4096
 
+/* Not used at this time, but in the future, want to be able to
+   have compile errors be reported nicely
+*/
 typedef struct ana_compile_state {
   node *ast;
   char *filename;
@@ -14,6 +17,5 @@ typedef struct ana_compile_state {
 } ana_compile_state;
 
 ana_function *ana_compileast(ana_vm *vm, ana_compile_state *compile_state);
-
 
 #endif

@@ -1876,10 +1876,6 @@ CALL_METHOD_leave:
               }
             }
           }
-          /* TODO, to make this callable and user configurable
-             we can also provide a method that can be called
-            when an instance type is invoked
-          */
           else if(ana_type_is(callable, ana_instance_type))
           {
             // this will happen when a method calls base()
@@ -1898,13 +1894,15 @@ CALL_METHOD_leave:
               /* todo all base constructors need to be called */
               constructor = ana_map_get(class_defn->members, instance_name);
 
-              /*TODO attempt to call base, on a base class without constructor */
-              assert(constructor);
-              
+              if(constructor == NULL)
+              {
+                goto no_constructor_found;
+              }      
+
               ana_instance *current_instance = ana_get_instance(frame->self);
 
-              /* prevent base constructors from being called outside
-                 constructors (e.g. in methods)
+              /* prevent instances from being called outside
+                 constructors (e.g. in class methods)
                */
               if(!(current_instance->self->name->type->obj_equals(current_instance->self->name,
                 frame->name)))
@@ -1920,11 +1918,44 @@ CALL_METHOD_leave:
                 goto call_exit;
               }
 
+              /* Now we are sure this instance is being called inside a class constructor, but we now must check that this call is legal
+                 e.g. no passing instances to other classes */
+
+              /* perhaps, an instance won't be called in a constructor if it doesn't have a base */
+
+              if(current_instance->base_instance == NULL)
+              {
+                Ana_SetError(InvalidOperation, 
+                  "Illegal invocation of instance `%s`", ana_cstring(instance_name)
+                );
+
+                goto call_exit;               
+              }
+
+              /* Now check that this target instance call is an immediate parent of this current instance */
+
+              ana_instance *parent_instance = (ana_instance *)current_instance->base_instance;
+
+              if(!ana_object_equals(parent_instance->self->name, instance->self->name))
+              {
+                 Ana_SetError(InvalidOperation, 
+                  "Illegal invocation of instance `%s`, as it's not an immediate parent of `%s`", 
+                  ana_cstring(instance_name),
+                  ana_cstring(current_instance->self->name)
+                );
+
+                goto call_exit;
+              }
+
+
               if(constructor == NULL)
               {
+                no_constructor_found:
                 Ana_SetError(AnaTypeError, 
                   "constructor for class %s is not defined", 
-                  ana_cstring(class_defn->name));               
+                  ana_cstring(class_defn->name));   
+
+                goto call_exit;            
               }
               else
               {

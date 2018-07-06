@@ -155,7 +155,7 @@ statement:
 ;
 
 selection_stmt:
-  T_IF '(' assignment_expression ')' '{' if_statements '}' { 
+  T_IF '(' assignment_expression ')' '{' if_statements '}' {
     $$ = list_node(pstate, COMO_AST_IF);
     // assignment_expression
     add_child(pstate, $$, $3);
@@ -314,7 +314,7 @@ dotted_name:
 
 import_name:
   T_ID { 
-    $$ = id_node(pstate, $1); 
+    $$ = id_node(pstate, $1);
   }
 ;
 

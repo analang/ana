@@ -23,7 +23,7 @@ static void module_print(ana_object *ob)
 {
   ana_module *module = (ana_module *)ob;
 
-  printf("<module %s at %p>", ana_cstring(module->name), (void *)module);
+  printf("<module '%s' at '%p'>", ana_cstring(module->name), (void *)module);
 }
 
 static inline void module_dtor(ana_object *ob)
@@ -36,7 +36,7 @@ static ana_object *module_string(ana_object *obj)
   ana_module *module = (ana_module *)obj;
   ana_object *retval;
 
-  ANA_AUTO_RELEASE(ana_build_str("<module %s at %p>", 
+  ANA_AUTO_RELEASE(ana_build_str("<module '%s' at '%p'>", 
     ana_cstring(module->name), (void *)module), 
   {
       retval = ana_stringfromstring(value);
