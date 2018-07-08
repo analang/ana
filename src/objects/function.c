@@ -4,7 +4,7 @@ static ana_function_defn *ana_new_function_defn(void)
 {
   ana_function_defn *obj = malloc(sizeof(*obj));
 
-  obj->base.type  = NULL;
+  obj->base.type  = &ana_function_type;
   obj->base.next  = NULL;
   obj->base.flags = 0;
   obj->base.refcount = 0;
@@ -164,4 +164,80 @@ COMO_OBJECT_API ana_object *ana_methodfromhandler(
   fn->method.m_parameters = parameters == NULL ? ana_array_empty : parameters;
 
   return (ana_object *)fn;  
+}
+
+
+
+
+static void bounded_function_print(ana_object *obj)
+{
+  ana_bounded_function *self = ana_get_bounded_function(obj); 
+
+  fprintf(stdout, "<function.bounded '%s' at %p>", ana_cstring(self->func->name), 
+      (void *)self);
+}
+
+static void bounded_function_dtor(ana_object *obj)
+{
+  free(obj);
+}
+
+static int bounded_function_equals(ana_object *a, ana_object *b)
+{
+  return a == b;
+}
+
+static int bounded_function_bool(ana_object *obj)
+{
+  COMO_UNUSED(obj);
+
+  return 1;
+}
+
+static ana_object *bounded_function_string(ana_object *obj)
+{
+  ana_bounded_function *self = ana_get_bounded_function(obj);
+
+  return ana_stringfromstring(
+    ana_build_str("<function '%s' at %p>", ana_cstring(self->func->name), 
+      (void *)self)
+  );
+}
+
+ana_type ana_bounded_function_type = 
+{
+  .obj_name    = "function.bounded",
+  .obj_print   = bounded_function_print,
+  .obj_dtor    = bounded_function_dtor,
+  .obj_equals  = bounded_function_equals,
+  .obj_bool    = bounded_function_bool,
+  .obj_hash    = NULL,
+  .obj_str     = bounded_function_string,
+  .obj_init    = NULL,
+  .obj_deinit  = NULL,
+  .obj_binops  = NULL,
+  .obj_unops   = NULL,
+  .obj_compops = NULL,
+  .obj_seqops  = NULL,
+  .obj_get_attr = NULL,
+  .obj_props    = NULL,
+  .obj_iter     = NULL,
+  .obj_iter_next = NULL
+};
+
+COMO_OBJECT_API ana_object *ana_bounded_function_new(ana_object *inst, 
+    ana_function *func)
+{
+  ana_bounded_function *obj = malloc(sizeof(*obj));
+
+  obj->base.type  = &ana_bounded_function_type;
+  obj->base.next  = NULL;
+  obj->base.flags = 0;
+  obj->base.refcount = 0;
+  obj->base.is_tracked = 0;
+
+  obj->self = inst;
+  obj->func = func;
+
+  return (ana_object *)obj;
 }

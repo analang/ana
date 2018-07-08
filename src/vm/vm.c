@@ -860,6 +860,14 @@ SETPROP_leave:
             }
             else
             {
+              if(ana_type_is(res, ana_function_type)) 
+              {
+                res = ana_bounded_function_new(
+                  instance, ana_get_function(res)
+                );
+
+                GC_TRACK(vm, res);
+              }
               push(res);
             }
           }
@@ -1542,7 +1550,9 @@ CALL_METHOD_leave:
           ana_object *res = NULL;
           ana_object *callable = pop();
           ana_object *globals = BASE_FRAME->locals;
+          ana_object *self = NULL;
 
+          call_function_type:
           if(ana_type_is(callable, ana_function_type)) 
           {
             int totalargs = oparg;
@@ -1562,6 +1572,12 @@ CALL_METHOD_leave:
                 current_line,
                 fn->filename
               );
+
+              if(self)
+              {
+                ana_map_put(execframe->locals,
+                  vm->self_symbol, self);
+              }
 
               if(call->parameters != NULL)
               {
@@ -1970,6 +1986,16 @@ CALL_METHOD_leave:
               Ana_SetError(InvalidOperation, 
                 "Can't call instance type outside of a class constructor");
             }
+          }
+          else if(ana_type_is(callable, ana_bounded_function_type))
+          {
+            ana_bounded_function *bounded = ana_get_bounded_function(callable);
+
+            callable = (ana_object *)bounded->func;
+
+            self = bounded->self;
+            
+            goto call_function_type;
           }
           else
           { 

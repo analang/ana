@@ -1,0 +1,12 @@
+class Foo {
+  public function bar()
+  {
+    print(self);
+  }
+}
+
+foo = Foo();
+
+bar = foo.bar;
+
+bar();

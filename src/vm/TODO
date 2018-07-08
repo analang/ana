@@ -5,8 +5,8 @@ OOP:
 
 CLASSES:
   - Chained constructor calling. Right now it is single inher
-  - Chained inhertience, right now it's only immediate parent
-  - Prevent constructor from being called twice
+  - Chained property access, via all base classes
+  - Remove self requirement for class instance variables
   - Properly install the self object into methods, right now
     if a name is assigned to a instance method, the `self` variable
     will not be available
