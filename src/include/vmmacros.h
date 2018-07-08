@@ -61,8 +61,14 @@
   opflag =  (opline) & 0xff; \
   frame->pc++;  \
   \
-  ana_uint32_t next_op_line = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
-  next_op_code = (next_op_line >> 24) & 0xff; \
+  if(frame->pc != ana_container_size(frame->code)) \
+  { \
+    ana_uint32_t next_op_line = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
+    next_op_code = (next_op_line >> 24) & 0xff; \
+  } \
+  else { \
+    next_op_code = -1; \
+  } \
 } while(0)
 
 #define get_const(x) (constants[x])
