@@ -114,11 +114,8 @@ void ana_vm_finalize(ana_vm *vm)
   ana_object_dtor(vm->constants);
 
   ana_bool_type_finalize();
-
   ana_array_type_finalize(vm);
-  
   ana_string_type_finalize(vm);
-
   ana_long_type_finalize(vm);
 
   free(vm);
@@ -137,8 +134,7 @@ ana_object *ana_vm_new_symbol(ana_vm *vm, char *symbol)
 
 static __attribute__((unused)) void inspect_stack(ana_frame *frame)
 {
-  fprintf(stdout, "Ana Stack Inspection (%s)\n",
-    ana_cstring(frame->name));
+  fprintf(stdout, "Ana Stack Inspection (%s)\n", ana_cstring(frame->name));
   printf("    SP: %ld\n", frame->sp);
 
   ana_size_t i;
@@ -198,7 +194,6 @@ static inline void trace_frame(ana_vm *vm, ana_frame *frame)
   fputc('\n', stdout);
 }
 
-
 static ana_object *ana_frame_eval(ana_vm *vm)
 {
   ana_frame *frame;
@@ -244,8 +239,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
         vm_target(ITER)
         {
-          TRACE(ITER, oparg, 0, 1);
-
           /* This is the container */
           ana_object *iterable = pop();
 
@@ -273,9 +266,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           vm_continue();   
         }
-        vm_target(ITER_MV) {
-          TRACE(ITER_MV, oparg, 0, 1);
-          
+        vm_target(ITER_MV) {          
           ana_object *iterator = pop();
           
           assert(iterator);
@@ -303,7 +294,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
 
         vm_target(ILAND) {
-          TRACE(ILAND, oparg, 0, 1);
           ana_object *right = pop();
           ana_object *left = pop();
 
@@ -325,7 +315,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(ILOR)
         {
-          TRACE(ILOR, oparg, 0, 1);
           // // operator, returns the first value that was true,
           // else the right value is returned
           //
@@ -352,7 +341,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(ILSHFT) {
-          TRACE(ILSHFT, oparg, 0, 1);
           ana_object *right = pop();
           ana_object *left = pop();
 
@@ -398,7 +386,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(IUNARYNOT)
         {
-          TRACE(IUNARYNOT, oparg, 0, 1);
           arg = pop();
           
           if(arg->type->obj_bool(arg) == 0)
@@ -413,7 +400,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(IIN) {
-          TRACE(IIN, oparg, 0, 1);
           ana_object *container = pop();
           ana_object *index = pop();
           ana_object *res = getindex(vm, container, index);
@@ -427,7 +413,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(IUNARYMINUS) {
-          TRACE(IUNARYMINUS, 0, 0, 1);
           arg = pop();
 
           if(arg->type->obj_unops != NULL 
@@ -452,7 +437,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(IUNARYPLUS) {
-          TRACE(IUNARYPLUS, 0, 0, 1);
           arg = pop();
 
           if(arg->type->obj_unops != NULL 
@@ -475,7 +459,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(ITHROW) {
-          TRACE(ITHROW, 0, 0, 1);  
           arg = pop();
 
           ana_tostring_fast(arg, {
@@ -485,12 +468,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(JMP) {
-          TRACE(JMP, oparg, 0, 1);
           frame->pc = (*(jmptargets + oparg))->value;
           goto top;
         }
         vm_target(JMPF) {
-          TRACE(JMPF, oparg, 0, 1);
           result = pop();
           push(result);
 
@@ -504,7 +485,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(JMPT)
         {
-          TRACE(JMPT, oparg, 0, 1);
           result = pop();
           push(result);
 
@@ -518,7 +498,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
 
         vm_target(JMPZ) {
-          TRACE(JMPZ, oparg, 0, 1);
           result = pop();
           
           assert(result);
@@ -547,8 +526,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(BEGIN_LOOP)
         {
-          TRACE(BEGIN_LOOP, oparg, 0, 1);
-
           /* TODO need to check if need resize */
           ana_basic_block *loop = malloc(sizeof(*loop));
           loop->stack_obj_count = 0;
@@ -563,9 +540,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(EXIT_LOOP_CONTINUE)
-        {      
-          TRACE(EXIT_LOOP_CONTINUE, oparg, 0, 1);
- 
+        {       
           /* all of pushs to this tack inside the block, need to be poped 
              if they weren't already
             */
@@ -589,7 +564,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(END_LOOP)
         {
-          TRACE(END_LOOP, oparg, 0, 1);
           /* now we must pop this loop block */
           --frame->loop->stack_position;
           --frame->loop->stack_size;
@@ -600,7 +574,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         vm_target(TRY) {
           int arg = get_arg();
           /* Arg is the index into the jmptargets table */
-          TRACE(TRY, arg, 0, 1);
           ana_object *jmptargetobj = ana_array_get(frame->jump_targets,
             (ana_size_t)arg);
 
@@ -620,9 +593,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         vm_target(SETUP_CATCH) 
         {
           int cindex = get_arg();
-          
-          TRACE(SETUP_CATCH, cindex, 0, 1);
-          
+                    
           if(ex == NULL) 
           {
             assert(ana_excep != NULL);
@@ -658,7 +629,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(LOAD_SUBSCRIPT) 
         {
-          TRACE(LOAD_SUBSCRIPT, 0, 0, 0);
           ana_object *index = pop();
           ana_object *container = pop();
           ana_object *res = getindex(vm, container, index);
@@ -682,7 +652,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(STORE_SUBSCRIPT) 
         {
-          TRACE(STORE_SUBSCRIPT, 0, 0, 0);
           ana_object *value = pop();
           ana_object *index = pop();
           ana_object *container = pop();
@@ -708,9 +677,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           vm_continue();
         }
-        vm_target(INITARRAY) {
-          TRACE(INITARRAY, oparg, 0, 1);
-          
+        vm_target(INITARRAY) {          
           result = ana_array_new(oparg);
 
           while(oparg--)
@@ -731,7 +698,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         vm_target(INITOBJ) 
         {
           int arg = get_arg();
-          TRACE(INITOBJ, arg, 0, 1);
           ana_object *obj = ana_map_new(arg > 0 ? arg : 2);
 
           while(arg--)
@@ -754,7 +720,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(SETPROP) {
           arg = ana_array_get(vm->symbols, oparg);
-          TRACE(SETPROP, oparg, 0, 1);
           assert(arg);
           
           ana_object *value = pop();          
@@ -821,7 +786,6 @@ SETPROP_leave:
         }
         vm_target(GETPROP) {
           int argvalue = get_arg();
-          TRACE(GETPROP, argvalue, 0, 1);
           ana_object *instance = pop();
           arg = ana_get_array(vm->symbols)->items[argvalue];
 
@@ -837,8 +801,6 @@ SETPROP_leave:
             {
               set_except("KeyError", "%s", ana_cstring(arg));
             }
-
-            goto leave_GETPROP;
           }
           else if(instance->type->obj_props != NULL)
           {
@@ -906,11 +868,10 @@ SETPROP_leave:
             set_except("RuntimeError", "can't get property on object of type %s"
               ,ana_type_name(instance));
           }
-leave_GETPROP:
+          
           vm_continue();
         }
         vm_target(IRETURN) {
-          TRACE(IRETURN, get_arg(), 0, 0);
           /* this is for early return value binding, for class constructors instances */
           if(frame->retval)
           {
@@ -933,15 +894,12 @@ leave_GETPROP:
           goto exit; 
         }
         vm_target(LOAD_CONST) {
-          TRACE(LOAD_CONST, oparg, 0, 1);
           arg = ana_array_get(vm->constants, oparg);
           push(arg);
           vm_continue();
         }
         vm_target(STORE_NAME) 
         {
-          TRACE(STORE_NAME, oparg, 0, 1);
-
           ana_object *thename = ana_array_get(vm->symbols, oparg);
           result = pop();
 
@@ -977,8 +935,6 @@ leave_GETPROP:
         }
         vm_target(LOAD_NAME) 
         {
-          TRACE(LOAD_NAME, oparg, 0, 1);
-
           ana_object *thename  = ana_array_get(vm->symbols, oparg);
           ana_object *result   = ana_map_get(frame->locals, thename);
 
@@ -1010,7 +966,6 @@ leave_GETPROP:
           vm_continue();
         }
         vm_target(IDIV) {
-          TRACE(IDIV, get_arg(), 0, 0);
           right = pop();
           left  = pop();
 
@@ -1024,7 +979,6 @@ leave_GETPROP:
           vm_continue();       
         }
         vm_target(IEQUAL) {
-          TRACE(IEQUAL, get_arg(), 0, 1);
           right = pop();
           left  = pop();
           result = NULL;
@@ -1058,7 +1012,6 @@ leave_GETPROP:
         }
         vm_target(INEQUAL) 
         {
-          TRACE(INEQUAL, oparg, 0, 1);
           right = pop();
           left  = pop();
           result = NULL;
@@ -1089,7 +1042,6 @@ leave_GETPROP:
           vm_continue();
         }
         vm_target(IREM) {
-          TRACE(IREM, get_arg(), 0, 1);
           right = pop();
           left  = pop();
           result = NULL;
@@ -1115,7 +1067,6 @@ leave_GETPROP:
           vm_continue();
         }  
         vm_target(IADD) {
-          TRACE(IADD, get_arg(), 0, 1);
 
           /* Here we have a reference to two objects that may
              have been GC allocated */
@@ -1157,7 +1108,6 @@ leave_GETPROP:
         }
         vm_target(ILT) 
         {
-          TRACE(ILT, oparg, 0, 1);
           right = pop();
           left  = pop();
 
@@ -1195,7 +1145,6 @@ leave_GETPROP:
         }
         vm_target(IGT) 
         {
-          TRACE(IGT, oparg, 0, 1);
           right = pop();
           left  = pop();
 
@@ -1233,7 +1182,6 @@ leave_GETPROP:
         }
         vm_target(ILTE) 
         {
-          TRACE(ILTE, get_arg(), 0, 1);
           right = pop();
           left  = pop();
 
@@ -1272,7 +1220,6 @@ leave_GETPROP:
         }
         vm_target(IGTE)
         {
-          TRACE(IGTE, get_arg(), 0, 1);
           right = pop();
           left  = pop();
 
@@ -1308,7 +1255,6 @@ leave_GETPROP:
         }
         vm_target(ITIMES) 
         {
-          TRACE(ITIMES, get_arg(), 0, 1);
           right = pop();
           left  = pop();
 
@@ -1324,7 +1270,6 @@ leave_GETPROP:
           vm_continue();
         }
         vm_target(IMINUS) {
-          TRACE(IMINUS, get_arg(), 0, 1);
           right = pop();
           left  = pop();
 
@@ -1341,8 +1286,6 @@ leave_GETPROP:
         }
         vm_target(DEFINE_CLASS) 
         {
-          TRACE(DEFINE_CLASS, oparg, 0, 1);
-
           ana_object *baseclass = NULL;
 
           if(opflag)
@@ -1372,8 +1315,6 @@ leave_GETPROP:
           vm_continue();
         }
         vm_target(DEFINE_FUNCTION) {
-          int arg = get_arg();
-          TRACE(DEFINE_FUNCTION, arg, 0, 1);        
           ana_object *name = pop();
           ana_object *code = pop();
           ana_map_put(frame->locals, name, code);
@@ -1384,7 +1325,6 @@ leave_GETPROP:
           /* TODO, this needs to be refactorted to account for language defined
              methods too
            */
-          TRACE(CALL_METHOD, oparg, 0, 1);
           ana_object *res = NULL;
           ana_object *callable = pop();
           ana_object *self = pop();
@@ -1415,8 +1355,8 @@ leave_GETPROP:
             {
               if(ana_get_array(call->parameters)->size != totalargs)
               {
-                set_except(
-                  "ArgumentError", "%s expects %lu arguments, %d given",
+                Ana_SetError(
+                  AnaArgumentError, "%s expects %lu argument(s), %d given",
                   ana_get_fn_name(execframe), 
                   ana_get_array(call->parameters)->size,
                   totalargs);
@@ -1426,8 +1366,8 @@ leave_GETPROP:
             }
             else if(totalargs != 0)
             {
-              set_except(
-                "ArgumentError", "%s expects 0 arguments, %d given",
+              Ana_SetError(
+                AnaArgumentError, "%s expects 0 argument(s), %d given",
                 ana_get_fn_name(execframe), totalargs);
 
               goto CALL_METHOD_leave;
@@ -1488,7 +1428,7 @@ leave_GETPROP:
             if(ana_array_size(ana_get_function(callable)->method.m_parameters) 
                 != (ana_size_t)totalargs)
             {
-               set_except("ArgumentError", "%s expects %ld argument(s), but %d were passed",
+               Ana_SetError(AnaArgumentError, "%s expects %ld argument(s), %d given",
                 ana_cstring(ana_get_function(callable)->name), 
                 ana_array_size(ana_get_function(callable)->method.m_parameters),
                 totalargs);      
@@ -1599,8 +1539,6 @@ CALL_METHOD_leave:
         }
 
         vm_target(CALL) {
-          TRACE(CALL, oparg, 0, 1);
-
           ana_object *res = NULL;
           ana_object *callable = pop();
           ana_object *globals = BASE_FRAME->locals;
@@ -1629,8 +1567,8 @@ CALL_METHOD_leave:
               {
                 if(ana_get_array(call->parameters)->size != totalargs)
                 {
-                  set_except(
-                    "ArgumentError", "%s expects %lu arguments, %d given",
+                  Ana_SetError(
+                    AnaArgumentError, "%s expects %lu argument(s), %d given",
                     ana_get_fn_name(execframe), 
                     ana_get_array(call->parameters)->size,
                     totalargs);
@@ -1640,8 +1578,8 @@ CALL_METHOD_leave:
               }
               else if(totalargs != 0)
               {
-                set_except(
-                  "ArgumentError", "%s expects 0 arguments, %d given",
+                Ana_SetError(
+                  AnaArgumentError, "%s expects 0 argument(s), %d given",
                   ana_get_fn_name(execframe), totalargs);
 
                 goto call_exit;
@@ -1765,8 +1703,8 @@ CALL_METHOD_leave:
               {
                 if(ana_get_array(call->parameters)->size != totalargs)
                 {
-                  set_except(
-                    "ArgumentError", "%s expects %lu arguments, %d given",
+                  Ana_SetError(
+                    AnaArgumentError, "%s expects %lu argument(s), %d given",
                     ana_get_fn_name(execframe), 
                     ana_get_array(call->parameters)->size,
                     totalargs);
@@ -1776,8 +1714,8 @@ CALL_METHOD_leave:
               }
               else if(totalargs != 0)
               {
-                set_except(
-                  "ArgumentError", "%s expects 0 arguments, %d given",
+                Ana_SetError(
+                  AnaArgumentError, "%s expects 0 argument(s), %d given",
                   ana_get_fn_name(execframe), totalargs);
 
                 goto call_exit;
@@ -1847,6 +1785,13 @@ CALL_METHOD_leave:
             }
             else
             {
+              if(oparg > 0)
+              {
+                Ana_SetError(AnaArgumentError, "%s expects 0 argument(s), %d given",
+                  ana_cstring(ana_get_class(callable)->name), oparg);
+                
+                goto call_exit;
+              }
               if(base_constructor 
                 && ana_array_size(bc_funcdef->parameters) == 0)
               {
@@ -1904,8 +1849,7 @@ CALL_METHOD_leave:
               /* prevent instances from being called outside
                  constructors (e.g. in class methods)
                */
-              if(!(current_instance->self->name->type->obj_equals(current_instance->self->name,
-                frame->name)))
+              if(!ana_object_equals(current_instance->self->name, frame->name))
               {
                 Ana_SetError(InvalidOperation, 
                   "Illegal invocation of %s.%s outside of %s.%s", 
@@ -1980,8 +1924,8 @@ CALL_METHOD_leave:
                 {
                   if(ana_get_array(c_func_def->parameters)->size != totalargs)
                   {
-                    set_except(
-                      "ArgumentError", "%s expects %lu arguments, %d given",
+                    Ana_SetError(
+                      AnaArgumentError, "%s expects %lu argument(s), %d given",
                       ana_get_fn_name(execframe), 
                       ana_get_array(c_func_def->parameters)->size,
                       totalargs);
@@ -1991,8 +1935,8 @@ CALL_METHOD_leave:
                 }
                 else if(totalargs != 0)
                 {
-                  set_except(
-                    "ArgumentError", "%s expects 0 arguments, %d given",
+                  Ana_SetError(
+                    AnaArgumentError, "%s expects 0 argument(s), %d given",
                     ana_get_fn_name(execframe), totalargs);
 
                   goto call_exit;
@@ -2029,8 +1973,10 @@ CALL_METHOD_leave:
           }
           else
           { 
-            set_except("RuntimeError", "value of type '%s' is not callable",
+            Ana_SetError(AnaRuntimeError, "value of type '%s' is not callable",
               ana_type_name(callable));
+
+            goto call_exit;
           }
 
           if(res)
@@ -2066,7 +2012,6 @@ CALL_METHOD_leave:
             /* code won't continue from there */
             if(originalframe != thisframe)
             {
-
               while(!(originalframe->sp == 0)) 
               {
                 ana_object *temp = pop2(originalframe);
@@ -2122,9 +2067,6 @@ CALL_METHOD_leave:
       }
     }
     exit:
-    /* wait, if we have a value on the stack, that was also the
-       same value as a local, won't we decrement the reference count twice? 
-       */
       while(!empty()) 
       {
         ana_object *temp = pop();
@@ -2141,11 +2083,6 @@ CALL_METHOD_leave:
         decref_recursively(value);
       } ana_map_foreach_end();
       
-#ifdef ANA_DUMP_LOCALS_AFTER_FRAME_EXIT
-      ana_object_print(frame->locals);
-      fputc('\n', stdout);
-#endif
-
       ana_object_finalize(frame);
       ana_object_dtor(frame);
       vm->base_frame = NULL;

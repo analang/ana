@@ -2,19 +2,14 @@ TODO: July 4, 2018
 OOP:
   - Instance of operator
   - Exceptions a core class type
-  - Base constructor calling rules, for when there are arguments, etc
-    - Perhaps, a base constructor is only called if it's the 
-      constructor with no arguments?
-  - Chained constructor calling. Right now it is single.
+
+CLASSES:
+  - Chained constructor calling. Right now it is single inher
   - Chained inhertience, right now it's only immediate parent
   - Prevent constructor from being called twice
-      - This can happen, for example, when a child class method
-      - trys to call the base() name, but that should only work in the
-        the class construtor and only once.
-
-
-Operators need to be tested, one test suite for each operator, on each type
-
+  - Properly install the self object into methods, right now
+    if a name is assigned to a instance method, the `self` variable
+    will not be available
 
 Import Statements:
   - Should be straightforward

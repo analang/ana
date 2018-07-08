@@ -16,6 +16,7 @@
 #define ANA_RUNTIME_MSG_MAX 1024UL
 
 /* Order is important here */
+#include "anaversion.h"
 #include "anaexceptions.h"
 #include "utils.h"
 #include "system.h"

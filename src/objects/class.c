@@ -16,7 +16,7 @@ COMO_OBJECT_API ana_object *ana_class_new(ana_object *base, ana_object *name)
   return (ana_object *)obj;
 }
 
-static int class_equals(ana_object *a, ana_object *b)
+static inline int class_equals(ana_object *a, ana_object *b)
 {
   return a == b;
 }

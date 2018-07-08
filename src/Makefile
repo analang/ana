@@ -1,6 +1,6 @@
 CC = cc
 PROFILE=-pg
-CFLAGS = -O2 -Iinclude -Wall -Wextra -g -ggdb -std=c99
+CFLAGS = -O0 -Iinclude -Wall -Wextra -g -ggdb -std=c99
 YFLAGS=--defines=include/ana_parser.h --output=parser/ana_parser.c
 LFLAGS=--noline --outfile=parser/ana_lexer.c --header-file=include/ana_lexer.h
 LDLIBS = -lm

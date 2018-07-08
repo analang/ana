@@ -1,0 +1,19 @@
+class ArgumentError {
+  public function ArgumentError(expected, given) 
+  {
+    self.expected = expected;
+    self.given = given;
+  }
+  public function getMessage()
+  {
+    return "expected " + self.expected  + ", " + self.given + " given";
+  }
+}
+
+try {
+  throw ArgumentError(0, 1);
+}
+catch(e)
+{
+  print(e);
+}

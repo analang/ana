@@ -147,7 +147,7 @@ static ana_options parse_argv(int argc, char **argv)
     }
   }
 
-exit:
+  exit:
   if(optind < argc)
   {    
     ret.argc = argc - optind;
@@ -165,7 +165,6 @@ static void ana_free_opts(ana_options *opts)
 
 static int run_file(ana_options *opts)
 {
-  /* TODO, resolve full file path */ 
   const char *filename = opts->argv[0];
   int retval;
   char *resolved_path = NULL;
@@ -344,7 +343,7 @@ static int run_file(ana_options *opts)
     ana_arena_free(state.arena);
   }
 
-exit:
+  exit:
   if(resolved_path)
     free(resolved_path);
 
@@ -353,48 +352,102 @@ exit:
   return retval;
 }
 
-static int dump_ast(const char *src, int argc, char **argv)
-{  
-  assert(src);
-  (void)argv;
-  (void)argc;
-
-  fprintf(stdout, "%s\n", __func__);
-  return 0;
-}
-
-static int dump_opcodes(const char *src, int argc, char **argv)
+static int eval_ast(ana_options *opts, node *ast, const char *filename)
 {
-  assert(src);
+  ana_vm *vm = ana_vm_new();
 
-  (void)argc; (void)argv;
+  if(opts->livetracing)
+    vm->flags |= COMO_VM_LIVE_TRACING;
+  else if(opts->opcodes)
+    vm->flags |= COMO_VM_TRACING;
 
-  fprintf(stdout, "%s\n", __func__);
-  return 0;
-}
+  if(opts->disable_gc)
+    vm->flags |= COMO_VM_GC_DISABLED;
+  
+  if(opts->ast)
+  {
+    visit(ast, 0);
+  }
+  else 
+  {
+    ana_compile_state compile_state;
+    compile_state.ast = ast;
+    compile_state.filename = (char *)filename;
 
-static int run_string(const char *src, int argc, char **argv)
-{
-  assert(src);
+    ana_function *code = ana_compileast(vm, &compile_state);
 
-  (void)argc; (void)argv;
+    if(!code) 
+    {
+      fprintf(stderr, PROGRAM_NAME ": compile error\n");
+      return 1;
+    }
+    else
+      if(opts->function)
+        ana_eval(vm, code, opts->function);
+      else
+        ana_eval(vm, code, NULL); 
 
-  fprintf(stderr, "%s\n", __func__);
+    ana_vm_finalize(vm);
+  }
+
   return 0;
 }
 
 static int run_command(ana_options *opts)
 {
   const char *cmd = opts->cmdstr;
+  const char *filename = "<command>";
+  ana_parser_state state;
+  int retval;
 
-  if(opts->ast)
-    return dump_ast(cmd, opts->argc, opts->argv);
-  else if(opts->opcodes)
-    return dump_opcodes(cmd, opts->argc, opts->argv); 
+  state.debug = opts->debug;
+  state.arena = ana_arena_new();
+
+  if(!state.arena)
+  {
+    retval = 1;
+    fprintf(stderr, PROGRAM_NAME " : failed to acquire arena "
+      "(ana_arena_new)\n");
+    goto exit;
+  }
+
+  retval = ana_astfromstring(cmd, opts->argc, opts->argv, &state);
+
+  if(retval != 0)
+  {    
+    int i;
+
+    fprintf(stdout, "SyntaxError: %s\n", state.error);
+    fprintf(stdout, "    at %s:%d:%d \n", filename, state.first_line,
+      state.first_column);
+
+    printf("%s\n", cmd);
+
+    for(i = 1; i <= state.first_column; i++)
+    {
+      if(i == state.first_column)
+      {
+        printf("^\n");
+        break;
+      }
+      else
+      {
+        fputc(' ', stdout);
+      }
+    }
+  }
   else
-    return run_string(cmd, opts->argc, opts->argv);
-}
+  {
+    retval = eval_ast(opts, state.ast, filename);
+  }
 
+  ana_arena_free(state.arena);
+
+  exit:
+
+  ana_free_opts(opts);
+  return retval;
+}
 
 int main(int argc, char **argv)
 {
@@ -414,7 +467,8 @@ int main(int argc, char **argv)
   }
   else if(opts.version) 
   {
-    return printf("version\n");
+    printf("Ana %s\n", ANA_VERSION);
+    return 0;
   }
   else if(opts.help) 
   {

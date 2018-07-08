@@ -1824,7 +1824,7 @@ yyreduce:
 
   case 12:
 
-    { 
+    {
     (yyval.ast) = list_node(pstate, COMO_AST_IF);
     // assignment_expression
     add_child(pstate, (yyval.ast), (yyvsp[-4].ast));
@@ -2101,7 +2101,7 @@ yyreduce:
   case 44:
 
     { 
-    (yyval.ast) = id_node(pstate, (yyvsp[0].id)); 
+    (yyval.ast) = id_node(pstate, (yyvsp[0].id));
   }
 
     break;

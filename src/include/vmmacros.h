@@ -1,30 +1,32 @@
 #define ANA_TRACE_DEBUG_ENABLED
 
 #define vm_case(o) switch(o)
-#define vm_target(x) case x:
+#define vm_target(x) case x: \
+  TRACE(x, #x, oparg, 0, 1); \
+
 #define vm_continue() break
 
 #ifdef ANA_TRACE_DEBUG_ENABLED
-# define DO_TRACE(op, arg, flag, argused) \
+# define DO_TRACE(op, strop, arg, flag, argused) \
   do \
   { \
     fprintf(stdout, "%-5d: ", (int)frame->pc -1); \
     if(argused) \
     { \
-      fprintf(stdout, "%-25s%-10d\n", op, arg); \
+      fprintf(stdout, "%-25s%-10d\n", strop, arg); \
     } \
     else \
     { \
-      fprintf(stdout, "%-25s\n", op); \
+      fprintf(stdout, "%-25s\n", strop); \
     } \
   } while(0)
   
-# define TRACE(op, arg, flag, argused) \
+# define TRACE(op, strop, arg, flag, argused) \
   if(1) \
   { \
     if(vm->flags & COMO_VM_TRACING) \
     { \
-      DO_TRACE(#op, arg, flag, argused); \
+      DO_TRACE(op, strop, arg, flag, argused); \
       if(op != IRETURN) \
         break; \
       else \
@@ -32,12 +34,12 @@
       } \
     else if(vm->flags & COMO_VM_LIVE_TRACING) \
     { \
-      DO_TRACE(#op, arg, flag, argused); \
+      DO_TRACE(op, strop, arg, flag, argused); \
     } \
   } \
 
 #else
-#   define TRACE(op, arg, flag, argused) do {} while(0)
+#   define TRACE(op, strop, arg, flag, argused) do {} while(0)
 #endif
 
 
@@ -92,7 +94,6 @@
 #define pop2(frame) \
  ((frame->loop->stack_size != 0 ? (--frame->loop->stack[frame->loop->stack_position == 0 ? 0 : \
     (frame->loop->stack_position - 1)]->stack_obj_count) : -1), (frame->stack[--frame->sp]))
-
 
 #define pop pop_ex
 

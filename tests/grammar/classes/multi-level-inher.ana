@@ -1,0 +1,34 @@
+class Grandparent {
+  public function Grandparent()
+  {
+    print("Constructing Grandparent");
+  }
+
+  public function getGrandParentName() 
+  {
+    return "Grandparent";
+  }
+}
+
+class Parent : Grandparent {
+  public function Parent()
+  {
+    print("Constructing Parent");
+  }
+
+  public function getParentName() { return "Parent"; }
+}
+
+class Child : Parent {
+  public function Child()
+  {
+    print("Constructing child");
+  } 
+  public function getChildName() { return "" + self; }
+}
+
+child = Child();
+
+getChildName = child.getChildName;
+
+print(getChildName());

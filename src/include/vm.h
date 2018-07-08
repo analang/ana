@@ -4,7 +4,7 @@
 #include <ana.h>
 #include "ana_debug.h"
 
-#define COMO_VM_GC_TIMEOUT     10
+#define COMO_VM_GC_TIMEOUT     (10)
 #define COMO_VM_TRACING        (1 << 0)
 #define COMO_VM_LIVE_TRACING   (1 << 1)
 #define COMO_VM_GC_DISABLED    (1 << 2)
@@ -31,7 +31,6 @@ struct ana_vm
   ana_object *base_symbol;
   ana_frame *base_frame;
   ana_object *frameroot;
-  /* registers */
   void(*do_gc)(ana_vm *);
 };
 
