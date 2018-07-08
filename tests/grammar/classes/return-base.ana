@@ -1,3 +1,4 @@
+//{"Expect": "FAIL": "Reason": "Constructor for class Base is not defined"}
 class Base {
   public function toString() { return "[Base]"; }
 }

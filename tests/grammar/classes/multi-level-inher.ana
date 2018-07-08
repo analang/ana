@@ -1,3 +1,4 @@
+//{"Expect": "FAIL", "Reason": "Multi level inher not supported yet"}
 class Grandparent {
   public function Grandparent()
   {

@@ -1,4 +1,4 @@
-//{"Expect": "FAIL", "Reason", "Illegal instance call"}
+//{"Expect": "FAIL", "Reason": "Illegal instance call"}
 class BaseMessage {
   public function BaseMessage(message)
   {

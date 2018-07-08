@@ -1,0 +1,22 @@
+//{"Expect": "FAIL", "Reason": "Illegal call to Base.Base"}
+class Base {
+    public function Base()
+    {
+        print("Constructing Base");
+    }
+}
+
+class Child : Base {
+    public function Child() 
+    {
+        print("Constructing Child");
+    }
+
+    public function getBase()
+    {
+        return base();
+    }
+}
+
+child = Child();
+print(child.getBase());
