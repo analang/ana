@@ -1,3 +1,4 @@
+//{"Expect": "FAIL", "Reason", "Invalid callable type"}
 class Foo {
   public function Foo()
   {

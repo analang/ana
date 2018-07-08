@@ -224,6 +224,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
     ana_uint32_t opline;
     ana_uint32_t opcode;
+    int next_op_code;
     short oparg;
     unsigned opflag;
 
@@ -860,7 +861,8 @@ SETPROP_leave:
             }
             else
             {
-              if(ana_type_is(res, ana_function_type)) 
+              if(ana_type_is(res, ana_function_type) && 
+                (next_op_code != CALL_METHOD))
               {
                 res = ana_bounded_function_new(
                   instance, ana_get_function(res)
@@ -1338,6 +1340,14 @@ SETPROP_leave:
           ana_object *self = pop();
           
           int totalargs = oparg;
+
+          if(!ana_type_is(callable, ana_function_type))
+          {
+            Ana_SetError(InvalidOperation, "Cannot call object of type `%s`",
+              ana_type_name(callable));
+
+            vm_continue();
+          }
           ana_function *func = ana_get_function(callable);
 
           if((ana_get_function(callable)->flags & COMO_FUNCTION_LANG) 
@@ -1994,12 +2004,12 @@ CALL_METHOD_leave:
             callable = (ana_object *)bounded->func;
 
             self = bounded->self;
-            
+
             goto call_function_type;
           }
           else
           { 
-            Ana_SetError(AnaRuntimeError, "value of type '%s' is not callable",
+            Ana_SetError(InvalidOperation, "Cannot call object of type `%s`",
               ana_type_name(callable));
 
             goto call_exit;
