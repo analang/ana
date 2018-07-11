@@ -89,6 +89,7 @@ typedef void* yyscan_t;
 %token T_BF "false literal"
 %token T_LS "<<"
 %token T_RS ">>"
+%token T_VARARG "..."
 
 %token T_IF       "keyword if"
 %token T_ELSE_IF  "keyword else if"
@@ -490,6 +491,9 @@ function_params:
 function_param:
   T_ID { 
     $$ = id_node(pstate, $1);
+  }
+| T_VARARG T_ID {
+    $$ = vararg_node(pstate, $2);
   }
 ;
 

@@ -668,6 +668,19 @@ node *continue_node(ana_parser_state *state)
   return list;    
 }
 
+node *vararg_node(ana_parser_state *state, char *name)
+{
+  node *list = list_node(state, COMO_AST_VARARG);
+  list->attribute_visit = NULL;
+  list->attributes = 0;
+  list->visit = visit;
+  list->info = "VarArg";
+
+  add_child(state, list, id_node(state, name));
+
+  return list;    
+}
+
 #include "astkind.c"
 
 const char *astkind(int kind)

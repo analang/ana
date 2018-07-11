@@ -26,6 +26,7 @@ typedef struct _ps {
 } ana_parser_state;
 
 typedef enum node_kind {
+  COMO_AST_VARARG,
   COMO_AST_LEFT_SHIFT,
   COMO_AST_RIGHT_SHIFT,
   COMO_AST_COMPOUND_IF_STATEMENT,
@@ -161,6 +162,7 @@ node *compound_if_node(ana_parser_state *state,
   node *else_stmts);
 node *break_node(ana_parser_state *state);
 node *continue_node(ana_parser_state *state);
+node *vararg_node(ana_parser_state *state, char *name);
 
 node *postfix_node(ana_parser_state *state, node *left, int type);
 

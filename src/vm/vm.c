@@ -1807,7 +1807,6 @@ CALL_METHOD_leave:
                 ana_map_put(execframe->locals, paramname, theargvalue);
               }
               
-
               execframe->retval = inst;
 
               /* the base constructor */
@@ -2436,7 +2435,7 @@ static void sweep(ana_vm *vm)
       }
       else
       {
-        #ifdef ANA_GC_DE
+        #ifdef ANA_GC_DEBUG1
         ana_object *str = ana_object_tostring(unreached);
         printf("not releasing %p(%s, %s), it's reference count is %ld\n", 
             (void *)unreached, ana_type_name(unreached), ana_cstring(str), unreached->refcount);

@@ -52,8 +52,6 @@ static inline int invoke_class(
 
     if(invoked_class->c_base)
     {
-      assert(vm->global_frame->locals);
-
       ana_object *temp = ana_map_get(vm->global_frame->locals, invoked_class->c_base);
     
       if(temp && !ana_type_is(temp, ana_class_type))
@@ -96,7 +94,6 @@ static inline int invoke_class(
 
     if(i + 1 < ana_array_size(instances))
     {      
-      /* TODO, determine if refcoutn needs to be increased */
       inst->base_instance = ana_array_get(instances, i + 1);
     }
   }

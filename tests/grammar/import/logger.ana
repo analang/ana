@@ -1,0 +1,4 @@
+function log(...args)
+{
+  print(args);
+

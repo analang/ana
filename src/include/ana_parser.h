@@ -80,19 +80,20 @@ typedef void* yyscan_t;
     T_BF = 279,
     T_LS = 280,
     T_RS = 281,
-    T_IF = 282,
-    T_ELSE_IF = 283,
-    T_ELSE = 284,
-    T_FOR = 285,
-    T_FOREACH = 286,
-    T_WHILE = 287,
-    T_CONTINUE = 288,
-    T_BREAK = 289,
-    T_RETURN = 290,
-    T_IN = 291,
-    T_THROW = 292,
-    T_TRY = 293,
-    T_CATCH = 294,
+    T_VARARG = 282,
+    T_IF = 283,
+    T_ELSE_IF = 284,
+    T_ELSE = 285,
+    T_FOR = 286,
+    T_FOREACH = 287,
+    T_WHILE = 288,
+    T_CONTINUE = 289,
+    T_BREAK = 290,
+    T_RETURN = 291,
+    T_IN = 292,
+    T_THROW = 293,
+    T_TRY = 294,
+    T_CATCH = 295,
     UNDEFINED = 2
   };
 #endif
@@ -122,19 +123,20 @@ typedef void* yyscan_t;
 #define T_BF 279
 #define T_LS 280
 #define T_RS 281
-#define T_IF 282
-#define T_ELSE_IF 283
-#define T_ELSE 284
-#define T_FOR 285
-#define T_FOREACH 286
-#define T_WHILE 287
-#define T_CONTINUE 288
-#define T_BREAK 289
-#define T_RETURN 290
-#define T_IN 291
-#define T_THROW 292
-#define T_TRY 293
-#define T_CATCH 294
+#define T_VARARG 282
+#define T_IF 283
+#define T_ELSE_IF 284
+#define T_ELSE 285
+#define T_FOR 286
+#define T_FOREACH 287
+#define T_WHILE 288
+#define T_CONTINUE 289
+#define T_BREAK 290
+#define T_RETURN 291
+#define T_IN 292
+#define T_THROW 293
+#define T_TRY 294
+#define T_CATCH 295
 #define UNDEFINED 2
 
 /* Value type.  */

@@ -168,6 +168,7 @@ D   [0-9]
 "in"        { return T_IN;        }
 "<<"        { return T_LS;        }
 ">>"        { return T_RS;        }
+"..."       { return T_VARARG;    }
 
 \" {
   if(ana_byte_buffer_init(&string_literal))
