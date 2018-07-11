@@ -29,6 +29,7 @@ struct _ana_frame {
   /* 24 bytes */
   ana_object  base;
   ana_object *code;             /* this is not allocated or deallocated here, it's provided by a function defn */
+  ana_size_t  current_line;     /* Current line of code being executed */
   ana_size_t  pc;               /* current index into the code array, reset to 0 at EOO (end of execution) */
   ana_object **stack;           /* this is dynamically allocated */
   ana_size_t sz;                /* keeps its size across reuse */

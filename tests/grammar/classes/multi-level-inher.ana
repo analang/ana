@@ -14,7 +14,7 @@ class Grandparent {
 class Parent : Grandparent {
   public function Parent()
   {
-    print("Constructing Parent");
+    print("Constructing Parent base is (" + base + ")");
   }
   public function getParentName() 
   { 
@@ -25,7 +25,7 @@ class Parent : Grandparent {
 class Child : Parent {
   public function Child()
   {
-    print("Constructing child");
+    print("Constructing child base is (" + base + ")");
   } 
   public function getChildName() 
   { 
@@ -33,8 +33,14 @@ class Child : Parent {
   }
 }
 
-child = Child();
+class Wrapped {
 
-getChildName = child.getChildName;
+  public function Wrapped(adapter)
+  {
+    self.adapter = adapter;
+  }
+}
 
-print(getChildName());
+wrapper = Wrapped(Child);
+
+child = wrapper.adapter();

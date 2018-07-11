@@ -9,6 +9,7 @@ COMO_OBJECT_API ana_object *ana_class_new(ana_object *base, ana_object *name)
   obj->base.flags = 0;
   obj->base.refcount = 0;  
   obj->base.is_tracked = 0;
+
   obj->c_base = base;
   obj->members = ana_map_new(4);
   obj->name = name;
@@ -66,7 +67,7 @@ static void class_init(ana_object *obj)
 COMO_OBJECT_API ana_object *ana_instance_new(ana_object *class_defn)
 {
   assert(ana_type_is(class_defn, ana_class_type));
-
+  
   ana_instance *obj = malloc(sizeof(*obj));
 
   obj->base.type = &ana_instance_type;
@@ -114,9 +115,6 @@ static void instance_dtor(ana_object *obj)
   ana_instance *self = (ana_instance *)obj;
 
   ana_object_dtor(self->properties);
-
-  if(self->base_instance)
-    instance_dtor(self->base_instance);
   
   free(self);
 }

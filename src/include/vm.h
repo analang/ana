@@ -30,6 +30,7 @@ struct ana_vm
   ana_object *self_symbol;
   ana_object *base_symbol;
   ana_frame *base_frame;
+  ana_frame *global_frame;
   ana_object *frameroot;
   void(*do_gc)(ana_vm *);
 };

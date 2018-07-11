@@ -167,8 +167,6 @@ COMO_OBJECT_API ana_object *ana_methodfromhandler(
 }
 
 
-
-
 static void bounded_function_print(ana_object *obj)
 {
   ana_bounded_function *self = ana_get_bounded_function(obj); 

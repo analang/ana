@@ -1,0 +1,14 @@
+class Bag {
+  public function Bag(bagAdapter)
+  {
+    self.adapter = bagAdapter;
+  }
+}
+
+class Adapter {
+  public function adapt() { return 1; }
+}
+
+bag = Bag(Adapter);
+
+bag.adapter();

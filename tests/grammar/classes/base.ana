@@ -1,0 +1,24 @@
+class Base {
+  
+}
+
+class Child : Base {
+  public function getBase()
+  {
+    return base;
+  }
+}
+
+child = Child();
+
+theBase = child.getBase();
+
+name = 1;
+
+// Allocate 
+for(i = 0; i < 100; i++)
+{
+  data = [4 *4, 4 * 2];
+}
+
+print(theBase);

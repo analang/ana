@@ -49,10 +49,13 @@
   ana_object *pc = ana_longfromlong((long)frame->pc); \
   ana_object *theline = ana_map_get(frame->line_mapping, pc); \
   \
-  if(theline) \
+  if(theline) {\
     current_line = (int)ana_get_long(theline)->value; \
-  else \
+    frame->current_line = current_line; \
+  } \
+  else {\
     current_line = 0; \
+  } \
   ana_object_dtor(pc); \
   \
   opline = (ana_uint32_t)((unsigned long)(code[frame->pc])); \

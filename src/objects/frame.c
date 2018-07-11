@@ -21,6 +21,7 @@ ana_frame *ana_frame_new(
 
   obj->code             = code;
   obj->pc               = 0;
+  obj->current_line     = 0;
   obj->stack            = malloc(sizeof(ana_object *) * COMO_FRAME_STACK_SIZE); 
   obj->sz               = COMO_FRAME_STACK_SIZE;
   obj->sp               = 0;
