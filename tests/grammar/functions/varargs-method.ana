@@ -1,0 +1,15 @@
+class Foo { 
+  public function bar(...args) { 
+    print(args); 
+  } 
+}
+Foo().bar(1,2,3, [1,2,3]);
+
+class Foo { 
+  public function bar(fmt, ...args) {
+    print(fmt); 
+    print(args); 
+  } 
+}
+
+Foo().bar("fmt", 1,2,3, [1,2,3]);

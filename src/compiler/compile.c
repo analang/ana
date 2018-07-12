@@ -151,14 +151,19 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
     {
       node *node = params->children[j];
 
-      if(node->kind == COMO_AST_VARARG && i + 1 != params->nchild)
+      if(node->kind == COMO_AST_VARARG && j + 1 != params->nchild)
       {
-        printf("SyntaxError, ... must be the last argument\n");
+        printf("SyntaxError, ... must be the last argument on line %d\n", ast->line);
         exit(1);
       }
-      else if(node->kind == COMO_AST_VARARG && i + 1 == params->nchild)
-      {
-        printf("warning: varargs (...) is not implemented yet\n");
+      else if(node->kind == COMO_AST_VARARG && j + 1 == params->nchild)
+      {        
+        ana_get_function(funcobj)->flags |= COMO_FUNCTION_HAS_VARARGS;
+        
+        node_id *id_node = (node_id *)node->children[0];
+
+        ana_array_push(func->parameters, ana_stringfromstring(id_node->value));
+
         continue;
       }
 
@@ -168,7 +173,7 @@ static void compile_class(ana_vm *vm, ana_object *parentfuncobj, node *ast)
 
       ana_array_push(func->parameters, ana_stringfromstring(idnode->value));
     }
-
+    
     ana_compile_unit(vm, funcobj, body);
 
     if(body->nchild > 0) 
@@ -777,7 +782,8 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       int callflags = 0;
       int i;
       
-      for(i = 0; i < args->nchild; i++) {
+      for(i = 0; i < args->nchild; i++) 
+      {
         ana_compile_unit(vm, funcobj, args->children[i]);
       }
 

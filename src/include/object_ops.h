@@ -1,6 +1,104 @@
 #include <ana.h>
 #include "vmmacros.h"
 
+static inline int setup_args(ana_vm *vm, ana_frame *frame, 
+  ana_frame *execframe, ana_function *fn, int totalargs)
+{
+  int retval = 0;
+  ana_function_defn *call = ana_get_function_defn(fn);
+
+  if(!(fn->flags & COMO_FUNCTION_HAS_VARARGS) && ana_get_array(call->parameters)->size != totalargs)
+  {
+    Ana_SetError(
+      AnaArgumentError, "%s expects %lu argument(s), %d given",
+      ana_cstring(fn->name), 
+      ana_get_array(call->parameters)->size,
+      totalargs
+    );
+
+    return 1;
+  }
+
+  if(ana_get_array(call->parameters)->size == 1 && (fn->flags & COMO_FUNCTION_HAS_VARARGS))
+  {
+    ana_object *paramname = ana_array_get(
+      call->parameters, 0);
+
+    ana_object *vargs = ana_array_new(4);
+
+    GC_TRACK(vm, vargs);
+
+    vargs->refcount++;
+
+    while(totalargs--)
+    {
+      ana_object *theargvalue = pop2(frame);
+      
+      theargvalue->refcount++;
+
+      ana_array_push(vargs, theargvalue);
+    }  
+
+    ana_map_put(execframe->locals, paramname, 
+      ana_array_reverse(vargs)
+    );
+  }
+  else if(ana_get_array(call->parameters)->size > 1 && (fn->flags & COMO_FUNCTION_HAS_VARARGS))
+  {
+    ana_object *arguments = ana_array_new(totalargs);
+
+    while(totalargs--)
+    {
+      ana_array_push(arguments, pop2(frame));
+    }
+
+    ana_array_reverse(arguments);
+
+    ana_size_t position = 0;
+    ana_size_t i;
+
+    for(i = 0; i < ana_array_size(call->parameters) - 1; i++)
+    {
+      ana_map_put(execframe->locals, 
+        ana_array_get(call->parameters, i), ana_array_get(arguments, i));
+
+      position++;
+    }
+
+    ana_object *vargs = ana_array_new(2);
+
+    for(i = position; i < ana_array_size(arguments); i++)
+    {
+      ana_array_push(vargs, ana_array_get(arguments, position));
+    }
+
+    ana_map_put(execframe->locals,
+      ana_array_get(call->parameters, ana_array_size(call->parameters) - 1),
+      vargs
+    );
+
+    GC_TRACK(vm, vargs);
+
+    ana_object_dtor(arguments);
+  }
+  else
+  {
+    while(totalargs--)
+    {
+      ana_object *theargvalue = pop2(frame);
+
+      theargvalue->refcount++;
+
+      ana_object *paramname = ana_array_get(
+        call->parameters, (ana_size_t)totalargs);
+
+      ana_map_put(execframe->locals, paramname, theargvalue);
+    }
+  }
+
+  return retval;
+}
+
 static inline int invoke_class(
   ana_vm *vm,
   ana_object *class_defn,
@@ -120,7 +218,6 @@ static inline int invoke_class(
 
   return retval;
 }
-
 
 static inline ana_object *mul(ana_vm *vm, ana_object *a, ana_object *b)
 {

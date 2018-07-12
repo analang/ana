@@ -6,6 +6,7 @@
 #define AnaRuntimeError  "RuntimeError"
 #define AnaSystemError   "SystemError"
 #define InvalidOperation "InvalidOperation"
+#define AnaNameError     "NameError"
 
 extern char **ana__excep_location(void);
 extern char **ana__except_type_location(void);

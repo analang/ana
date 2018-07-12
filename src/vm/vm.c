@@ -968,7 +968,7 @@ SETPROP_leave:
           }
           else 
           {
-            set_except("RuntimeError", "undefined variable '%s'", 
+            Ana_SetError(AnaNameError, "undefined variable '%s'", 
               ana_cstring(thename));
           }
           
@@ -1315,6 +1315,13 @@ SETPROP_leave:
             ana_map_put(theclass->members, function_name, function_code);
           }
 
+          ana_object *prev;
+
+          if((prev = ana_map_get(frame->locals, name)) != NULL)
+          {
+            decref_recursively(prev);
+          }
+
           ana_map_put(frame->locals, name, (ana_object *)theclass);
 
           ana_get_base(theclass)->refcount++;
@@ -1363,26 +1370,10 @@ SETPROP_leave:
                 fn->filename
               );
 
-              if(call->parameters != NULL)
+              if(setup_args(vm, frame, execframe, fn, totalargs) != 0)
               {
-                if(ana_get_array(call->parameters)->size != totalargs)
-                {
-                  Ana_SetError(
-                    AnaArgumentError, "%s expects %lu argument(s), %d given",
-                    ana_get_fn_name(execframe), 
-                    ana_get_array(call->parameters)->size,
-                    totalargs);
-                  
-                  goto CALL_METHOD_leave;
-                }
-              }
-              else if(totalargs != 0)
-              {
-                Ana_SetError(
-                  AnaArgumentError, "%s expects 0 argument(s), %d given",
-                  ana_get_fn_name(execframe), totalargs);
-
-                goto CALL_METHOD_leave;
+                ana_object_dtor(execframe);
+                vm_continue();
               }
 
               /* Make sure this isn't a module funciton */
@@ -1417,18 +1408,6 @@ SETPROP_leave:
                 execframe->self = real_self;
               }
 
-              while(totalargs--)
-              {
-                ana_object *theargvalue = pop();
-
-                theargvalue->refcount++;
-
-                ana_object *paramname = ana_array_get(
-                  call->parameters, (ana_size_t)totalargs);
-
-                ana_map_put(execframe->locals, paramname, theargvalue);
-              }
-              
               COMO_VM_PUSH_FRAME(frame);
               COMO_VM_PUSH_FRAME(execframe);
 
@@ -1592,94 +1571,10 @@ CALL_METHOD_leave:
                   vm->self_symbol, self);
               }
 
-              if(!(fn->flags & COMO_FUNCTION_HAS_VARARGS) && ana_get_array(call->parameters)->size != totalargs)
+              if(setup_args(vm, frame, execframe, fn, totalargs) != 0)
               {
-                Ana_SetError(
-                  AnaArgumentError, "%s expects %lu argument(s), %d given",
-                  ana_get_fn_name(execframe), 
-                  ana_get_array(call->parameters)->size,
-                  totalargs);
-                
                 ana_object_dtor(execframe);
-
-                goto call_exit;
-              }
-
-              if(ana_get_array(call->parameters)->size == 1 && (fn->flags & COMO_FUNCTION_HAS_VARARGS))
-              {
-                ana_object *paramname = ana_array_get(
-                  call->parameters, 0);
-
-                ana_object *vargs = ana_array_new(4);
-
-                GC_TRACK(vm, vargs);
-
-                vargs->refcount++;
-
-                while(totalargs--)
-                {
-                  ana_object *theargvalue = pop();
-                  
-                  theargvalue->refcount++;
-
-                  ana_array_push(vargs, theargvalue);
-                }  
-
-                ana_map_put(execframe->locals, paramname, 
-                  ana_array_reverse(vargs)
-                );
-              }
-              else if(ana_get_array(call->parameters)->size > 1 && (fn->flags & COMO_FUNCTION_HAS_VARARGS))
-              {
-                ana_object *arguments = ana_array_new(totalargs);
-
-                while(totalargs--)
-                {
-                  ana_array_push(arguments, pop());
-                }
-
-                ana_array_reverse(arguments);
-
-                ana_size_t position = 0;
-                ana_size_t i;
-
-                for(i = 0; i < ana_array_size(call->parameters) - 1; i++)
-                {
-                  ana_map_put(execframe->locals, 
-                    ana_array_get(call->parameters, i), ana_array_get(arguments, i));
-
-                  position++;
-                }
-
-                ana_object *vargs = ana_array_new(2);
-
-                for(i = position; i < ana_array_size(arguments); i++)
-                {
-                  ana_array_push(vargs, ana_array_get(arguments, position));
-                }
-
-                ana_map_put(execframe->locals,
-                  ana_array_get(call->parameters, ana_array_size(call->parameters) - 1),
-                  vargs
-                );
-
-                GC_TRACK(vm, vargs);
-
-                ana_object_dtor(arguments);
-              }
-              else
-              {
-                while(totalargs--)
-                {
-                  ana_object *theargvalue = pop();
-
-                  theargvalue->refcount++;
-
-                  ana_object *paramname = ana_array_get(
-                    call->parameters, (ana_size_t)totalargs);
-
-                  ana_map_put(execframe->locals, paramname, theargvalue);
-                }
+                vm_continue();
               }
               
               COMO_VM_PUSH_FRAME(frame);
@@ -2147,6 +2042,19 @@ CALL_METHOD_leave:
             thisframe = NULL;
           }
         }
+        int current_line;
+        ana_object *pc = ana_longfromlong((long)frame->pc);
+        ana_object *theline = ana_map_get(frame->line_mapping, pc);
+        
+        if(theline) {
+          current_line = (int)ana_get_long(theline)->value;
+          frame->current_line = current_line; 
+        }
+        else {
+          current_line = 0;
+        }
+
+        ana_object_dtor(pc);
 
         fprintf(stdout, "%s: %s\n    in %s:%d\n", 
           the_type, 
