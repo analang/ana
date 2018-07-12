@@ -1,7 +1,3 @@
-// This creates a memory leak because of a single dimension
-// refcount-- in INITARRAY
-//
-
 function init()
 {
   dynamic_value = {a: 1 * 5 };

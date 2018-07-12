@@ -1,3 +1,6 @@
+#ifndef ANA_VM_MACROS_H
+#define ANA_VM_MACROS_H
+
 #define ANA_TRACE_DEBUG_ENABLED
 
 #define vm_case(o) switch(o)
@@ -116,3 +119,6 @@
   ex_type = exception_type; \
   ex = make_except(fmt, ##__VA_ARGS__); \
 } while(0)
+
+
+#endif

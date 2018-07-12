@@ -5,10 +5,11 @@
 #   error "Please do not include function.h directly"
 #endif
 
-#define COMO_FUNCTION_LANG    (1 << 0)
-#define COMO_FUNCTION_NATIVE  (1 << 1)
-#define COMO_FUNCTION_METHOD  (1 << 2)
-#define COMO_FUNCTION_BOUND   (1 << 3)
+#define COMO_FUNCTION_LANG          (1 << 0)
+#define COMO_FUNCTION_NATIVE        (1 << 1)
+#define COMO_FUNCTION_METHOD        (1 << 2)
+#define COMO_FUNCTION_BOUND         (1 << 3)
+#define COMO_FUNCTION_HAS_VARARGS   (1 << 3)
 #define COMO_FUNCTION_NATIVE_METHOD \
     (COMO_FUNCTION_NATIVE | COMO_FUNCTION_METHOD)
 

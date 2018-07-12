@@ -264,6 +264,28 @@ COMO_OBJECT_API ana_object *ana_array_push_index(ana_object *xself,
   return value;
 }
 
+COMO_OBJECT_API ana_object *ana_array_reverse(ana_object *obj)
+{
+  assert(ana_type_is(obj, ana_array_type));
+
+  ana_array *self = ana_get_array(obj);
+
+  ana_size_t end = self->size - 1;
+  ana_size_t start = 0;
+
+  while(end > start)
+  {
+    ana_object *temp = self->items[end]; 
+
+    self->items[end] = self->items[start];
+    self->items[start] = temp;
+    end--;
+    start++;
+  }
+
+  return obj;
+}
+
 static ana_object *ana_array_iterator_next(ana_array_iterator *iter)
 {
   if(iter->position == iter->array->size)

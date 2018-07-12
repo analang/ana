@@ -1,4 +1,5 @@
 #include <ana.h>
+#include "vmmacros.h"
 
 static inline int invoke_class(
   ana_vm *vm,
@@ -9,14 +10,19 @@ static inline int invoke_class(
   assert(ana_type_is(class_defn, ana_class_type));
   
   ana_class    *invoked_class = ana_get_class(class_defn);
+  ana_instance *invoked_instance = (ana_instance *)ana_instance_new((ana_object *)invoked_class);
+
+  GC_TRACK(vm, invoked_instance);
+
   ana_object   *instances = ana_array_new(4);
+  ana_size_t i;
+  int retval = 1;
 
   int calling_frame_pushed = 0;
   int total_ctors = 0;
 
   while(invoked_class)
   {    
-    ana_instance *invoked_instance       = (ana_instance *)ana_instance_new((ana_object *)invoked_class);
     ana_function *invoked_constructor    = (ana_function *)ana_map_get(invoked_class->members, invoked_class->name);
     ana_frame *invoked_constructor_frame = NULL;
 
@@ -43,10 +49,9 @@ static inline int invoke_class(
       }
 
       COMO_VM_PUSH_FRAME(invoked_constructor_frame);
+
       total_ctors++;
     }
-
-    GC_TRACK(vm, invoked_instance);
 
     ana_array_push(instances, (ana_object *)invoked_instance);
 
@@ -68,6 +73,9 @@ static inline int invoke_class(
       } 
       
       invoked_class = ana_get_class(temp);
+      invoked_instance = (ana_instance *)ana_instance_new((ana_object *)invoked_class);
+
+      GC_TRACK(vm, invoked_instance);
     }
     else
     {
@@ -75,9 +83,17 @@ static inline int invoke_class(
     }
   }
 
-  ana_size_t sp = vm->stackpointer - total_ctors;
-  ana_size_t i;
+  /* Did we not have any constructors */
+  if(vm->stackpointer == 0)
+  {
+    pushto(frame, (ana_object *)invoked_instance);
+    goto done;
+  }
 
+  retval = 0;
+
+  ana_size_t sp = vm->stackpointer - total_ctors;
+  
   for(i = sp; i < vm->stackpointer; i++)
   {
     ana_frame *f = vm->stack[i];
@@ -87,6 +103,8 @@ static inline int invoke_class(
       ana_map_put(f->locals, vm->base_symbol, vm->stack[i + 1]->self);
     }
   }
+
+  done:
 
   for(i = 0; i < ana_array_size(instances); i++)
   {
@@ -100,7 +118,7 @@ static inline int invoke_class(
 
   ana_object_dtor(instances);
 
-  return 0;
+  return retval;
 }
 
 

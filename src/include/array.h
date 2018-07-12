@@ -27,6 +27,8 @@ COMO_OBJECT_API ana_object *ana_array_push(ana_object *, ana_object *);
 COMO_OBJECT_API ana_object *ana_array_push_index(ana_object *, 
   ana_size_t i, ana_object *);
 COMO_OBJECT_API ana_object *ana_array_get(ana_object *, ana_size_t i);
+COMO_OBJECT_API ana_object *ana_array_reverse(ana_object *);
+
 
 COMO_OBJECT_API void ana_array_type_init(ana_vm *vm);
 COMO_OBJECT_API void ana_array_type_finalize(ana_vm *vm);

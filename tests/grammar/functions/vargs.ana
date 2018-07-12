@@ -1,0 +1,27 @@
+function testVarArgs(...args)
+{
+  for(i = 0; i < args.length(); i++)
+  {
+    print("[" + i + "]" + "=>" + args[i]);
+  }
+}
+
+testVarArgs("First", "Second", "Third");
+
+
+function test(fmt, ...args)
+{
+  print(fmt);
+
+  print(args); 
+}
+
+test("%s", "Hello", "WOrld");
+
+
+function test1(arg1, arg2) {
+  print(arg1);
+  print(arg2);
+}
+
+test1("A", "B");

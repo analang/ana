@@ -6,9 +6,13 @@ class Bag {
 }
 
 class Adapter {
-  public function adapt() { return 1; }
+  public function adapt() { 
+    return 1; 
+  }
 }
 
 bag = Bag(Adapter);
 
-bag.adapter();
+print(
+  bag.adapter()
+);

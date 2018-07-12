@@ -1,0 +1,8 @@
+//{"Expect": "FAIL", "Reason": "Not enough arguments"}
+function test(arg1, arg2)
+{
+
+}
+
+
+test(1);
