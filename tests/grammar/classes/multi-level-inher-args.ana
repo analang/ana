@@ -1,5 +1,5 @@
 class Grandparent {
-  public function Grandparent()
+  public function Grandparent(arg1)
   {
     print("Constructing Grandparent");
   }
@@ -11,7 +11,7 @@ class Grandparent {
 }
 
 class Parent : Grandparent {
-  public function Parent()
+  public function Parent(arg1)
   {
     print("Constructing Parent base is (" + base + ")");
   }
@@ -43,3 +43,7 @@ class Wrapped {
 wrapper = Wrapped(Child);
 
 child = wrapper.adapter();
+
+
+
+print(child);
