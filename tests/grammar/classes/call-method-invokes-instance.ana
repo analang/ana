@@ -6,10 +6,6 @@ class Bag {
 }
 
 class Adapter {
-  public function Adapter() 
-  {
-    print("Invoking Adapter");
-  }
   public function adapt() { 
     return 1; 
   }

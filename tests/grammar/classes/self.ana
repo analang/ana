@@ -1,7 +1,0 @@
-class Bound {
-  public function Bound() {
-    self.x = 1;
-  }
-}
-
-Bound();
