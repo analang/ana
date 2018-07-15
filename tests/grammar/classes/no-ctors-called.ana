@@ -1,0 +1,8 @@
+class BaseInstance {
+}
+
+class Instance {
+
+}
+
+inst = Instance();
