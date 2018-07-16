@@ -109,63 +109,84 @@ static inline int invoke_function(
   ana_frame *frame)
 {
   assert(
-    ana_type_is(function, ana_function_type) || 
-      ana_type_is(function, ana_bounded_function_type)
-  );
+    ana_type_is(function, ana_function_type));
 
-  ana_function *fn = ana_get_function(function);
 
-  if((fn->flags & COMO_FUNCTION_LANG) == COMO_FUNCTION_LANG)
+  call_function_type:
+
+  if(ana_type_is(function, ana_function_type))
   {
-    struct _ana_function_def *call = fn->func;
+    ana_function *fn = ana_get_function(function);
 
-    ana_frame *execframe = ana_frame_new(
-      call->code,
-      call->jump_targets, 
-      call->line_mapping, 
-      frame->locals,
-      fn->name, 
-      frame,
-      frame->current_line,
-      fn->filename
-    );
-
-    if(self)
+    if((fn->flags & COMO_FUNCTION_LANG) == COMO_FUNCTION_LANG)
     {
-      ana_map_put(execframe->locals, vm->self_symbol, self);
+      struct _ana_function_def *call = fn->func;
+
+      ana_frame *execframe = ana_frame_new(
+        call->code,
+        call->jump_targets, 
+        call->line_mapping, 
+        vm->global_frame->locals,
+        fn->name, 
+        frame,
+        frame->current_line,
+        fn->filename
+      );
+
+      if(self)
+      {
+        ana_map_put(execframe->locals, vm->self_symbol, self);
+      }
+
+      if(setup_args(vm, frame, execframe, fn, argcount) != 0)
+      {
+        ana_object_dtor(execframe);
+        
+        return 1;
+      }
+
+      COMO_VM_PUSH_FRAME(frame);
+      COMO_VM_PUSH_FRAME(execframe);
     }
-
-    if(setup_args(vm, frame, execframe, fn, argcount) != 0)
+    else
     {
-      ana_object_dtor(execframe);
-      
+      ana_object *nativeargs = ana_array_new(4);
+
+      while(argcount--)
+      {
+        ana_object *thearg = pop();
+
+        ana_array_push(nativeargs, thearg);
+      }       
+
+      ana_object *res = fn->handler(nativeargs); 
+
+      if(res) 
+      {
+        GC_TRACK(vm, res);
+
+        pushto(frame, res);
+      }
+
+      ana_object_dtor(nativeargs);
+
       return 1;
     }
+  }
+  else if(ana_type_is(function, ana_bounded_function_type))
+  {           
+    ana_bounded_function *bounded = ana_get_bounded_function(function);
 
-    COMO_VM_PUSH_FRAME(frame);
-    COMO_VM_PUSH_FRAME(execframe);
+    function = (ana_object *)bounded->func;
+
+    self = bounded->self;
+
+    goto call_function_type;
   }
   else
   {
-    ana_object *nativeargs = ana_array_new(4);
-
-    while(argcount--)
-    {
-      ana_object *thearg = pop();
-
-      ana_array_push(nativeargs, thearg);
-    }       
-
-    ana_object *res = fn->handler(nativeargs); 
-
-    if(res) 
-    {
-      GC_TRACK(vm, res);
-
-      pushto(frame, res);
-    }
-
-    ana_object_dtor(nativeargs);
+    /* Unreachable */
+    abort();
   }
 
   return 0;
@@ -227,10 +248,10 @@ static inline int invoke_class(
       invoked_constructor_frame->self = (ana_object *)invoked_instance;
       invoked_constructor_frame->retval = (ana_object *)invoked_instance;
 
-      if(invoked_constructors != 0 && ana_array_size(
+      if(total_ctors != 0 && ana_array_size(
         ana_get_function_defn(invoked_constructor)->parameters) != 0)
       {
-        /* We don't call base constructors unless they have 0 arguments */
+        /* Don't call base constructors unless they have 0 arguments */
         ana_object_dtor(invoked_constructor_frame);
         
         goto skip;
@@ -267,7 +288,6 @@ static inline int invoke_class(
       } 
       else if(!temp)
       {
-        Ana_SetError(AnaTypeError, "%s", ana_cstring(invoked_class->c_base));
 
         return 1;
       } 
@@ -316,11 +336,16 @@ static inline int invoke_class(
     }
   }
 
-  pushto(frame, ana_array_get(instances, 0));
+  assert(ana_array_size(instances) > 0);
+
+  if(invoked_constructors == 0)
+  {
+    pushto(frame, ana_array_get(instances, 0));
+  }
 
   ana_object_dtor(instances);
 
-  return invoked_constructors == 0 ? 1 : 0;
+  return invoked_constructors;
 }
 
 static inline ana_object *mul(ana_vm *vm, ana_object *a, ana_object *b)

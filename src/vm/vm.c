@@ -209,6 +209,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
     int current_line = 0;
 
     enter:
+    assert(vm->stackpointer > 0);
+    
     frame = COMO_VM_POP_FRAME();
     vm->base_frame = frame;
 
@@ -888,7 +890,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         vm_target(STORE_NAME) {
           ana_object *thename = ana_array_get(vm->symbols, oparg);
           result = pop();
-
           {
             ana_object *oldvalue;
 
@@ -1487,10 +1488,14 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           else if(ana_type_is(callable, ana_class_type))
           {
             /* This happens on a class property assign to a class */
-            if(invoke_class(vm, callable, totalargs, frame) != 0)
+            if(invoke_class(vm, callable, totalargs, frame) == 0)
+            {
               vm_continue();
+            }
             else
+            {
               goto enter;
+            }
           }
           else
           {
@@ -1508,7 +1513,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *self = NULL;
 
           call_function_type:
-          if(ana_type_is(callable, ana_function_type)) 
+          if(ana_type_is(callable, ana_function_type) || 
+                ana_type_is(callable, ana_bounded_function_type)) 
           {
             if(invoke_function(vm, self, callable, oparg, frame) != 0)
               vm_continue();
@@ -1517,10 +1523,15 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
           else if(ana_type_is(callable, ana_class_type))
           {
-            if(invoke_class(vm, callable, (int)oparg, frame) != 0)
+            /* This happens on a class property assign to a class */
+            if(invoke_class(vm, callable, (int)oparg, frame) == 0)
+            {
               vm_continue();
+            }
             else
+            {
               goto enter;
+            }
           }
           else if(ana_type_is(callable, ana_instance_type))
           {
@@ -1671,16 +1682,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
               Ana_SetError(InvalidOperation, 
                 "Can't call instance type outside of a class constructor");
             }
-          }
-          else if(ana_type_is(callable, ana_bounded_function_type))
-          {
-            ana_bounded_function *bounded = ana_get_bounded_function(callable);
-
-            callable = (ana_object *)bounded->func;
-
-            self = bounded->self;
-
-            goto call_function_type;
           }
           else
           { 

@@ -1,0 +1,24 @@
+class Exception {
+  public function Exception(message)
+  {
+    self._message = message;
+  } 
+
+  public function getMessage()
+  {
+    return self._message;
+  }
+}
+
+class IndexOutOfRangeException : Exception {
+  public function IndexOutOfRangeException(index)
+  {
+    base("Index out of range " + index);
+    self.index = index;  
+  }
+}
+
+ex = IndexOutOfRangeException(-1);
+
+
+print(ex.getMessage());

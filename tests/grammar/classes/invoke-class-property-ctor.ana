@@ -14,5 +14,5 @@ class Adapter : BaseAdapter {
 bag = Adapter();
 
 print(
-  bag.adapter()
+  bag.adapt()
 );
