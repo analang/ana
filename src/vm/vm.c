@@ -1512,7 +1512,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *callable = pop();
           ana_object *self = NULL;
 
-          call_function_type:
           if(ana_type_is(callable, ana_function_type) || 
                 ana_type_is(callable, ana_bounded_function_type)) 
           {

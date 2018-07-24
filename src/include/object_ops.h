@@ -192,7 +192,6 @@ static inline int invoke_function(
   return 0;
 }
 
-
 static inline int invoke_class(
   ana_vm *vm,
   ana_object *class_defn,
