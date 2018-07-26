@@ -662,11 +662,11 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       if(asname)
       {
         EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, name), 0,  ast);
-        EMITX(vm, func, IIMPORTAS,  NEW_SYMBOL(vm, asname),  0, ast);
+        EMITX(vm, func, IIMPORTAS,  NEW_STR_CONST(vm, asname),  0, ast);
       }
       else
       {
-        EMITX(vm, func, IIMPORT, NEW_SYMBOL(vm, name), 0, ast);
+        EMITX(vm, func, IIMPORT, NEW_STR_CONST(vm, name), 0, ast);
       }
 
       free(buffer);

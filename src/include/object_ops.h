@@ -1,4 +1,9 @@
+#define _GNU_SOURCE 1 /* For realpath */
+
 #include <ana.h>
+#include <stdio.h>
+#include <limits.h>
+
 #include "vmmacros.h"
 
 static inline int setup_args(ana_vm *vm, ana_frame *frame, 
@@ -101,6 +106,59 @@ static inline int setup_args(ana_vm *vm, ana_frame *frame,
   return retval;
 }
 
+static char *get_real_path(ana_object *pathobj)
+{
+  ana_object *pathobjcopy = ana_stringfromstring(ana_cstring(pathobj));
+  char *pathwithext = NULL;
+  char *rpath;
+  char *path = ana_cstring(pathobjcopy);
+
+  while(*path)
+  {
+    if(*path == '.')
+    {
+      *path = '/';
+    }
+  
+    path++; 
+  }
+
+  path = ana_cstring(pathobjcopy);
+  pathwithext = ana_build_str("%s.ana", path);
+  rpath = realpath(pathwithext, NULL);
+
+  free(pathwithext);
+  ana_object_dtor(pathobjcopy);
+
+  return rpath;
+}
+
+static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
+{ 
+  char *path = get_real_path(pathobj);
+
+  if(path == NULL)
+  {
+    import_error:
+
+    Ana_SetError("ImportError", "`%s` was not located", ana_cstring(pathobj));
+    
+    return 1;
+  }
+
+  FILE *fp = ana_open_file_for_parsing(path);
+
+  if(!fp)
+  {
+    goto import_error;
+  }
+
+
+  free(path);
+
+  return 1;
+}
+
 static inline int invoke_function(
   ana_vm *vm,
   ana_object *self,
@@ -109,8 +167,9 @@ static inline int invoke_function(
   ana_frame *frame)
 {
   assert(
-    ana_type_is(function, ana_function_type));
-
+    ana_type_is(function, ana_function_type) ||
+    ana_type_is(function, ana_bounded_function_type)
+  );
 
   call_function_type:
 

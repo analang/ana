@@ -1,9 +1,15 @@
 #include <stdarg.h>
+#define _GNU_SOURCE 1
+
+#include <stdlib.h>
 #include <assert.h>
 #include <signal.h>
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
+
+#include <stdio.h>
+#include <limits.h>
 
 #include "ana.h"
 #include "vm.h"
@@ -236,6 +242,19 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         default: {
           Ana_SetError("VMError", "Opcode %#04x is not implemented", opcode);
           vm_continue();
+        }
+        vm_target(IIMPORT)
+        {
+          ana_object *path = ana_array_get(vm->constants, (long)oparg);
+
+          if(import_file(vm, frame, path) != 0)
+          {
+            vm_continue();
+          }
+          else
+          {
+            goto enter;
+          }
         }
         vm_target(ITER) {
           /* This is the container */

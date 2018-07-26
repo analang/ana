@@ -1,4 +1,4 @@
-  #define _GNU_SOURCE 1 /* For realpath */
+#define _GNU_SOURCE 1 /* For realpath */
 
 #include <stdio.h>
 #include <stdlib.h>
