@@ -1,10 +1,10 @@
 class Exception {
-  public function Exception(message)
+  function Exception(message)
   {
     self._message = message;
   } 
 
-  public function getMessage()
+  function getMessage()
   {
     return self._message;
   }

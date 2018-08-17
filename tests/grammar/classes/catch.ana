@@ -1,10 +1,10 @@
 class ArgumentError {
-  public function ArgumentError(expected, given) 
+  function ArgumentError(expected, given) 
   {
     self.expected = expected;
     self.given = given;
   }
-  public function getMessage()
+  function getMessage()
   {
     return "expected " + self.expected  + ", " + self.given + " given";
   }

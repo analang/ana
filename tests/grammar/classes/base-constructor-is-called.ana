@@ -7,7 +7,7 @@ class Exception {
 }
 
 class IndexOutOfBoundsException : Exception {
-  public function IndexOutOfBoundsExpcetion(message)
+  function IndexOutOfBoundsExpcetion(message)
   {
     self.message = message;
     // TODO figure out rules for how this will work
@@ -16,12 +16,12 @@ class IndexOutOfBoundsException : Exception {
 }
 
 class Container {
-  public function Container()
+  function Container()
   {
     self._items = [];
   }
   
-  public function get(index)
+  function get(index)
   {
     if(index >= 0 && index < self._items.length())
     {
@@ -31,14 +31,14 @@ class Container {
     throw IndexOutOfBoundsException();
   }
 
-  public function put(value)
+  function put(value)
   {
     self._items.push(value);
   }
 }
 
 class List : Container {
-  public function getItems() { 
+  function getItems() { 
     return self._items; 
   }
 }

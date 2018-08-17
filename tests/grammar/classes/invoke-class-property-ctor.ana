@@ -2,11 +2,11 @@ class BaseAdapter {
 }
 
 class Adapter : BaseAdapter {
-  public function Adapter() 
+  function Adapter() 
   {
     self.base = base;
   }
-  public function adapt() { 
+  function adapt() { 
     return 1; 
   }
 }

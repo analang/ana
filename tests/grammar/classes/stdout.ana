@@ -1,10 +1,10 @@
 class Stdout {
-  public function Stdout(writer)
+  function Stdout(writer)
   {
     self._writer = writer;
   }
 
-  public function write(value)
+  function write(value)
   {
     self._writer(value);
   }

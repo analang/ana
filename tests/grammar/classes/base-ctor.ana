@@ -1,12 +1,12 @@
 class BaseMessage {
-  public function BaseMessage(message)
+  function BaseMessage(message)
   {
     self.message = message;
   }
 }
 
 class TextMessage : BaseMessage {
-  public function TextMessage(message)
+  function TextMessage(message)
   {
     base(message); 
   }

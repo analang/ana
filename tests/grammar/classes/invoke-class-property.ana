@@ -1,16 +1,16 @@
 class Bag {
-  public function Bag(bagAdapter)
+  function Bag(bagAdapter)
   {
     self.adapter = bagAdapter;
   }
 }
 
 class Adapter {
-  public function Adapter() 
+  function Adapter() 
   {
     print("Invoking Adapter");
   }
-  public function adapt() { 
+  function adapt() { 
     return 1; 
   }
 }

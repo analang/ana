@@ -1,26 +1,26 @@
 //{"Expect": "FAIL", "Reason": "Illegal instance call"}
 class BaseMessage {
-  public function BaseMessage(message)
+  function BaseMessage(message)
   {
     self.message = message;
   }
 }
 
 class TextMessage : BaseMessage {
-  public function TextMessage(message)
+  function TextMessage(message)
   {
     base(message); 
   }
 }
 
 class Wrapper {
-  public function Wrapper(messageProxy)
+  function Wrapper(messageProxy)
   {
     msg = messageProxy(1);
     
     self.messageProxy = messageProxy;
   }
-  public function call()
+  function call()
   {
     self.messageProxy();
   }

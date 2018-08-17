@@ -1,10 +1,10 @@
 //{"Expect": "FAIL", "Reason": "Constructor for class Base is not defined"}
 class Base {
-  public function toString() { return "[Base]"; }
+  function toString() { return "[Base]"; }
 }
 
 class Child : Base {
-  public function getBase() { return base(); }
+  function getBase() { return base(); }
 }
 
 child = Child();

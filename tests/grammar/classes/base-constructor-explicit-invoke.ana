@@ -1,5 +1,5 @@
 class Exception {
-  public function Exception(message)
+  function Exception(message)
   {
     print("To verify Exception contructor happens");
     self.message = message;
@@ -7,7 +7,7 @@ class Exception {
 }
 
 class IndexOutOfBoundsException : Exception {
-  public function IndexOutOfBoundsException(message)
+  function IndexOutOfBoundsException(message)
   {
     // the base is not called automatically, because it doesn't have 0
     // arguments

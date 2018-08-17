@@ -1,17 +1,17 @@
 //{"Expect": "FAIL", "Reason": "Base constructor can only be called inside constructor"}
 class BaseMessage {
-  public function BaseMessage(message)
+  function BaseMessage(message)
   {
     self.message = message;
   }
 }
 
 class TextMessage : BaseMessage {
-  public function TextMessage(message)
+  function TextMessage(message)
   {
     base(message); 
   }
-  public function setMessage()
+  function setMessage()
   {
     base(1);
   }
@@ -19,8 +19,6 @@ class TextMessage : BaseMessage {
 
 msg = TextMessage("Hello World");
 
-
 print(msg.message);
-
 
 msg.setMessage();

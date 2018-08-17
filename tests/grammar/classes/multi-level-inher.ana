@@ -1,40 +1,39 @@
 class Grandparent {
-  public function Grandparent()
+  function Grandparent()
   {
     print("Constructing Grandparent");
   }
 
-  public function getGrandParentName() 
+  function getGrandParentName() 
   {
     return "Grandparent";
   }
 }
 
 class Parent : Grandparent {
-  public function Parent()
+  function Parent()
   {
     print("Constructing Parent base is (" + base + ")");
   }
-  public function getParentName() 
+  function getParentName() 
   { 
     return "Parent"; 
   }
 }
 
 class Child : Parent {
-  public function Child()
+  function Child()
   {
     print("Constructing child base is (" + base + ")");
   } 
-  public function getChildName() 
+  function getChildName() 
   { 
     return "" + self; 
   }
 }
 
 class Wrapped {
-
-  public function Wrapped(adapter)
+  function Wrapped(adapter)
   {
     self.adapter = adapter;
   }

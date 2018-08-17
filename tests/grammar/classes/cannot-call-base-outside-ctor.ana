@@ -1,8 +1,8 @@
 //{"Expect": "FAIL", "Reason": "Try to invoke constructor outside method"}
 class Foo { }
 class FooBar : Foo {
-  public function FooBar() {}
-  public function getThis() { return base; } 
+  function FooBar() {}
+  function getThis() { return base; } 
 }
 
 bar = FooBar();

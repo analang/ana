@@ -1,18 +1,18 @@
 class Object {
-  public function toString() 
+  function toString() 
   {
     return "" + self;
   }
 }
 
 class Runtime : Object {
-  public function Runtime()
+  function Runtime()
   {
     self._state = -1;
     self._self = self;  
   }
   
-  public function getState()
+  function getState()
   {
     return self._state;
   }

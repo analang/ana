@@ -1,4 +1,4 @@
-TODO: July 4, 2018
+TODO: August 17, 2018
 OOP:
   - Instance of operator
   - Exceptions a core class type
@@ -7,17 +7,3 @@ CLASSES:
   - Chained constructor calling. Right now it is single inher
   - Chained property access, via all base classes
   - Remove self requirement for class instance variables
-
-FUNCTIONS:
-  - Function Expressionis
-
-Import Statements:
-  - Should be straightforward
-
-
-Statements must not have a value pushed onto the stack,
-however, in the cast of expression statements, the value IS pushed onto the
-stack, we solve this by keeping track of the loop, and making sure to pop
-all values off the stack before jumping to the top. There should be a better
-way to do this at compile time. To figure out if an expression statement should
-have it's value popped
