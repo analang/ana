@@ -13,13 +13,18 @@
 typedef struct _ana_module 
 {
   ana_object  base;
+
   ana_object *name;
+  ana_object *code;
   ana_object *members; /* Modules can have variables, functions, 
                           and classes, all key value pairs (ana_map) */
+  ana_object *jump_targets;
+  ana_object *line_mapping;
 } ana_module;
 
-COMO_OBJECT_API ana_object *ana_module_new(ana_object *name, 
-  ana_object *members);
+COMO_OBJECT_API ana_object *ana_module_new(char *name);
+
+#define ana_get_module(obj) ((ana_module *)((obj)))
 
 extern ana_type ana_module_type;
 

@@ -4,7 +4,7 @@
 
 #include <ana.h>
 
-COMO_OBJECT_API ana_object *ana_module_new(ana_object *name, ana_object *members)
+COMO_OBJECT_API ana_object *ana_module_new(char *name)
 {
   ana_module *module = malloc(sizeof(*module));
 
@@ -13,8 +13,9 @@ COMO_OBJECT_API ana_object *ana_module_new(ana_object *name, ana_object *members
   module->base.flags = 0;
   module->base.refcount = 0;
   module->base.is_tracked = 0;
-  module->name = name;
-  module->members = members;
+
+  module->name    = ana_stringfromstring(name);
+  module->members = ana_map_new(4);
 
   return (ana_object *)module;
 }

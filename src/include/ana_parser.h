@@ -63,37 +63,34 @@ typedef void* yyscan_t;
     T_STR_LIT = 262,
     T_FUNCTION = 263,
     T_CLASS = 264,
-    T_PUBLIC = 265,
-    T_PROTECTED = 266,
-    T_PRIVATE = 267,
-    T_NEW = 268,
-    T_IMPORT = 269,
-    T_AS = 270,
-    T_LTE = 271,
-    T_GTE = 272,
-    T_NEQ = 273,
-    T_INC = 274,
-    T_DEC = 275,
-    T_LA = 276,
-    T_LO = 277,
-    T_BT = 278,
-    T_BF = 279,
-    T_LS = 280,
-    T_RS = 281,
-    T_VARARG = 282,
-    T_IF = 283,
-    T_ELSE_IF = 284,
-    T_ELSE = 285,
-    T_FOR = 286,
-    T_FOREACH = 287,
-    T_WHILE = 288,
-    T_CONTINUE = 289,
-    T_BREAK = 290,
-    T_RETURN = 291,
-    T_IN = 292,
-    T_THROW = 293,
-    T_TRY = 294,
-    T_CATCH = 295,
+    T_NEW = 265,
+    T_IMPORT = 266,
+    T_AS = 267,
+    T_LTE = 268,
+    T_GTE = 269,
+    T_NEQ = 270,
+    T_INC = 271,
+    T_DEC = 272,
+    T_LA = 273,
+    T_LO = 274,
+    T_BT = 275,
+    T_BF = 276,
+    T_LS = 277,
+    T_RS = 278,
+    T_VARARG = 279,
+    T_IF = 280,
+    T_ELSE_IF = 281,
+    T_ELSE = 282,
+    T_FOR = 283,
+    T_FOREACH = 284,
+    T_WHILE = 285,
+    T_CONTINUE = 286,
+    T_BREAK = 287,
+    T_RETURN = 288,
+    T_IN = 289,
+    T_THROW = 290,
+    T_TRY = 291,
+    T_CATCH = 292,
     UNDEFINED = 2
   };
 #endif
@@ -106,37 +103,34 @@ typedef void* yyscan_t;
 #define T_STR_LIT 262
 #define T_FUNCTION 263
 #define T_CLASS 264
-#define T_PUBLIC 265
-#define T_PROTECTED 266
-#define T_PRIVATE 267
-#define T_NEW 268
-#define T_IMPORT 269
-#define T_AS 270
-#define T_LTE 271
-#define T_GTE 272
-#define T_NEQ 273
-#define T_INC 274
-#define T_DEC 275
-#define T_LA 276
-#define T_LO 277
-#define T_BT 278
-#define T_BF 279
-#define T_LS 280
-#define T_RS 281
-#define T_VARARG 282
-#define T_IF 283
-#define T_ELSE_IF 284
-#define T_ELSE 285
-#define T_FOR 286
-#define T_FOREACH 287
-#define T_WHILE 288
-#define T_CONTINUE 289
-#define T_BREAK 290
-#define T_RETURN 291
-#define T_IN 292
-#define T_THROW 293
-#define T_TRY 294
-#define T_CATCH 295
+#define T_NEW 265
+#define T_IMPORT 266
+#define T_AS 267
+#define T_LTE 268
+#define T_GTE 269
+#define T_NEQ 270
+#define T_INC 271
+#define T_DEC 272
+#define T_LA 273
+#define T_LO 274
+#define T_BT 275
+#define T_BF 276
+#define T_LS 277
+#define T_RS 278
+#define T_VARARG 279
+#define T_IF 280
+#define T_ELSE_IF 281
+#define T_ELSE 282
+#define T_FOR 283
+#define T_FOREACH 284
+#define T_WHILE 285
+#define T_CONTINUE 286
+#define T_BREAK 287
+#define T_RETURN 288
+#define T_IN 289
+#define T_THROW 290
+#define T_TRY 291
+#define T_CATCH 292
 #define UNDEFINED 2
 
 /* Value type.  */
@@ -151,7 +145,6 @@ union YYSTYPE
   char* id;
   char* stringliteral; 
   node *ast;
-  node_kind token;
 
 
 };

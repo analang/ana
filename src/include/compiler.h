@@ -17,5 +17,7 @@ typedef struct ana_compile_state {
 } ana_compile_state;
 
 ana_function *ana_compileast(ana_vm *vm, ana_compile_state *compile_state);
+ana_module *ana_compilemodule(ana_vm *vm, ana_compile_state *state, char *modname);
+
 
 #endif

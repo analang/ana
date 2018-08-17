@@ -5,7 +5,7 @@
 #   error "Please do not include array.h directly"
 #endif
 
-typedef struct _ana_array 
+typedef struct _ana_array
 {
   ana_object base;
   ana_size_t size;

@@ -138,9 +138,6 @@ D   [0-9]
 "function"  { return T_FUNCTION;  }
 "func"      { return T_FUNCTION;  }
 "class"     { return T_CLASS;     }
-"public"    { return T_PUBLIC;    }
-"private"   { return T_PRIVATE;   }
-"protected" { return T_PROTECTED; }
 "import"    { return T_IMPORT;    }
 "throw"     { return T_THROW;     }
 "new"       { return T_NEW;       }

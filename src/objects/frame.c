@@ -20,6 +20,7 @@ ana_frame *ana_frame_new(
   obj->base.is_tracked = 0;
 
   obj->code             = code;
+  obj->flags            = 0;
   obj->pc               = 0;
   obj->current_line     = 0;
   obj->stack            = malloc(sizeof(ana_object *) * COMO_FRAME_STACK_SIZE); 
@@ -90,7 +91,10 @@ static void frame_dtor(ana_object *obj)
 
   free(self->stack);
 
-  ana_object_dtor(self->locals);
+  if(!(self->flags & COMO_FRAME_MODULE))
+  {
+    ana_object_dtor(self->locals);
+  }
 
   free(self);
 }

@@ -1270,3 +1270,24 @@ ana_function *ana_compileast(ana_vm *vm, ana_compile_state *state)
   
   return ana_get_function(func);
 }
+
+ana_module *ana_compilemodule(ana_vm *vm, ana_compile_state *state, char *modname)
+{
+  ana_object *func = ana_function_defn_new(state->filename, modname);
+
+  ana_compile_builtins(vm, ANA_GET_FUNCTION(func), state->ast);
+
+  ana_compile_unit(vm, func, state->ast);
+
+  ana_compile_return_statement(vm, ANA_GET_FUNCTION_DEF(func));
+  
+  ana_module *module = (ana_module *)ana_module_new(modname);
+
+  module->code = ana_get_function_defn(func)->code;
+  module->jump_targets = ana_get_function_defn(func)->jump_targets;
+  module->line_mapping = ana_get_function_defn(func)->line_mapping;
+
+  //ana_object_dtor(func);
+
+  return module;
+}

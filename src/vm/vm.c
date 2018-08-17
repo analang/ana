@@ -788,7 +788,21 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *instance = pop();
           arg = ana_get_array(vm->symbols)->items[argvalue];
 
-          if(ana_type_is(instance, ana_map_type)) 
+          if(ana_type_is(instance, ana_module_type))
+          {
+            ana_object *res = ana_map_get(ana_get_module(instance)->members, 
+              arg);
+
+            if(res)
+            {
+              push(res);
+            }
+            else
+            {
+              set_except("KeyError", "%s", ana_cstring(arg));
+            }              
+          }
+          else if(ana_type_is(instance, ana_map_type)) 
           {
             ana_object *res = ana_map_get(instance, arg);
 

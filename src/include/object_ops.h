@@ -133,9 +133,26 @@ static char *get_real_path(ana_object *pathobj)
   return rpath;
 }
 
+static int compile_file(char *path, FILE *fp, ana_parser_state *state)
+{
+  int retval;
+
+  retval = ana_astfromfile(
+    fp, path, 0, NULL, state);
+
+  if(retval != 0)
+  {
+    Ana_SetError("SyntaxError", "%s", state->error);
+    return 1;
+  }
+
+  return retval;
+}
+
 static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
 { 
   char *path = get_real_path(pathobj);
+  int retval = 0;
 
   if(path == NULL)
   {
@@ -153,10 +170,52 @@ static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
     goto import_error;
   }
 
+  ana_parser_state parser_state;
+  parser_state.debug = 0;
+  parser_state.arena = ana_arena_new();
+
+  int status = compile_file(path, fp, &parser_state);
+
+  if(status != 0)
+  {
+    retval = 1;
+    goto exit;
+  }
+
+  ana_compile_state compile_state;
+  compile_state.ast = parser_state.ast;
+  compile_state.filename = (char *)path;
+
+  ana_module *code = ana_compilemodule(vm, &compile_state, 
+    ana_cstring(pathobj));
+
+  ana_frame *execframe = ana_frame_new(
+    code->code,
+    code->jump_targets, 
+    code->line_mapping, 
+    vm->global_frame->locals,
+    code->name, 
+    frame,
+    frame->current_line,
+    pathobj
+  );
+
+  execframe->flags |= COMO_FRAME_MODULE;
+
+  ana_map_put(frame->locals, pathobj, (ana_object *)code);
+
+  COMO_VM_PUSH_FRAME(frame);
+  COMO_VM_PUSH_FRAME(execframe);
+
+  code->members = execframe->locals;
+  
+  exit:
+
+  ana_arena_free(parser_state.arena);
 
   free(path);
 
-  return 1;
+  return retval;
 }
 
 static inline int invoke_function(

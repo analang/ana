@@ -56,7 +56,6 @@ typedef void* yyscan_t;
   char* id;
   char* stringliteral; 
   node *ast;
-  node_kind token;
 }
 
 
@@ -71,9 +70,6 @@ typedef void* yyscan_t;
 
 %token T_FUNCTION "keyword function"
 %token T_CLASS "keyword class"
-%token T_PUBLIC "keyword public"
-%token T_PROTECTED "keyword protected"
-%token T_PRIVATE "keyword private"
 %token T_NEW "keyword new"
 %token T_IMPORT "keyword import"
 %token T_AS "keyword as"
@@ -126,8 +122,6 @@ typedef void* yyscan_t;
 %type<ast> function_params function_param optional_parameter_list jump_statement
 %type<ast> throw_stmt
 %type<ast> optional_extends
-
-%type<token> access_modifier
 
 %initial-action
 {
@@ -387,18 +381,6 @@ function_expression:
   }
 ;
 
-access_modifier:
-  T_PUBLIC {
-    $$ = COMO_AST_PUBLIC;
-  }
-  | T_PROTECTED {
-    $$ = COMO_AST_PROTECTED;
-  } 
-  | T_PRIVATE {
-    $$ = COMO_AST_PRIVATE;
-  }
-;
-
 class_statements:
   class_statements class_statement { 
     $$ = $1;  
@@ -409,8 +391,8 @@ class_statements:
   }
  
 class_statement:
-  access_modifier function_def { 
-    $$ = class_method_node(pstate, $1, $2);
+  function_def { 
+    $$ = class_method_node(pstate, 0, $1);
   }
 ;
 
