@@ -1,0 +1,10 @@
+class List {
+  function List()
+  {
+    self._items = [];
+  }
+  function add(item)
+  {
+    self._items.push(item);
+  }
+}
