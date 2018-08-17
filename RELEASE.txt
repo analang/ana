@@ -1,0 +1,13 @@
+8/17/2018
+
+Annoucing Ana 0.0.1
+
+- Implemented features:
+  - Referenced counted garabage collection with cycle detection
+  - Built in types, map, array, string, int, float
+  - Modules. via the `import` statement
+  - C based API (More work needed, but is available)
+  - Multi level OOP support, with multi layered inheritence
+  - First class functions
+  - foreach statements, (array, and map)
+

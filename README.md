@@ -17,11 +17,11 @@ Ana is a Python, PHP, and C inspired dynamically typed scripting language that i
 ```
 class Hello 
 {
-    func sayHello()
+    function sayHello()
     {
         print('Hello World');
     }
 }
 
-Hello().sayHello()
+Hello().sayHello();
 ```
