@@ -149,7 +149,8 @@ static int compile_file(char *path, FILE *fp, ana_parser_state *state)
   return retval;
 }
 
-static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
+static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *alias, 
+  ana_object *pathobj)
 { 
   char *path = get_real_path(pathobj);
   int retval = 0;
@@ -204,7 +205,7 @@ static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
 
   GC_TRACK(vm, code);
 
-  ana_map_put(frame->locals, pathobj, (ana_object *)code);
+  ana_map_put(frame->locals, alias, (ana_object *)code);
 
   COMO_VM_PUSH_FRAME(frame);
   COMO_VM_PUSH_FRAME(execframe);

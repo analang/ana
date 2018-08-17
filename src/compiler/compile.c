@@ -640,6 +640,7 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       }
 
       buffer = malloc(len + importlist->nchild + 1);
+      ana_object *alias;
 
       ana_array_foreach(import_tree, index, value) {
         (void)index;
@@ -647,15 +648,19 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
         memcpy(buffer + pos, val, ana_get_string(value)->len);
         pos += ana_get_string(value)->len;
         
-        if(index + 1 != ana_get_array(import_tree)->size)
+        if(index + 1 != ana_get_array(import_tree)->size) 
+        {
           *(buffer + pos++) = '.'; 
+        }
+        else
+        {
+          alias = ana_stringfromstring(val);
+        }
 
         ana_object_dtor(value);
       } ana_array_foreach_end();
 
       buffer[pos] = '\0';
-
-      ana_object_dtor(import_tree);
 
       name = buffer;
       
@@ -666,8 +671,12 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
       }
       else
       {
-        EMITX(vm, func, IIMPORT, NEW_STR_CONST(vm, name), 0, ast);
+        EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, ana_cstring(alias)), 0, ast);
+        EMITX(vm, func, IIMPORT,    NEW_STR_CONST(vm, name), 0, ast);
       }
+
+      ana_object_dtor(import_tree);
+      ana_object_dtor(alias);
 
       free(buffer);
       

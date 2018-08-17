@@ -245,9 +245,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         }
         vm_target(IIMPORT)
         {
+          ana_object *alias = pop();
           ana_object *path = ana_array_get(vm->constants, (long)oparg);
 
-          if(import_file(vm, frame, path) != 0)
+          if(import_file(vm, frame, alias, path) != 0)
           {
             vm_continue();
           }
