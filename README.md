@@ -16,24 +16,34 @@ Ana is a Python, PHP, and C inspired dynamically typed scripting language that i
 -	first class functions
 
 ```javascript
+import String;
+
 class Logger 
 {
-    function Logger()
+    function Logger(buffered)
     {
+      self._buffered = buffered;
       self._lines = [];
     }
 
     function log(fmt, ...args)
     {
       line = String.format(fmt, args);
-      
-      self._lines.push(line);
+
+      if(!_buffered)
+      {
+        print(line); 
+      }
+      else 
+      {
+        self._lines.push(line);
+      }
     }
 }
 
-logger = Logger();
+logger = Logger(false);
 
 logger.log("{}", "Welcome to Ana Lang v.0.0.1");
 ```
 
-To run this example, simply execute `ana logger.ana` at your shell of choice.
+To run this example, simply execute `ana logger.ana` at your shell of choice. Hint: Make sure `String.ana` is located in the directory of `logger.ana`. It's located in the `lib` directory.
