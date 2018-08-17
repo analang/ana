@@ -1,0 +1,26 @@
+dist: trusty
+sudo: required
+language: c 
+addons:
+  apt:
+    packages:
+      - make
+      - autoconf 
+      - bison 
+      - flex 
+      - python3 
+      - valgrind
+
+notifications:
+  email:
+    on_failure: change
+
+cache:
+  apt: true
+
+before_script:
+    - make
+    - chmod +x automation/test-launcher.sh
+
+script:
+  - automation/test-launcher.sh
