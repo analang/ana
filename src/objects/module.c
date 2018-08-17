@@ -4,7 +4,7 @@
 
 #include <ana.h>
 
-COMO_OBJECT_API ana_object *ana_module_new(char *name)
+COMO_OBJECT_API ana_object *ana_module_new(char *name, ana_object *func)
 {
   ana_module *module = malloc(sizeof(*module));
 
@@ -15,7 +15,7 @@ COMO_OBJECT_API ana_object *ana_module_new(char *name)
   module->base.is_tracked = 0;
 
   module->name    = ana_stringfromstring(name);
-  module->members = ana_map_new(4);
+  module->func    = func;
 
   return (ana_object *)module;
 }
@@ -29,7 +29,13 @@ static void module_print(ana_object *ob)
 
 static inline void module_dtor(ana_object *ob)
 {
-  free(ob);
+  ana_module *self = ana_get_module(ob);
+
+  ana_object_dtor(self->name);
+  ana_object_dtor(self->members);
+  ana_object_dtor(self->func);
+
+  free(self);
 }
 
 static ana_object *module_string(ana_object *obj)

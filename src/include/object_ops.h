@@ -190,11 +190,11 @@ static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
     ana_cstring(pathobj));
 
   ana_frame *execframe = ana_frame_new(
-    code->code,
-    code->jump_targets, 
-    code->line_mapping, 
+    ana_get_function_defn(code->func)->code,
+    ana_get_function_defn(code->func)->jump_targets, 
+    ana_get_function_defn(code->func)->line_mapping, 
     vm->global_frame->locals,
-    code->name, 
+    code->name,
     frame,
     frame->current_line,
     pathobj
@@ -202,16 +202,23 @@ static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *pathobj)
 
   execframe->flags |= COMO_FRAME_MODULE;
 
+  GC_TRACK(vm, code);
+
   ana_map_put(frame->locals, pathobj, (ana_object *)code);
 
   COMO_VM_PUSH_FRAME(frame);
   COMO_VM_PUSH_FRAME(execframe);
 
   code->members = execframe->locals;
-  
+
   exit:
 
   ana_arena_free(parser_state.arena);
+
+  if(fp != NULL)
+  {
+    fclose(fp);
+  }
 
   free(path);
 

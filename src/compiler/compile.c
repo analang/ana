@@ -1281,13 +1281,7 @@ ana_module *ana_compilemodule(ana_vm *vm, ana_compile_state *state, char *modnam
 
   ana_compile_return_statement(vm, ANA_GET_FUNCTION_DEF(func));
   
-  ana_module *module = (ana_module *)ana_module_new(modname);
-
-  module->code = ana_get_function_defn(func)->code;
-  module->jump_targets = ana_get_function_defn(func)->jump_targets;
-  module->line_mapping = ana_get_function_defn(func)->line_mapping;
-
-  //ana_object_dtor(func);
-
+  ana_module *module = (ana_module *)ana_module_new(modname, func);
+  
   return module;
 }
