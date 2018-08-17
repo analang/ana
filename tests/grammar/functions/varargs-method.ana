@@ -1,12 +1,12 @@
 class Foo { 
-  public function bar(...args) { 
+  function bar(...args) { 
     print(args); 
   } 
 }
 Foo().bar(1,2,3, [1,2,3]);
 
 class Foo { 
-  public function bar(fmt, ...args) {
+  function bar(fmt, ...args) {
     print(fmt); 
     print(args); 
   } 
