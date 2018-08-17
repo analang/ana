@@ -4,6 +4,7 @@ import os
 import sys
 import signal
 import json
+import fcntl
 import platform
 import traceback
 from xml.dom import minidom
@@ -25,7 +26,8 @@ def valgrind_test(valgrind, anapath, fullpath):
   readfd = pipefds[0]
   writefd = pipefds[1]
   childex = None
-  os.set_blocking(readfd, False)
+  fl = fcntl.fcntl(readfd, fcntl.F_GETFL)
+  fcntl.fcntl(readfd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
   devnull = open("/dev/null");
 
   pid = os.fork()
