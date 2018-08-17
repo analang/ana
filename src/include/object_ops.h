@@ -106,11 +106,97 @@ static inline int setup_args(ana_vm *vm, ana_frame *frame,
   return retval;
 }
 
-static char *get_real_path(ana_object *pathobj)
+/**
+ TODO Unit test this exception 
+ */
+static char *get_relative_dir(ana_frame *frame)
 {
+  ana_object *curr_file_copy = ana_stringfromstring(ana_cstring(frame->filename));
+  ana_object *parts = ana_array_new(4);
+  char *path = ana_cstring(curr_file_copy);
+  char part[50];
+  size_t i = 0;
+
+  while(*path)
+  {
+    if(*path == '/')
+    {
+      part[i] = '\0';
+      ana_array_push(parts, ana_stringfromstring(part));
+      memset(part, '\0', sizeof(part));
+      i = 0;
+    }
+    else
+    {
+      if(i == sizeof(part) - 1)
+      {
+        Ana_SetError("ImportError", "Directory path is too large");
+
+        ana_object_dtor(parts);
+        ana_object_dtor(curr_file_copy);
+
+        return NULL;
+      }
+      else
+      {
+        part[i++] = *path;
+      }
+    }
+
+    path++;
+  }
+
+  size_t buffsize = 1;
+  i = 0;
+  char *buffer;
+
+  ana_array_foreach(parts, index, value)
+  {
+    (void)index;
+    buffsize += ana_get_string(value)->len + 1;
+  } ana_array_foreach_end();
+
+  buffer = malloc(buffsize);
+
+  ana_array_foreach(parts, index, value)
+  {
+    (void)index;
+
+    memcpy(buffer + i, ana_cstring(value), ana_get_string(value)->len);
+    i += ana_get_string(value)->len;
+    memcpy(buffer + i, "/", 1);
+    i += 1;
+  } ana_array_foreach_end();
+
+  buffer[i] = '\0';
+
+
+  ana_array_foreach(parts, index, value)
+  {
+    (void)index;
+
+    ana_object_dtor(value);
+
+  } ana_array_foreach_end();
+
+
+  ana_object_dtor(parts);
+  ana_object_dtor(curr_file_copy);
+
+  return buffer;
+}
+
+static char *get_real_path(ana_frame *frame, ana_object *pathobj)
+{
+  char *relative_path = get_relative_dir(frame);
+
+  if(!relative_path)
+  {
+    return NULL;
+  }
+
   ana_object *pathobjcopy = ana_stringfromstring(ana_cstring(pathobj));
   char *pathwithext = NULL;
-  char *rpath;
   char *path = ana_cstring(pathobjcopy);
 
   while(*path)
@@ -124,13 +210,12 @@ static char *get_real_path(ana_object *pathobj)
   }
 
   path = ana_cstring(pathobjcopy);
-  pathwithext = ana_build_str("%s.ana", path);
-  rpath = realpath(pathwithext, NULL);
+  pathwithext = ana_build_str("%s%s.ana", relative_path, path);
 
-  free(pathwithext);
+  free(relative_path);
   ana_object_dtor(pathobjcopy);
 
-  return rpath;
+  return pathwithext;
 }
 
 static int compile_file(char *path, FILE *fp, ana_parser_state *state)
@@ -152,7 +237,7 @@ static int compile_file(char *path, FILE *fp, ana_parser_state *state)
 static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *alias, 
   ana_object *pathobj)
 { 
-  char *path = get_real_path(pathobj);
+  char *path = get_real_path(frame, pathobj);
   int retval = 0;
 
   if(path == NULL)

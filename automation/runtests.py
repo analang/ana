@@ -113,6 +113,8 @@ def valgrind_test(valgrind, anapath, fullpath):
 def run_test(anapath, basedir, testpath):
   fullpath = basedir + "/" + testpath
 
+  print(fullpath)
+
   contents = open(fullpath).read().split(os.linesep)
   expecation = "PASS"
   stdin_data = None
@@ -208,6 +210,7 @@ def main():
 
 
   if only_one_dir:
+    print("Running one test: `%s`" % only_one_dir)
     return run_test(ana, basepath, only_one_dir)
 
   for dir in files:
