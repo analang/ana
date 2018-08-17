@@ -1,0 +1,38 @@
+class Object
+{
+  function Object()
+  {
+    self._logger = 1;
+  }
+  
+  function getLogger()
+  {
+    return self._logger;
+  }
+
+  function toString()
+  {
+    return "[Object]";
+  }
+}
+
+class BaseObject: Object {
+
+}
+
+class ObjectImpl: BaseObject {
+
+}
+
+bar = ObjectImpl();
+
+print(bar.toString());
+
+bar._logger = "Hello Logger";
+
+print(bar._logger);
+
+if(!(bar._logger == bar.getLogger()))
+{
+  throw "bar._logger != bar.getLogger()";
+}

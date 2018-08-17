@@ -1,0 +1,14 @@
+class PropertyHolder
+{
+  function put()
+  {
+
+  }
+}
+
+ph = PropertyHolder();
+
+ph.put = 1;
+
+print(ph.put);
+

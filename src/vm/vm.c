@@ -744,7 +744,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
             ana_map_put(instance, arg, value);
 
-
             incref_recursively(value);
             
             if(!opflag)  
@@ -763,22 +762,54 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           } 
           else  
           {
-            ana_instance *theinstance = (ana_instance*)instance;
 
-            ana_object *prev = ana_map_get(theinstance->properties, arg);
 
-            if(prev)
+            //--- Begin chained resolution --------------------------
+            ana_instance *ins = ana_get_instance(instance);
+            ana_object *res = NULL;
+
+            while(ins)
             {
-              decref_recursively(prev);
+              res = ana_map_get(ins->self->members, arg);
+
+              if(res)
+              {
+                Ana_SetError(AnaTypeError, "Property `%s` is read-only", 
+                  ana_cstring(arg));
+                
+                vm_continue();
+              }
+                
+              if(!res)
+              {
+                res = ana_map_get(ins->properties, arg);
+              }
+
+              if(res)
+              {
+                decref_recursively(res);
+
+                res = ana_map_put(ins->properties, arg, value);
+
+                incref_recursively(value);
+
+                break;
+              }
+
+              ins = ana_get_instance(ins->base_instance);
             }
 
-            ana_object *res = ana_map_put(theinstance->properties, arg, value);
-
-            incref_recursively(value);
 
             if(!res)
-              assert(res);
+            {
+              res = ana_map_put(
+                ana_get_instance(instance)->properties, 
+                arg, 
+                value
+              );
+            }
 
+            //----------------------------------------------------
             if(!opflag)
               push(res);
           } 
