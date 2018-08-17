@@ -7,6 +7,5 @@ class String
 {
   function format(fmt, ...args)
   {
-    throw FormatException();
   }
 }

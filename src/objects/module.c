@@ -34,7 +34,8 @@ static inline void module_dtor(ana_object *ob)
   ana_object_dtor(self->name);
   ana_object_dtor(self->members);
   ana_object_dtor(self->func);
-
+  ana_object_dtor(self->filename);
+  
   free(self);
 }
 
