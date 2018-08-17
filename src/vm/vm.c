@@ -615,6 +615,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *exvalue = ana_stringfromstring(ex == NULL ? ana_excep : ex);
           
           GC_TRACK(vm, exvalue);
+          
           ana_map_put(frame->locals, arg, exvalue);
           
           if(ex) 

@@ -227,7 +227,7 @@ static int compile_file(char *path, FILE *fp, ana_parser_state *state)
 
   if(retval != 0)
   {
-    Ana_SetError("SyntaxError", "%s", state->error);
+    Ana_SetError("ImportError", "%s", state->error);
     return 1;
   }
 
