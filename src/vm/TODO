@@ -6,4 +6,3 @@ OOP:
 CLASSES:
   - Chained constructor calling. Right now it is single inher
   - Chained property access, via all base classes
-  - Remove self requirement for class instance variables

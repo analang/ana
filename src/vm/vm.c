@@ -839,37 +839,32 @@ static ana_object *ana_frame_eval(ana_vm *vm)
              * properties
              * locals
              */
-            ana_object *res = ana_map_get(
-              ((ana_instance *)instance)->self->members, arg);
 
-            if(!res)
-            {
-              res = ana_map_get(ana_get_instance(instance)->properties, arg);
-            }
+            //--- Begin chained resolution --------------------------
+            ana_instance *ins = ana_get_instance(instance);
+            ana_object *res = NULL;
 
-            if(ana_get_instance(instance)->base_instance)
+            while(ins)
             {
-              if(!res)
-              {
-                res = ana_map_get(
-                  ana_get_instance(
-                    ana_get_instance(instance)->base_instance
-                  )->self->members, arg);          
-              }
+
+              res = ana_map_get(ins->self->members, arg);
 
               if(!res)
               {
-                res = ana_map_get(
-                  ana_get_instance(
-                    ana_get_instance(instance)->base_instance
-                  )->properties, arg);          
+                res = ana_map_get(ins->properties, arg);
               }
+
+              if(res)
+                break;
+
+              ins = ana_get_instance(ins->base_instance);
             }
+            //----------------------------------------------------
 
             if(!res)
             {
-              set_except("RuntimeError", "%s is not defined on %s instance",
-                ((ana_string *)arg)->value, 
+              Ana_SetError(AnaRuntimeError, "%s is not defined on %s instance",
+                ana_get_string(arg)->value, 
                 ana_cstring(ana_get_instance(instance)->self->name));
             }
             else

@@ -1,0 +1,16 @@
+class Object 
+{
+  function Object()
+  {
+    self._name = "Object";
+  }
+
+  function getName()
+  {
+    return _name;
+  }
+}
+
+obj = Object();
+
+print(obj.getName());

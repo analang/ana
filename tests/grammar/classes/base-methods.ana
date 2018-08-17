@@ -1,0 +1,19 @@
+class Object
+{
+  function toString()
+  {
+    return "[Object]";
+  }
+}
+
+class BaseObject: Object {
+
+}
+
+class ObjectImpl: BaseObject {
+
+}
+
+bar = ObjectImpl();
+
+print(bar.toString());
