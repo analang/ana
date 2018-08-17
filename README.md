@@ -31,7 +31,7 @@ class Logger
     }
 }
 
-log = Logger();
+logger = Logger();
 
 logger.log("{}", "Welcome to Ana Lang v.0.0.1");
 ```
