@@ -23,7 +23,7 @@ class Logger
       self._lines = [];
     }
 
-    function log(fnt, ...args)
+    function log(fmt, ...args)
     {
       line = String.format(fmt, args);
       
