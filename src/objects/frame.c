@@ -53,7 +53,8 @@ ana_frame *ana_frame_new(
   obj->filename               = filename;
   obj->caller                 = caller;
   obj->retval                 = NULL;
-
+  obj->module                 = NULL;
+  
   return obj;
 }
 

@@ -21,6 +21,7 @@
 #include "utils.h"
 #include "system.h"
 #include "anaobject.h"
+#include "module.h"
 #include "frame.h"
 #include "function.h"
 #include "vm.h"

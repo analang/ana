@@ -275,6 +275,8 @@ static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *alias,
   ana_module *code = ana_compilemodule(vm, &compile_state, 
     ana_cstring(pathobj));
 
+  code->filename = ana_stringfromstring(path);
+
   ana_frame *execframe = ana_frame_new(
     ana_get_function_defn(code->func)->code,
     ana_get_function_defn(code->func)->jump_targets, 
@@ -286,6 +288,7 @@ static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *alias,
     pathobj
   );
 
+  execframe->module = code;
   execframe->flags |= COMO_FRAME_MODULE;
 
   GC_TRACK(vm, code);
@@ -407,7 +410,9 @@ static inline int invoke_class(
   ana_vm *vm,
   ana_object *class_defn,
   int argcount,
-  ana_frame *frame)
+  ana_frame *frame,
+  ana_object *self
+  )
 {
   assert(ana_type_is(class_defn, ana_class_type));
   
@@ -430,6 +435,11 @@ static inline int invoke_class(
     ana_function *invoked_constructor = 
         (ana_function *)ana_map_get(invoked_class->members, invoked_class->name);
     ana_frame *invoked_constructor_frame = NULL;
+
+    if(self && ana_type_is(self, ana_module_type))
+    {
+      invoked_instance->module = ana_get_module(self);
+    }
 
     if(invoked_constructor)
     { 

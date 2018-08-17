@@ -79,7 +79,8 @@ COMO_OBJECT_API ana_object *ana_instance_new(ana_object *class_defn)
   obj->base_instance = NULL;
   obj->self          = (ana_class *)class_defn;
   obj->properties    = ana_map_new(4);
-
+  obj->module = NULL;
+  
   return (ana_object *)obj; 
 }
 

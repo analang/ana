@@ -47,6 +47,7 @@ struct _ana_frame {
   ana_object *filename;
   ana_frame  *caller;
   ana_object *retval;
+  ana_module *module;
 };
 
 ana_frame *ana_frame_new(

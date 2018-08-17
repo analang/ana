@@ -999,6 +999,19 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             }
           }
 
+
+          printf("current frame is %s\n", ana_cstring(frame->name));
+          if(frame->self)
+          {
+            printf("self is of type %s\n", ana_type_name(frame->self));
+          }
+
+          if(!result && frame->self && ana_get_instance(frame->self)->module)
+          {
+            result = ana_map_get(ana_get_instance(frame->self)->module->members, 
+              thename);
+          }
+
           if(result) 
           {
             push(result);
@@ -1393,7 +1406,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                 fn->name, 
                 frame,
                 current_line,
-                frame->filename
+                fn->filename
               );
 
               if(setup_args(vm, frame, execframe, fn, totalargs) != 0)
@@ -1432,7 +1445,9 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                   vm->self_symbol, real_self);
 
                 execframe->self = real_self;
+                ana_get_instance(execframe->self)->module= i->module;
               }
+
 
               COMO_VM_PUSH_FRAME(frame);
               COMO_VM_PUSH_FRAME(execframe);
@@ -1548,7 +1563,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           else if(ana_type_is(callable, ana_class_type))
           {
             /* This happens on a class property assign to a class */
-            if(invoke_class(vm, callable, totalargs, frame) == 0)
+            if(invoke_class(vm, callable, totalargs, frame, self) == 0)
             {
               vm_continue();
             }
@@ -1583,7 +1598,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           else if(ana_type_is(callable, ana_class_type))
           {
             /* This happens on a class property assign to a class */
-            if(invoke_class(vm, callable, (int)oparg, frame) == 0)
+            if(invoke_class(vm, callable, (int)oparg, frame, NULL) == 0)
             {
               vm_continue();
             }
@@ -1836,10 +1851,13 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
         ana_object_dtor(pc);
 
+        ana_object *filename;
+        filename = frame->filename;
+        
         fprintf(stdout, "%s: %s\n    in %s:%d\n", 
           the_type, 
           the_message, 
-          ana_cstring(frame->filename), 
+          ana_cstring(filename), 
           current_line
         );
 

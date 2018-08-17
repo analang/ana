@@ -18,6 +18,7 @@ typedef struct _ana_module
   ana_object *code;
   ana_object *members; /* Modules can have variables, functions, 
                           and classes, all key value pairs (ana_map) */
+  ana_object *filename;
   ana_object *func;
 } ana_module;
 
