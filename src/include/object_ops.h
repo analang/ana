@@ -341,7 +341,7 @@ static inline int invoke_function(
         fn->name, 
         frame,
         frame->current_line,
-        fn->filename
+        frame->filename
       );
 
       if(self)
@@ -441,7 +441,7 @@ static inline int invoke_class(
         invoked_constructor->name, 
         frame,
         frame->current_line,
-        invoked_constructor->filename
+        frame->filename
       );
 
       ana_map_put(invoked_constructor_frame->locals, vm->self_symbol, 

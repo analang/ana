@@ -1393,7 +1393,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                 fn->name, 
                 frame,
                 current_line,
-                fn->filename
+                frame->filename
               );
 
               if(setup_args(vm, frame, execframe, fn, totalargs) != 0)
@@ -1685,7 +1685,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                   c_func->name, 
                   frame,
                   current_line,
-                  c_func->filename
+                  frame->filename
                 );
 
                 ana_map_put(execframe->locals, 
