@@ -1,3 +1,4 @@
+//{"Expect": "FAIL", "Reason": "Illegal assignment of read-only property"}
 class PropertyHolder
 {
   function put()

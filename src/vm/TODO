@@ -4,5 +4,3 @@ OOP:
   - Exceptions a core class type
 
 CLASSES:
-  - Chained constructor calling. Right now it is single inher
-  - Chained property access, via all base classes
