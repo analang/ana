@@ -347,6 +347,9 @@ static inline int invoke_function(
         frame->filename
       );
 
+      if(frame->module)
+        execframe->module = frame->module;
+
       if(self)
       {
         ana_map_put(execframe->locals, vm->self_symbol, self);

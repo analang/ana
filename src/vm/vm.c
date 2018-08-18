@@ -1005,6 +1005,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             result = ana_map_get(ana_get_instance(frame->self)->module->members, 
               thename);
           }
+          if(!result && frame->module)
+          {
+            result = ana_map_get(frame->module->members, 
+              thename);
+          }
 
           if(result) 
           {
@@ -1403,6 +1408,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                 frame->filename
               );
 
+
               if(setup_args(vm, frame, execframe, fn, totalargs) != 0)
               {
                 ana_object_dtor(execframe);
@@ -1442,6 +1448,10 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                 ana_get_instance(execframe->self)->module= i->module;
               }
 
+              if(ana_type_is(self, ana_module_type))
+              {
+                execframe->module = ana_get_module(self);
+              }
 
               COMO_VM_PUSH_FRAME(frame);
               COMO_VM_PUSH_FRAME(execframe);
