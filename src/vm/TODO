@@ -1,6 +1,15 @@
-TODO: August 17, 2018
+TODO: August 18, 2018
+
+- Need to make more test cases for the import statements
+- Implement binary bitwise operations
+- Determine if all types operate on standard operators in an expected way
+- Implement the REPL
+- All instances of the `throw` operation should not convert the operand to a 
+  string, need full support for an Exception type in the main loop
+- compiler errors, that are useful
+- Real C api that is easy to use, with full support for extensions to the main 
+  types
+
 OOP:
   - Instance of operator
   - Exceptions a core class type
-
-CLASSES:
