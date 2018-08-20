@@ -1264,6 +1264,14 @@ static void ana_compile_builtins(ana_vm *vm, ana_function *funcobj, node *ast)
   EMITX(vm, func, LOAD_CONST, NEW_FUNCTION_CONST(vm, print_handler), 0, ast);
   EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "print"), 0,  ast);
   EMITX(vm, func, DEFINE_FUNCTION, 0, 0, ast);
+
+
+  ana_object *int_handler =
+    ana_functionfromhandler(ana_cstring(funcobj->filename), "int",
+        ana__builtin_int);
+  EMITX(vm, func, LOAD_CONST, NEW_FUNCTION_CONST(vm, int_handler), 0, ast);
+  EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "int"), 0,  ast);
+  EMITX(vm, func, DEFINE_FUNCTION, 0, 0, ast);
 }
 
 
