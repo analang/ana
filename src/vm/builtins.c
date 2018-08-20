@@ -96,6 +96,12 @@ ana_object *ana__builtin_int(ana_object *args)
         {
           lval = lval * 10 + (str->value[i] - '0');
         }
+        else
+        {
+          Ana_SetError("ArgumentError", "Cannot convert string to integer");
+
+          return NULL;
+        }
       }
 
       return ana_longfromlong(lval);
