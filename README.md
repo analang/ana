@@ -5,6 +5,8 @@ Ana is a Python, PHP, and C inspired dynamically typed scripting language that i
 
 ## Features
 
+-   virtual machine
+-   source to bytecode compiler, intepreted by the VM
 -	classes with single layered inheritance
 -	dynamically sized arrays
 -	built in hash map support
