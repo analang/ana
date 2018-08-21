@@ -1,0 +1,19 @@
+class Foo {
+  function Foo()
+  {
+    self.value = 0;
+  }
+
+  function increment()
+  {
+    return value++;
+  }
+}
+
+foo = Foo();
+
+foo.increment();
+print(foo.value);
+
+foo.increment();
+print(foo.value);

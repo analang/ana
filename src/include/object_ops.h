@@ -352,6 +352,8 @@ static inline int invoke_function(
 
       if(self)
       {
+        execframe->self = self;
+
         ana_map_put(execframe->locals, vm->self_symbol, self);
       }
 

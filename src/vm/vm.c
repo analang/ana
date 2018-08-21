@@ -949,29 +949,64 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           vm_continue();
         }
         vm_target(STORE_NAME) {
+
           ana_object *thename = ana_array_get(vm->symbols, oparg);
           result = pop();
+          ana_object *oldvalue = NULL;
+          ana_instance *ins = NULL;
+
+          if(frame->self)
           {
-            ana_object *oldvalue;
+            ins = ana_get_instance(frame->self);
 
-            oldvalue = ana_map_get(locals, thename);
-
-            if(oldvalue)
+            while(ins)
             {
-              if(ana_get_base(oldvalue)->refcount > 0)
+              oldvalue = ana_map_get(ins->self->members, arg);
+
+              if(oldvalue)
               {
+                Ana_SetError(AnaTypeError, "Property `%s` is read-only", 
+                  ana_cstring(arg));
                 
-                #ifdef ANA_GC_DEBUG
-                printf("decreasing refcount for %p, old %ld\n",
-                  (void *)oldvalue, ana_get_base(oldvalue)->refcount);
-                #endif
-                decref_recursively(ana_get_base(oldvalue));
+                vm_continue();
               }
-            }       
+                
+              if(!oldvalue)
+              {
+                oldvalue = ana_map_get(ins->properties, arg);
+              }
+
+              if(oldvalue)
+              {
+                break;
+              }
+
+              ins = ana_get_instance(ins->base_instance);
+            }
+
+          }
+          else
+          {
+            oldvalue = ana_map_get(locals, thename);
           }
 
-          ana_map_put(locals, thename, result);
-          
+
+          if(oldvalue)
+          {
+
+            decref_recursively(ana_get_base(oldvalue));          
+          }       
+
+
+          if(!frame->self)
+          {
+            ana_map_put(locals, thename, result);
+          }
+          else
+          {
+            ana_map_put(ana_get_instance(frame->self)->properties, thename, result);
+          }
+
           result->refcount++;
 
           if(!opflag) 
