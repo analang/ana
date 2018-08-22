@@ -618,12 +618,9 @@ static inline ana_object *getindex(ana_vm *vm, ana_object *container,
 
     if(!ana_type_is(container, ana_array_type) 
       && !ana_type_is(container, ana_map_type)) 
-      {
+    {
         GC_TRACK(vm, res);
-      }
-
-
-    res->refcount++;
+    }
 
     return res;
   }

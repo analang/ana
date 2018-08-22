@@ -882,10 +882,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
               assert(ins->self);
               assert(ins->self->members);
 
-              printf("arg is:\n");
-              ana_object_print(arg);
-              printf("\ndone\n");
-              
               res = ana_map_get(ins->self->members, arg);
 
               if(!res)

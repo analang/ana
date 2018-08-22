@@ -13,3 +13,8 @@ TODO: August 18, 2018
 OOP:
   - Instance of operator
   - Exceptions a core class type
+
+- Instances:
+- LOAD_NAME, STORE_NAME:
+  - determine if is in instance, and should look into instance properties
+  - ensure ++, --, work directly on the class instance properties
