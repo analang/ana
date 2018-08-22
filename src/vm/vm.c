@@ -879,6 +879,13 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             while(ins)
             {
 
+              assert(ins->self);
+              assert(ins->self->members);
+
+              printf("arg is:\n");
+              ana_object_print(arg);
+              printf("\ndone\n");
+              
               res = ana_map_get(ins->self->members, arg);
 
               if(!res)
@@ -957,6 +964,8 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           if(frame->self)
           {
+            assert(ana_type_is(ins, ana_instance_type));
+
             ins = ana_get_instance(frame->self);
 
             while(ins)
@@ -1022,9 +1031,11 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           if(!result && frame->self != NULL)
           {
-            ana_class *instance = (ana_class *)frame->self;
+            assert(ana_type_is(frame->self, ana_instance_type));
 
-            result = ana_map_get(instance->members, thename);
+            ana_instance *instance = (ana_instance *)frame->self;
+
+            result = ana_map_get(instance->properties, thename);
           }
 
           if(!result)

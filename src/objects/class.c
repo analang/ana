@@ -78,6 +78,7 @@ COMO_OBJECT_API ana_object *ana_instance_new(ana_object *class_defn)
 
   obj->base_instance = NULL;
   obj->self          = (ana_class *)class_defn;
+  ana_get_base(obj->self)->refcount++;
   obj->properties    = ana_map_new(4);
   obj->module = NULL;
   
@@ -114,6 +115,8 @@ static void instance_print(ana_object *obj)
 static void instance_dtor(ana_object *obj)
 {  
   ana_instance *self = (ana_instance *)obj;
+
+  ana_get_base(self->self)->refcount--;
 
   ana_object_dtor(self->properties);
   

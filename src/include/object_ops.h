@@ -350,8 +350,9 @@ static inline int invoke_function(
       if(frame->module)
         execframe->module = frame->module;
 
-      if(self)
+      if(self && ana_type_is(self, ana_instance_type))
       {
+        printf("invoke_function: setting self to instance\n");
         execframe->self = self;
 
         ana_map_put(execframe->locals, vm->self_symbol, self);
@@ -616,8 +617,13 @@ static inline ana_object *getindex(ana_vm *vm, ana_object *container,
     }
 
     if(!ana_type_is(container, ana_array_type) 
-      && !ana_type_is(container, ana_map_type))
+      && !ana_type_is(container, ana_map_type)) 
+      {
         GC_TRACK(vm, res);
+      }
+
+
+    res->refcount++;
 
     return res;
   }
