@@ -960,7 +960,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
           if(frame->self)
           {
-            assert(ana_type_is(ins, ana_instance_type));
+            assert(ana_type_is(frame->self, ana_instance_type));
 
             ins = ana_get_instance(frame->self);
 
