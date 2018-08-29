@@ -2,7 +2,8 @@
 #include <assert.h>
 
 ana_frame *ana_frame_new(
-  ana_object *code, 
+  unsigned int *code, 
+  ana_size_t code_size,
   ana_object *jumptargets, 
   ana_object *line_mapping, 
   ana_object *global_variables, 
@@ -20,6 +21,7 @@ ana_frame *ana_frame_new(
   obj->base.is_tracked = 0;
 
   obj->code             = code;
+  obj->code_size        = code_size;
   obj->flags            = 0;
   obj->pc               = 0;
   obj->current_line     = 0;

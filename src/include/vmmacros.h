@@ -47,8 +47,7 @@
 
 
 #define fetch() do { \
-  assert(frame->pc >= 0 && frame->pc < ana_container_size(frame->code)); \
-  \
+  assert(frame->line_mapping); \
   ana_object *pc = ana_longfromlong((long)frame->pc); \
   ana_object *theline = ana_map_get(frame->line_mapping, pc); \
   \
@@ -61,15 +60,15 @@
   } \
   ana_object_dtor(pc); \
   \
-  opline = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
+  opline = *(code + frame->pc); \
   opcode = (opline >> 24) & 0xff; \
   oparg = (opline >> 8) & 0xffff; \
   opflag =  (opline) & 0xff; \
   frame->pc++;  \
   \
-  if(frame->pc != ana_container_size(frame->code)) \
+  if(frame->pc != frame->code_size) \
   { \
-    ana_uint32_t next_op_line = (ana_uint32_t)((unsigned long)(code[frame->pc])); \
+    ana_uint32_t next_op_line = *(code + frame->pc); \
     next_op_code = (next_op_line >> 24) & 0xff; \
   } \
   else { \

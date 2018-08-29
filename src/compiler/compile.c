@@ -20,10 +20,7 @@
 
 /* represent the address of the next instruction */
 #define CURRENT_ADDRESS() \
-  (ana_longfromlong((long)ana_container_size(func->code)))
-
-#define EMIT(func, opcode, arg, flag) \
-  ana_code_push(func->code, PACK_INSTRUCTION(opcode, arg, flag));
+  (ana_longfromlong((long)func->code_size))
 
 #define NEW_INT_CONST(vm, value) \
   (ana_array_push(vm->constants, ana_longfromlong((long)(value))), ana_array_size(vm->constants) - 1)
@@ -40,10 +37,35 @@
 #define NEW_DOUBLE_CONST(vm, value) \
   (ana_array_push(vm->constants, ana_doublefromdouble(value)), ana_array_size(vm->constants) - 1)
 
+
+#define ana_code_push(func, value) do { \
+  if(func->code_size >= func->code_capacity) \
+  { \
+    ana_size_t new_size = func->code_capacity * 2; \
+    if(new_size < func->code_capacity) \
+    { \
+      ana_error_noreturn("failed to allocate a code block"); \
+    } \
+    unsigned int *new_code = realloc(func->code, sizeof(unsigned int) * new_size); \
+    if(!new_code) \
+    { \
+      ana_error_noreturn("failed to allocate a code block, tried %ld bytes", new_size); \
+    } \
+    func->code_capacity = new_size; \
+    func->code = new_code; \
+  } \
+  *(func->code + func->code_size) = value; \
+  func->code_size++; \
+} while(0)
+
+
+#define EMIT(func, opcode, arg, flag) \
+  ana_code_push(func, PACK_INSTRUCTION(opcode, arg, flag))
+
 #define EMITX(vm, func, opcode, arg, flag, ast) do { \
   EMIT(func, opcode, arg, flag); \
   ana_map_put(func->line_mapping, \
-      ana_longfromlong(ana_container_size(func->code)), \
+      ana_longfromlong(func->code_size), \
       ana_longfromlong((long)ast->line) \
   ); \
 } while(0)
@@ -232,7 +254,7 @@ static void compile_try(ana_vm *vm, ana_object *parentfuncobj, node *stmt)
   EMITX(vm, parentfunc, JMP, jmptargetindex_skipexhandler, 0, catchbody);
   
   ana_array_push_index(parentfunc->jump_targets, jmptargetindex_exhandler,
-    ana_longfromlong((long)ana_container_size(parentfunc->code)));
+    ana_longfromlong((long)parentfunc->code_size));
 
   assert(exceptionvar->kind == COMO_AST_ID);
   
@@ -244,7 +266,7 @@ static void compile_try(ana_vm *vm, ana_object *parentfuncobj, node *stmt)
   ana_compile_unit(vm, parentfuncobj, catchbody);
 
   ana_array_push_index(parentfunc->jump_targets, jmptargetindex_skipexhandler,
-    ana_longfromlong((long)ana_container_size(parentfunc->code)));
+    ana_longfromlong((long)parentfunc->code_size));
 }
 
 /*
@@ -400,7 +422,7 @@ static void compile_if(ana_vm *vm, ana_object *funcobj,
 
   EMITX(vm, func, JMP, jmptargetindex_pass, 0, body);
 
-  ana_size_t start_of_else = ana_container_size(func->code);
+  ana_size_t start_of_else = func->code_size;
 
   if(else_statement)
     ana_compile_unit_ex(vm, funcobj, else_statement, 
@@ -410,7 +432,7 @@ static void compile_if(ana_vm *vm, ana_object *funcobj,
     ana_longfromlong((long)start_of_else));
 
   ana_array_push_index(func->jump_targets, jmptargetindex_pass,
-    ana_longfromlong((long)ana_container_size(func->code)));
+    ana_longfromlong((long)func->code_size));
 }
 
 static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
@@ -435,7 +457,7 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
   EMITX(vm, func, BEGIN_LOOP, 0, 0, body);
 
   ana_array_push(func->jump_targets, 
-    ana_longfromlong((long)ana_container_size(func->code))); 
+    ana_longfromlong((long)func->code_size)); 
 
   int jmptargetindex_start = ana_array_size(func->jump_targets) - 1;
 
@@ -451,9 +473,9 @@ static void compile_while(ana_vm *vm, ana_object *funcobj, node *ast)
   EMITX(vm, func, JMP, jmptargetindex_start, 0, body);
 
   ana_array_push_index(func->jump_targets, jmptargetindex_skiphandler,
-    ana_longfromlong((long)ana_container_size(func->code)));
+    ana_longfromlong((long)func->code_size));
 
-  ana_size_t end = ana_container_size(func->code);
+  ana_size_t end = func->code_size;
 
   EMITX(vm, func, END_LOOP, 0, 0, body);
 
@@ -494,7 +516,7 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
   EMITX(vm, func, BEGIN_LOOP, 0, 0, init);
 
   ana_array_push(func->jump_targets, 
-    ana_longfromlong((long)ana_container_size(func->code))); 
+    ana_longfromlong((long)func->code_size));
 
   int jmptargetindex_start = ana_array_size(func->jump_targets) - 1;
 
@@ -506,7 +528,7 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
     &break_address_index, &continue_address_index);
 
   ana_array_push_index(func->jump_targets, continue_address_index,
-    ana_longfromlong((long)ana_container_size(func->code)));
+    ana_longfromlong((long)func->code_size));
 
   ana_compile_unit(vm, funcobj, loop);
 
@@ -515,9 +537,9 @@ static void compile_for(ana_vm *vm, ana_object *funcobj, node *ast)
   EMITX(vm, func, JMP, jmptargetindex_start, 0, loop);
 
   ana_array_push_index(func->jump_targets, jmptargetindex_skiphandler,
-    ana_longfromlong((long)ana_container_size(func->code)));
+    ana_longfromlong((long)func->code_size));
 
-  ana_size_t end = ana_container_size(func->code);
+  ana_size_t end = func->code_size;
 
   ana_array_push_index(func->jump_targets, break_address_index,
     ana_longfromlong((long)end));
@@ -556,7 +578,7 @@ static void compile_foreach(ana_vm *vm, ana_object *funcobj, node *ast)
 
   ana_array_push_index(func->jump_targets, exit_address,
     ana_longfromlong(
-      (long)ana_container_size(func->code)
+      (long)func->code_size
     )
   );
 
@@ -901,7 +923,8 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
           ana_compile_unit(vm, funcobj, ast->children[1]);
           EMITX(vm, func, IMINUS, 0, 0, ast);
           break;  
-        TARGET(COMO_AST_ASSIGN) {
+        TARGET(COMO_AST_ASSIGN) 
+        {
           /* Check property */
           node *left = ast->children[0];
 
@@ -927,11 +950,20 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
           {
             assert(left->kind == COMO_AST_ID);
             node_id *name = (node_id *)ast->children[0];
-
             ana_compile_unit(vm, funcobj, ast->children[1]);
 
             EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, name->value), 0, ast);
           }
+          break;
+        }
+        TARGET(COMO_AST_PLUS_ASSIGN)
+        {
+          assert(ast->children[0]->kind == COMO_AST_ID);
+          node_id *name = (node_id *)ast->children[0];
+          ana_compile_unit(vm, funcobj, ast->children[0]);
+          ana_compile_unit(vm, funcobj, ast->children[1]);
+          EMITX(vm, func, IADD, 0, 0, ast);
+          EMITX(vm, func, STORE_NAME, NEW_SYMBOL(vm, name->value), 0, ast);
           break;
         }
         TARGET(COMO_AST_MUL) {
@@ -1196,12 +1228,18 @@ static void ana_compile_builtins(ana_vm *vm, ana_function *funcobj, node *ast)
   EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "print"), 0,  ast);
   EMITX(vm, func, DEFINE_FUNCTION, 0, 0, ast);
 
-
   ana_object *int_handler =
     ana_functionfromhandler(ana_cstring(funcobj->filename), "int",
         ana__builtin_int);
   EMITX(vm, func, LOAD_CONST, NEW_FUNCTION_CONST(vm, int_handler), 0, ast);
   EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "int"), 0,  ast);
+  EMITX(vm, func, DEFINE_FUNCTION, 0, 0, ast);
+
+  ana_object *typeof_handler =
+    ana_functionfromhandler(ana_cstring(funcobj->filename), "typeof",
+        ana__builtin_typeof);
+  EMITX(vm, func, LOAD_CONST, NEW_FUNCTION_CONST(vm, typeof_handler), 0, ast);
+  EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, "typeof"), 0,  ast);
   EMITX(vm, func, DEFINE_FUNCTION, 0, 0, ast);
 }
 

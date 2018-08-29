@@ -61,5 +61,6 @@ static const char * const kind_str[] = {
   "COMO_AST_PUBLIC",
   "COMO_AST_PRIVATE",
   "COMO_AST_THROW",
+  "COMO_AST_PLUS_ASSIGN",
   "COMO_AST_TOP"
 };

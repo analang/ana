@@ -88,6 +88,7 @@ typedef enum node_kind {
   COMO_AST_PUBLIC,
   COMO_AST_PRIVATE,
   COMO_AST_THROW,
+  COMO_AST_PLUS_ASSIGN,
   COMO_AST_TOP  /* Represents the root of the graph */
 } node_kind;
 
@@ -163,7 +164,6 @@ node *compound_if_node(ana_parser_state *state,
 node *break_node(ana_parser_state *state);
 node *continue_node(ana_parser_state *state);
 node *vararg_node(ana_parser_state *state, char *name);
-
 node *postfix_node(ana_parser_state *state, node *left, int type);
 
 int ana_astfromfile(

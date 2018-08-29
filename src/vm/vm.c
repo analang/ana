@@ -203,7 +203,6 @@ static inline void trace_frame(ana_vm *vm, ana_frame *frame)
 static ana_object *ana_frame_eval(ana_vm *vm)
 {
   ana_frame *frame;
-  ana_uint32_t **code;
   ana_long **jmptargets;
   ana_object **constants;
   ana_object *locals;
@@ -220,7 +219,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
     frame = COMO_VM_POP_FRAME();
     vm->base_frame = frame;
 
-    code = (ana_uint32_t **)(((ana_container *)frame->code)->data);
+    unsigned int *code = frame->code;
     jmptargets = (ana_long **)(((ana_array *)frame->jump_targets)->items);
     constants = (ana_object **)(((ana_array *)vm->constants)->items);
     locals = frame->locals;
@@ -290,8 +289,12 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
           else
           {
-            push(iterator);
+            if(!next->is_tracked)
+            {
+              GC_TRACK(vm, next);
+            }
 
+            push(iterator);
             push(next);
           }
 
@@ -1402,6 +1405,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
               ana_frame *execframe = ana_frame_new(
                 call->code,
+                call->code_size,
                 call->jump_targets, 
                 call->line_mapping, 
                 BASE_FRAME->locals,
@@ -1695,6 +1699,7 @@ static ana_object *ana_frame_eval(ana_vm *vm)
         
                 ana_frame *execframe = ana_frame_new(
                   c_func_def->code,
+                  c_func_def->code_size,
                   c_func_def->jump_targets, 
                   c_func_def->line_mapping, 
                   BASE_FRAME->locals,
@@ -2245,6 +2250,7 @@ static int trace_function(ana_vm *vm, char *function_name)
 
   ana_frame *firstframe = ana_frame_new(
     func->code,
+    func->code_size,
     func->jump_targets, 
     func->line_mapping, 
     NULL,
@@ -2278,6 +2284,7 @@ int ana_eval(ana_vm *vm, ana_function *functionobj, char *function)
 
   ana_frame *firstframe = ana_frame_new(
     func->code,
+    func->code_size,
     func->jump_targets, 
     func->line_mapping, 
     NULL,

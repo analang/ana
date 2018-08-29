@@ -1,0 +1,3 @@
+foreach(i in "Ryan") { 
+  print(i); 
+}

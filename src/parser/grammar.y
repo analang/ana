@@ -84,6 +84,7 @@ typedef void* yyscan_t;
 %token T_LS "<<"
 %token T_RS ">>"
 %token T_VARARG "..."
+%token T_PLUS_EQUAL "+="
 
 %token T_IF       "keyword if"
 %token T_ELSE_IF  "keyword else if"
@@ -588,6 +589,11 @@ assignment_expression:
   basic_expression { $$ = $1; }
 | unary_expression '=' assignment_expression { 
     $$ = binary_op(pstate, COMO_AST_ASSIGN);
+    add_child(pstate, $$, $1);
+    add_child(pstate, $$, $3);
+  }
+| unary_expression T_PLUS_EQUAL assignment_expression {
+    $$ = binary_op(pstate, COMO_AST_PLUS_ASSIGN);
     add_child(pstate, $$, $1);
     add_child(pstate, $$, $3);
   }

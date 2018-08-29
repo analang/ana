@@ -6,11 +6,11 @@ LFLAGS=--noline --outfile=parser/ana_lexer.c --header-file=include/ana_lexer.h
 LDLIBS = -lm
 LDFLAGS=-rdynamic
 OBJECTS=ana_parser.o ana_lexer.o ana.o ast.o arena.o compile.o \
-array.o bool.o code.o container.o double.o frame.o function.o long.o map.o \
+array.o bool.o double.o frame.o function.o long.o map.o \
 string.o builtins.o ana_debug.o class.o vm.o anaruntime.o anaio.o
 
 MEM_OBJECTS=anamem.o ana_parser.o ana_lexer.o ast.o arena.o compile.o \
-array.o bool.o code.o container.o double.o frame.o function.o long.o map.o \
+array.o bool.o double.o frame.o function.o long.o map.o \
 string.o builtins.o ana_debug.o class.o vm.o anaruntime.o anaio.o
 
 PREFIX=/usr/local
@@ -29,8 +29,6 @@ ana: $(OBJECTS)
 	../bin/ana_debug.o \
 	../bin/array.o \
 	../bin/bool.o \
-	../bin/code.o \
-	../bin/container.o \
 	../bin/double.o \
 	../bin/frame.o \
 	../bin/function.o \
@@ -56,8 +54,6 @@ anamem: $(MEM_OBJECTS)
 	../bin/ana_debug.o \
 	../bin/array.o \
 	../bin/bool.o \
-	../bin/code.o \
-	../bin/container.o \
 	../bin/double.o \
 	../bin/frame.o \
 	../bin/function.o \
@@ -118,12 +114,6 @@ array.o: objects/array.c
 	$(CC) $(CFLAGS) -c $< -o ../bin/$@
 
 bool.o: objects/bool.c
-	$(CC) $(CFLAGS) -c $< -o ../bin/$@
-
-code.o: objects/code.c
-	$(CC) $(CFLAGS) -c $< -o ../bin/$@
-
-container.o: objects/container.c
 	$(CC) $(CFLAGS) -c $< -o ../bin/$@
 
 double.o: objects/double.c

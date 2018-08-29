@@ -142,6 +142,7 @@ D   [0-9]
 "<="        { return T_LTE;       }
 ">="        { return T_GTE;       }
 "++"        { return T_INC;       }
+"+="        { return T_PLUS_EQUAL;}
 "--"        { return T_DEC;       }
 "=="        { return T_EQ;        }
 "!="        { return T_NEQ;       }

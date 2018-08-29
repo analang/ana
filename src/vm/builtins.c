@@ -118,3 +118,19 @@ ana_object *ana__builtin_int(ana_object *args)
 
   return NULL;
 } 
+
+ana_object *ana__builtin_typeof(ana_object *args)
+{
+  ana_object *arg;
+
+  if(ana_array_size(args) != 1)
+  {
+    Ana_SetError("ArgumentError", "typeof() expects exactly 1 argument");
+
+    return NULL;
+  }  
+
+  arg = ana_get_array(args)->items[0];
+
+  return ana_stringfromstring((char *)ana_type_name(arg));
+}

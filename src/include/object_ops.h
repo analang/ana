@@ -130,6 +130,7 @@ static inline int invoke_function(
 
       ana_frame *execframe = ana_frame_new(
         call->code,
+        call->code_size,
         call->jump_targets, 
         call->line_mapping, 
         vm->global_frame->locals,
@@ -233,6 +234,7 @@ static inline int invoke_class(
     { 
       invoked_constructor_frame = (ana_frame *)ana_frame_new(
         ana_get_function_defn(invoked_constructor)->code,
+        ana_get_function_defn(invoked_constructor)->code_size,
         ana_get_function_defn(invoked_constructor)->jump_targets, 
         ana_get_function_defn(invoked_constructor)->line_mapping, 
         vm->global_frame->locals,

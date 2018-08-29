@@ -12,6 +12,14 @@ typedef struct _ana_string {
   char *value;
 } ana_string;
 
+typedef struct _ana_string_iterator ana_string_iterator;
+
+struct _ana_string_iterator {
+  ana_object base;
+  ana_string *string;
+  ana_size_t position;
+};
+
 COMO_OBJECT_API ana_object *ana_stringfromstring(char *val);
 COMO_OBJECT_API void ana_string_type_init(ana_vm *vm);
 COMO_OBJECT_API void ana_string_type_finalize(ana_vm *vm);
@@ -20,5 +28,6 @@ COMO_OBJECT_API void ana_string_type_finalize(ana_vm *vm);
 #define ana_cstring(o) (((ana_string *)(o))->value)
 
 extern ana_type ana_string_type;
+extern ana_type ana_string_iterator_type;
 
 #endif

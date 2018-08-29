@@ -10,8 +10,10 @@ static ana_function_defn *ana_new_function_defn(void)
   obj->base.refcount = 0;
   obj->base.is_tracked = 0;
 
-  obj->parameters   = ana_array_new(4);
-  obj->code         = ana_code_new(COMO_CODE_SIZE);
+  obj->parameters    = ana_array_new(4);
+  obj->code          = malloc(sizeof(unsigned int) * COMO_CODE_SIZE);
+  obj->code_size     = 0;
+  obj->code_capacity = COMO_CODE_SIZE;
   obj->line_mapping = ana_map_new(4);
   obj->jump_targets = ana_array_new(4);
  
@@ -50,7 +52,7 @@ static void function_dtor(ana_object *obj)
     ana_array_foreach_apply(self->func->parameters, ana_object_dtor);
     ana_object_dtor(self->func->parameters);
 
-    ana_object_dtor(self->func->code);
+    free(self->func->code);
 
     ana_map_foreach_kv_apply(self->func->line_mapping, ana_object_dtor);
     ana_object_dtor(self->func->line_mapping);

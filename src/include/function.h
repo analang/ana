@@ -5,6 +5,7 @@
 #   error "Please do not include function.h directly"
 #endif
 
+#define COMO_CODE_SIZE              16
 #define COMO_FUNCTION_LANG          (1 << 0)
 #define COMO_FUNCTION_NATIVE        (1 << 1)
 #define COMO_FUNCTION_METHOD        (1 << 2)
@@ -19,9 +20,11 @@ typedef struct ana_bounded_function ana_bounded_function;
 
 /* Represents a compile time function definition */
 typedef struct _ana_function_def {
-  ana_object  base;
-  ana_object *parameters;
-  ana_object *code;
+  ana_object   base;
+  ana_object   *parameters;
+  unsigned int *code;
+  ana_size_t code_size;
+  ana_size_t code_capacity;
   ana_object *line_mapping; /* code to source line mapping */
   ana_object *jump_targets;
 } ana_function_defn;

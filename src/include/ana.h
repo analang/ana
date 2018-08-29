@@ -25,14 +25,12 @@
 #include "function.h"
 #include "vm.h"
 #include "anabool.h"
-#include "container.h"
 #include "class.h"
 #include "array.h"
 #include "anastring.h"
 #include "map.h"
 #include "long.h"
 #include "double.h"
-#include "code.h"
 #include "arena.h"
 
 #define LIKELY(x)       __builtin_expect(!!(x), 1)

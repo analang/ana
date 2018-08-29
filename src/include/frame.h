@@ -29,7 +29,8 @@ struct _ana_frame {
   /* 24 bytes */
   ana_object  base;
   ana_size_t flags;
-  ana_object *code;             /* this is not allocated or deallocated here, it's provided by a function defn */
+  unsigned int *code;           /* this is not allocated or deallocated here, it's provided by a function defn */
+  ana_size_t  code_size;
   ana_size_t  current_line;     /* Current line of code being executed */
   ana_size_t  pc;               /* current index into the code array, reset to 0 at EOO (end of execution) */
   ana_object **stack;           /* this is dynamically allocated */
@@ -50,14 +51,15 @@ struct _ana_frame {
 };
 
 ana_frame *ana_frame_new(
-  ana_object *code, 
-  ana_object *jumptargets, 
-  ana_object *line_mapping, 
-  ana_object *global_variables, 
-  ana_object *name, 
-  ana_frame  *caller, 
+  unsigned int *code, 
+  ana_size_t code_size,
+  ana_object   *jumptargets, 
+  ana_object   *line_mapping, 
+  ana_object   *global_variables, 
+  ana_object   *name, 
+  ana_frame    *caller, 
   int line, 
-  ana_object *filename
+  ana_object   *filename
 );
 
 #define ana_get_frame(o) ((ana_frame *)((o)))
@@ -72,7 +74,6 @@ COMO_OBJECT_API void ana_frame_growstack(ana_object *);
 #define COMO_FRAME_CONSTANTS_SIZE 8
 #define COMO_FRAME_LOCALS_SIZE    8
 #define COMO_FRAME_MAX_OBJECTS    16
-#define COMO_CODE_SIZE            8
 #define COMO_PARAMS_SIZE          4
 #define COMO_BLOCK_STACK_MAX      16
 #define COMO_FRAME_DEFN           (1 << 0)

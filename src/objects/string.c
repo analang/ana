@@ -341,6 +341,75 @@ static ana_object *string_less_than_or_equal(ana_object *strobj, ana_object *rig
   return ana_boolfromint(result <= 0 ? 1 : 0);
 }
 
+static ana_object *string_iterator_get(ana_object *obj)
+{ 
+  obj->refcount++;
+
+  ana_string_iterator *iter = malloc(sizeof(*iter));
+
+  iter->base.flags = 0;
+  iter->base.refcount = 0;
+  iter->base.type = &ana_string_iterator_type;
+  iter->base.next = NULL;
+
+  iter->string = (ana_string *)obj;
+  iter->position = 0;
+
+  return (ana_object *)iter;
+}
+
+static ana_object *ana_string_iterator_next(ana_string_iterator *iter)
+{
+  if(iter->position == iter->string->len)
+    return NULL;
+
+  return ana_stringfromstringandlen(&iter->string->value[iter->position++], 1);
+}
+
+static void string_iterator_dtor(ana_object *iterobj)
+{ 
+  ana_string_iterator *iter = (ana_string_iterator *)iterobj;
+
+  ana_get_base(iter->string)->refcount--;
+
+  free(iter);
+}
+
+static void string_iterator_print(ana_object *obj)
+{
+  printf("<string.iterator at %p>", (void *)obj);
+}
+
+static ana_object *string_iterator_string(ana_object *obj)
+{
+  char *val = ana_build_str("<string.iterator at %p>", (void *)obj);
+
+  ana_object *retval = ana_stringfromstring(val);
+
+  free(val);
+
+  return retval;
+}
+
+ana_type ana_string_iterator_type = {
+  .obj_name    = "string.iterator",
+  .obj_print   = string_iterator_print,
+  .obj_dtor    = string_iterator_dtor,
+  .obj_equals  = NULL,
+  .obj_bool    = NULL,
+  .obj_hash    = NULL,
+  .obj_str     = string_iterator_string,
+  .obj_init    = NULL,
+  .obj_deinit  = NULL,
+  .obj_binops  = NULL,
+  .obj_unops   = NULL,
+  .obj_compops = NULL,
+  .obj_seqops  = NULL,
+  .obj_get_attr  = NULL,
+  .obj_props     = NULL,
+  .obj_iter      = NULL,
+  .obj_iter_next = (ana_iterator_function)ana_string_iterator_next
+};
 
 static ana_comparison_ops compops = {
   .obj_eq  = string_equals_wrap,
@@ -382,7 +451,7 @@ ana_type ana_string_type = {
   .obj_seqops   = &seqops,
   .obj_get_attr = NULL,
   .obj_props    = NULL,
-  .obj_iter     = NULL,
+  .obj_iter     = string_iterator_get,
   .obj_iter_next = NULL
 };
 
