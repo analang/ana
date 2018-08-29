@@ -1,7 +1,0 @@
-import string;
-
-String = string.String();
-
-result = String.format("{}", "Hello World");
-
-print(result);

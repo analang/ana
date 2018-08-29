@@ -47,18 +47,17 @@ struct _ana_frame {
   ana_object *filename;
   ana_frame  *caller;
   ana_object *retval;
-  ana_module *module;
 };
 
 ana_frame *ana_frame_new(
-    ana_object *code, 
-    ana_object *jumptargets, 
-    ana_object *line_mapping, 
-    ana_object *global_variables, 
-    ana_object *name, 
-    ana_frame  *caller, 
-    int line, 
-    ana_object *filename
+  ana_object *code, 
+  ana_object *jumptargets, 
+  ana_object *line_mapping, 
+  ana_object *global_variables, 
+  ana_object *name, 
+  ana_frame  *caller, 
+  int line, 
+  ana_object *filename
 );
 
 #define ana_get_frame(o) ((ana_frame *)((o)))
@@ -78,6 +77,5 @@ COMO_OBJECT_API void ana_frame_growstack(ana_object *);
 #define COMO_BLOCK_STACK_MAX      16
 #define COMO_FRAME_DEFN           (1 << 0)
 #define COMO_FRAME_EXEC           (1 << 1)
-#define COMO_FRAME_MODULE         (1 << 2)
 
 #endif

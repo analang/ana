@@ -7,11 +7,11 @@ LDLIBS = -lm
 LDFLAGS=-rdynamic
 OBJECTS=ana_parser.o ana_lexer.o ana.o ast.o arena.o compile.o \
 array.o bool.o code.o container.o double.o frame.o function.o long.o map.o \
-string.o builtins.o ana_debug.o class.o module.o vm.o anaruntime.o anaio.o
+string.o builtins.o ana_debug.o class.o vm.o anaruntime.o anaio.o
 
 MEM_OBJECTS=anamem.o ana_parser.o ana_lexer.o ast.o arena.o compile.o \
 array.o bool.o code.o container.o double.o frame.o function.o long.o map.o \
-string.o builtins.o ana_debug.o class.o module.o vm.o anaruntime.o anaio.o
+string.o builtins.o ana_debug.o class.o vm.o anaruntime.o anaio.o
 
 PREFIX=/usr/local
 
@@ -38,7 +38,6 @@ ana: $(OBJECTS)
 	../bin/map.o \
 	../bin/string.o \
 	../bin/class.o \
-	../bin/module.o \
 	../bin/anaruntime.o \
 	$(LDLIBS)
 	make install
@@ -66,7 +65,6 @@ anamem: $(MEM_OBJECTS)
 	../bin/map.o \
 	../bin/string.o \
 	../bin/class.o \
-	../bin/module.o \
 	../bin/anaruntime.o \
 	$(LDLIBS)
 	make install_ana_mem
@@ -117,9 +115,6 @@ builtins.o: vm/builtins.c
 	$(CC) $(CFLAGS) -c $< -o ../bin/$@
 
 array.o: objects/array.c
-	$(CC) $(CFLAGS) -c $< -o ../bin/$@
-
-module.o: objects/module.c
 	$(CC) $(CFLAGS) -c $< -o ../bin/$@
 
 bool.o: objects/bool.c

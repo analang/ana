@@ -64,33 +64,31 @@ typedef void* yyscan_t;
     T_FUNCTION = 263,
     T_CLASS = 264,
     T_NEW = 265,
-    T_IMPORT = 266,
-    T_AS = 267,
-    T_LTE = 268,
-    T_GTE = 269,
-    T_NEQ = 270,
-    T_INC = 271,
-    T_DEC = 272,
-    T_LA = 273,
-    T_LO = 274,
-    T_BT = 275,
-    T_BF = 276,
-    T_LS = 277,
-    T_RS = 278,
-    T_VARARG = 279,
-    T_IF = 280,
-    T_ELSE_IF = 281,
-    T_ELSE = 282,
-    T_FOR = 283,
-    T_FOREACH = 284,
-    T_WHILE = 285,
-    T_CONTINUE = 286,
-    T_BREAK = 287,
-    T_RETURN = 288,
-    T_IN = 289,
-    T_THROW = 290,
-    T_TRY = 291,
-    T_CATCH = 292,
+    T_LTE = 266,
+    T_GTE = 267,
+    T_NEQ = 268,
+    T_INC = 269,
+    T_DEC = 270,
+    T_LA = 271,
+    T_LO = 272,
+    T_BT = 273,
+    T_BF = 274,
+    T_LS = 275,
+    T_RS = 276,
+    T_VARARG = 277,
+    T_IF = 278,
+    T_ELSE_IF = 279,
+    T_ELSE = 280,
+    T_FOR = 281,
+    T_FOREACH = 282,
+    T_WHILE = 283,
+    T_CONTINUE = 284,
+    T_BREAK = 285,
+    T_RETURN = 286,
+    T_IN = 287,
+    T_THROW = 288,
+    T_TRY = 289,
+    T_CATCH = 290,
     UNDEFINED = 2
   };
 #endif
@@ -104,33 +102,31 @@ typedef void* yyscan_t;
 #define T_FUNCTION 263
 #define T_CLASS 264
 #define T_NEW 265
-#define T_IMPORT 266
-#define T_AS 267
-#define T_LTE 268
-#define T_GTE 269
-#define T_NEQ 270
-#define T_INC 271
-#define T_DEC 272
-#define T_LA 273
-#define T_LO 274
-#define T_BT 275
-#define T_BF 276
-#define T_LS 277
-#define T_RS 278
-#define T_VARARG 279
-#define T_IF 280
-#define T_ELSE_IF 281
-#define T_ELSE 282
-#define T_FOR 283
-#define T_FOREACH 284
-#define T_WHILE 285
-#define T_CONTINUE 286
-#define T_BREAK 287
-#define T_RETURN 288
-#define T_IN 289
-#define T_THROW 290
-#define T_TRY 291
-#define T_CATCH 292
+#define T_LTE 266
+#define T_GTE 267
+#define T_NEQ 268
+#define T_INC 269
+#define T_DEC 270
+#define T_LA 271
+#define T_LO 272
+#define T_BT 273
+#define T_BF 274
+#define T_LS 275
+#define T_RS 276
+#define T_VARARG 277
+#define T_IF 278
+#define T_ELSE_IF 279
+#define T_ELSE 280
+#define T_FOR 281
+#define T_FOREACH 282
+#define T_WHILE 283
+#define T_CONTINUE 284
+#define T_BREAK 285
+#define T_RETURN 286
+#define T_IN 287
+#define T_THROW 288
+#define T_TRY 289
+#define T_CATCH 290
 #define UNDEFINED 2
 
 /* Value type.  */

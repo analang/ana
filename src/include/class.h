@@ -18,7 +18,6 @@ typedef struct _ana_instance {
   ana_object *base_instance; /* an ana_instance type */
   ana_class *self;           /* pointer to the class of this instance */
   ana_object *properties;    /* map of instance specific properties */
-  ana_module *module;
 } ana_instance;
 
 COMO_OBJECT_API ana_object *ana_class_new(ana_object *base, 
