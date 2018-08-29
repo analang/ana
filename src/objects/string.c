@@ -363,7 +363,11 @@ static ana_object *ana_string_iterator_next(ana_string_iterator *iter)
   if(iter->position == iter->string->len)
     return NULL;
 
-  return ana_stringfromstringandlen(&iter->string->value[iter->position++], 1);
+  ana_object *retval = ana_stringfromstringandlen(&iter->string->value[iter->position++], 1);
+
+  GC_TRACK(ana_VM, retval);
+
+  return retval;
 }
 
 static void string_iterator_dtor(ana_object *iterobj)

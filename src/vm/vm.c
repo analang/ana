@@ -289,11 +289,6 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           }
           else
           {
-            if(!next->is_tracked)
-            {
-              GC_TRACK(vm, next);
-            }
-
             push(iterator);
             push(next);
           }
