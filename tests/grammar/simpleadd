@@ -1,9 +1,0 @@
-result = 2 + 2;
-
-resultcopy = result;
-
-function ret(a, b, c)
-{
-  return;
-}
-

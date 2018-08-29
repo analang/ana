@@ -1,9 +1,0 @@
-function add()
-{
-
-	print(""+1 + " DFDF");
-
-}
-
-
-add();

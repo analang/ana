@@ -1,7 +1,0 @@
-sys.argv[0];
-
-sys.argv[getindex()];
-
-sys.argv[INDEX];
-
-sys.argv[sys.get[0].foo];

@@ -1,9 +1,0 @@
-class Program
-{
-  public function main()
-  {
-    -"THIS DOES NOT WORK";
-  }
-}
-
-Program().main();

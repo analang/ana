@@ -1,8 +1,0 @@
-function setParameters(parameters)
-{
-  return { parameters : parameters };
-}
-
-parameters = ["buffer", "length"];
-
-print(setParameters(parameters).parameters == parameters);

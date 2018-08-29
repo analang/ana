@@ -1,6 +1,0 @@
-function getObject()
-{
-  return { parameters : ["buffer", "length"] };
-}
-
-print(getObject().parameters);
