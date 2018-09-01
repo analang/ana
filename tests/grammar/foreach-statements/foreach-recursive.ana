@@ -1,0 +1,28 @@
+function doPrint(val)
+{
+  if(typeof(val) == "array")
+  {
+    print("[");
+    foreach(item in val)
+    {
+      doPrint(item);
+    }
+    print("]");
+  }
+  else if(typeof(val) == "map")
+  {
+    print("{");
+    foreach(key in val)
+    {
+      print(key + ":" );
+      doPrint(val[key]);
+    }
+    print("}");
+  }
+  else
+  {
+    print(val);
+  }
+}
+
+doPrint({"attributes": [1,2,4,5, [6,7,8,9]]});

@@ -30,6 +30,5 @@ COMO_OBJECT_API ana_object *ana_instance_new(ana_object *class_defn);
 
 extern ana_type ana_class_type;
 extern ana_type ana_instance_type;
-extern ana_object *AnaBaseClassObject;
 
 #endif
