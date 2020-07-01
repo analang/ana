@@ -1,0 +1,7 @@
+function helloWorld(name) {
+    print("Hello " + name);
+}
+
+helloWorld("Friend");
+
+
