@@ -8,7 +8,7 @@ Ana is a Python, PHP, and C inspired dynamically typed scripting language that i
 
 
 ## Bytecode example. Run with `ana --opcodes tests/hello_world.ana`
-![Compilation output](/assets/Opcodes.png)
+![Compilation output](/assets/CompilationOutput.png)
 
 
 ## Features
