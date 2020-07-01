@@ -1,11 +1,19 @@
 ## Welcome to Ana
 [![Build Status](https://travis-ci.com/analang/ana.svg?branch=master)](https://travis-ci.com/analang/ana)
 
+![Hello World code sample](/assets/HelloWorld.png)
+
+
 Ana is a Python, PHP, and C inspired dynamically typed scripting language that implements object-oriented programing along with imperativeness. Learn more.
+
+
+## Bytecode example. Run with `ana --opcodes tests/hello_world.ana`
+![Compilation output](/assets/Opcodes.png)
+
 
 ## Features
 
--   virtual machine
+-   Virtual machine
 -   source to bytecode compiler, intepreted by the VM
 -	classes with single layered inheritance
 -	dynamically sized arrays
