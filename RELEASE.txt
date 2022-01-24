@@ -11,3 +11,5 @@ Annoucing Ana 0.0.1
   - First class functions
   - foreach statements, (array, and map)
 
+  ejercicio
+
