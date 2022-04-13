@@ -32,6 +32,7 @@ ana --opcodes -c 'print(1);'
 -	variadic functions
 -	simple module system
 -	built in types
+-	exceptions
 -	C based runtime extension system
 -	garbage collection
 -	first class functions
