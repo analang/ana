@@ -19,12 +19,11 @@ ana --opcodes -c 'print(1);'
 ## Bytecode example with jump targets
 
 ```
-ana --opcodes tests/grammar/if-statements/if-statement.ana
-```
+ana --opcodes tests/grammar/if-statements/if-statement.ana --function test_if_statement```
 
 ```
 Ana Virtual Machine Disassembler
-  Frame: __main__
+  Frame: test_if_statement
   Constant Table:
    Index          Value        Type
    0              <function 'r function
@@ -50,6 +49,8 @@ Ana Virtual Machine Disassembler
    20             1            long
    21             0            long
   Jump Targets:
+   0              5            long
+   1              5            long
   VM Symbols:
    0              push
    1              length
@@ -68,40 +69,13 @@ Ana Virtual Machine Disassembler
    14             test_if_statement
    15             expect
 
-0    : LOAD_CONST               0
-1    : LOAD_CONST               1
-2    : DEFINE_FUNCTION          0
-3    : LOAD_CONST               2
-4    : LOAD_CONST               3
-5    : DEFINE_FUNCTION          0
-6    : LOAD_CONST               4
-7    : LOAD_CONST               5
-8    : DEFINE_FUNCTION          0
-9    : LOAD_CONST               6
-10   : LOAD_CONST               7
-11   : DEFINE_FUNCTION          0
-12   : LOAD_CONST               10
-13   : LOAD_CONST               11
-14   : DEFINE_FUNCTION          0
-15   : LOAD_CONST               15
-16   : LOAD_CONST               16
-17   : DEFINE_FUNCTION          0
-18   : LOAD_CONST               17
-19   : LOAD_NAME                12
-20   : CALL                     1
-21   : LOAD_CONST               18
-22   : LOAD_NAME                13
-23   : CALL                     2
-24   : LOAD_CONST               19
-25   : LOAD_NAME                14
-26   : CALL                     1
-27   : LOAD_CONST               20
-28   : IUNARYMINUS              0
-29   : LOAD_NAME                15
-30   : CALL                     2
-31   : LOAD_CONST               21
-32   : IRETURN                  0
+0    : LOAD_NAME                8
+1    : JMPZ                     0
+2    : LOAD_CONST               8
+3    : IRETURN                  0
 ```
+
+
 ## Building
 - `git clone https://github.com/analang/ana`
 - `cd ana`
