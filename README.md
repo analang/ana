@@ -11,7 +11,7 @@ Ana is a Python, PHP, and C inspired dynamically typed scripting language that i
 This screenshot was produced by running:
 
 ```bash
-ana --opcodes -c 'print(1);
+ana --opcodes -c 'print(1);'
 ```
 
 ![Compilation output](/assets/CompilationOutput2.png)
