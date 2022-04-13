@@ -1,0 +1,28 @@
+function create_cycle() {
+    // create a list x
+    x = [];
+  
+    // A reference cycle is created
+    // here as x contains reference to
+    // to self
+    x.push(x);
+}
+
+//create_cycle();
+
+
+data = [];
+data.push('Hello');
+
+item = 'Ryan';
+
+data.push(item);
+
+other_data = [1,3,4];
+
+data.push(other_data);
+
+other_data = ['This is a test string'];
+
+print(data);
+print([other_data]);

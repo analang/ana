@@ -71,6 +71,9 @@ char *ex_type = NULL;
 
 #define ANA_KEY_NOT_FOUND ((void*)-1)
 
+#define ANA_GC_DEBUG1 1
+#define ANA_GC_DEBUG 1
+
 ana_vm *ana_vm_new()
 {  
   ana_vm *vm = malloc(sizeof(ana_vm));

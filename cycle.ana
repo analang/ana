@@ -1,0 +1,11 @@
+function create_cycle() {
+    // create a list x
+    x = [];
+  
+    // A reference cycle is created
+    // here as x contains reference to
+    // to self
+    x.push(x);
+}
+
+create_cycle();
