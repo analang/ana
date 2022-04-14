@@ -304,9 +304,9 @@ def main():
           else:
             if expecation != 'FAIL':
               valgrindresult = valgrind_test(valgrind, ana, fullpath)
-              if valgrindresult is not None and valgrindresult is not -1:
+              if valgrindresult is not None and valgrindresult != -1:
                 print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))
-                print(valgrindresult.decode())
+                print(valgrindresult)
                 failed +=1  
               elif valgrindresult == -1:
                 print("%s: %s/%s " % (FAIL, dir, fullpath.split("/").pop()))               
