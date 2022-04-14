@@ -4,7 +4,6 @@
 # if !(defined(COMO_BASE_INCLUDED))
 #   error "Please do not include function.h directly"
 #endif
-
 #define COMO_CODE_SIZE              16
 #define COMO_FUNCTION_LANG          (1 << 0)
 #define COMO_FUNCTION_NATIVE        (1 << 1)
@@ -28,7 +27,7 @@ typedef struct _ana_function_def {
   ana_object *line_mapping; /* code to source line mapping */
   ana_object *jump_targets;
 } ana_function_defn;
-
+	
 typedef struct _ana_function 
 {
   ana_object base;

@@ -71,6 +71,9 @@ typedef void* yyscan_t;
 %token T_FUNCTION "keyword function"
 %token T_CLASS "keyword class"
 %token T_NEW "keyword new"
+%token T_IMPORT "keyword import"
+%token T_AS "keyword as"
+
 %token T_LTE "<="
 %token T_GTE ">="
 %token T_EQ "=="
@@ -109,6 +112,7 @@ typedef void* yyscan_t;
 %type<ast> postfix_expression
 %type<ast> key opt_key_vpairs key_vpairs keyvpair
 %type<ast> class_statements class_statement class_def
+%type<ast> import_stmt dotted_name import_name optional_as_modifier
 %type<ast> trycatch_stmt stmt_group stmt relational_expression
 %type<ast> function_expression
 %type<ast> selection_stmt
@@ -140,6 +144,7 @@ statements:
 statement:
   assignment_expression ';'            { $$ = $1; }
 | function_def                         { $$ = $1; }
+| import_stmt ';'                      { $$ = $1; }
 | class_def                            { $$ = $1; }
 | trycatch_stmt                        { $$ = $1; }
 | selection_stmt                       { $$ = $1; }
@@ -247,6 +252,7 @@ if_statements:
 
 if_statement:
   assignment_expression ';' { $$ = $1; }
+| import_stmt ';'           { $$ = $1; }  
 | trycatch_stmt             { $$ = $1; }
 | selection_stmt            { $$ = $1; }
 | jump_statement ';'        { $$ = $1; }
@@ -276,10 +282,37 @@ stmt_group:
 
 stmt:
   assignment_expression ';' { $$ = $1; }
+| import_stmt ';'           { $$ = $1; }  
 | trycatch_stmt             { $$ = $1; }
 | selection_stmt            { $$ = $1; }
 | jump_statement ';'        { $$ = $1; }
 | throw_stmt ';'            { $$ = $1; }
+;
+
+import_stmt:
+  T_IMPORT dotted_name optional_as_modifier {
+    $$ = import_node(pstate, $2);
+    add_child(pstate, $$, $3);
+  }
+;
+
+dotted_name:
+// Each dotted name can be a directory, until the last 
+// one where it should be a file
+  import_name { 
+    $$ = list_node(pstate, COMO_AST_LIST); 
+    add_child(pstate, $$, $1);
+  }
+| dotted_name '.' import_name   { 
+    $$ = $1;
+    add_child(pstate, $1, $3);
+  }
+;
+
+import_name:
+  T_ID { 
+    $$ = id_node(pstate, $1);
+  }
 ;
 
 // So we don't have nested functions 
@@ -295,6 +328,7 @@ function_statements:
 
 function_statement:
   assignment_expression ';' { $$ = $1; }
+| import_stmt ';'           { $$ = $1; }  
 | trycatch_stmt             { $$ = $1; }
 | selection_stmt            { $$ = $1; }
 | jump_statement ';'        { $$ = $1; }
@@ -316,6 +350,16 @@ jump_statement:
 optional_assignment_expression:
   assignment_expression { $$ = $1; }
 | %empty { $$ = NULL; }
+;
+
+
+optional_as_modifier:
+  T_AS T_ID {
+    $$ = id_node(pstate, $2);
+  }
+| %empty { 
+    $$ = NULL; 
+  }
 ;
 
 optional_extends:

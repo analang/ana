@@ -245,6 +245,20 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           Ana_SetError("VMError", "Opcode %#04x is not implemented", opcode);
           vm_continue();
         }
+        vm_target(IIMPORT)
+        {
+          ana_object *alias = pop();
+          ana_object *path = ana_array_get(vm->constants, (long)oparg);
+
+          if(import_file(vm, frame, alias, path) != 0)
+          {
+            vm_continue();
+          }
+          else
+          {
+            goto enter;
+          }
+        }        
         vm_target(ITER) {
           /* This is the container */
           ana_object *iterable = pop();
@@ -808,7 +822,21 @@ static ana_object *ana_frame_eval(ana_vm *vm)
           ana_object *instance = pop();
           arg = ana_get_array(vm->symbols)->items[argvalue];
 
-          if(ana_type_is(instance, ana_map_type)) 
+          if(ana_type_is(instance, ana_module_type))
+          {
+            ana_object *res = ana_map_get(ana_get_module(instance)->members, 
+              arg);
+
+            if(res)
+            {
+              push(res);
+            }
+            else
+            {
+              set_except("KeyError", "%s", ana_cstring(arg));
+            }              
+          }
+          else if(ana_type_is(instance, ana_map_type)) 
           {
             ana_object *res = ana_map_get(instance, arg);
 
@@ -1013,6 +1041,17 @@ static ana_object *ana_frame_eval(ana_vm *vm)
             {
               result = ana_map_get(frame->globals, thename);
             }
+          }
+
+          if(!result && frame->self && ana_get_instance(frame->self)->module)
+          {
+            result = ana_map_get(ana_get_instance(frame->self)->module->members, 
+              thename);
+          }
+          if(!result && frame->module)
+          {
+            result = ana_map_get(frame->module->members, 
+              thename);
           }
 
           if(result) 
@@ -1450,6 +1489,12 @@ static ana_object *ana_frame_eval(ana_vm *vm)
                   vm->self_symbol, real_self);
 
                 execframe->self = real_self;
+                ana_get_instance(execframe->self)->module= i->module;
+              }
+              
+              if(ana_type_is(self, ana_module_type))
+              {
+                execframe->module = ana_get_module(self);
               }
 
               COMO_VM_PUSH_FRAME(frame);
@@ -1855,8 +1900,16 @@ static ana_object *ana_frame_eval(ana_vm *vm)
 
         ana_object_dtor(pc);
 
-        ana_object *filename;     
-        filename = frame->filename;
+        ana_object *filename;    
+
+        if(frame->self && ana_get_instance(frame->self)->module)
+        {
+          filename = ana_get_module(ana_get_instance(frame->self)->module)->filename;
+        }
+        else
+        {
+          filename = frame->filename;
+        } 
             
         fprintf(stdout, "%s: %s\n    in %s:%d\n", 
           the_type, 

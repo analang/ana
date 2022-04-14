@@ -134,9 +134,11 @@ D   [0-9]
 
 [ \r\n\t]* { /* Skipping Blanks Today */ }
 
+"as"        { return T_AS;        }
 "function"  { return T_FUNCTION;  }
 "func"      { return T_FUNCTION;  }
 "class"     { return T_CLASS;     }
+"import"    { return T_IMPORT;    }
 "throw"     { return T_THROW;     }
 "new"       { return T_NEW;       }
 "<="        { return T_LTE;       }
