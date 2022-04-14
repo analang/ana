@@ -1,0 +1,17 @@
+data = {
+	"items": [
+		{"name": "Ryan"},
+		{"languages": ["english", "portuguese"]}
+	]
+};
+
+
+function print_data(data) {
+	print(data);
+	data = "hello";
+	print(data);
+}
+
+
+print(data);
+
