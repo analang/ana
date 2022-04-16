@@ -17,7 +17,7 @@ class Buffer
   {
     if(self.position == self.stream.length())
     {
-      throw "Can't advance buffer";
+      throw "Can't advance buffer. Unexpected EOF";
     }
 
     return stream[self.position++];
@@ -53,6 +53,8 @@ function parse_str(buffer)
 
     buffer.advance();
   }
+
+  buffer.advance();
 
   return val;
 }
