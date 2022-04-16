@@ -1,0 +1,10 @@
+import logger;
+import system.collections.generic.list;
+
+logger.log("Hello World", "Second argument");
+
+list = list.List();
+list.add("Hello World");
+list.add(logger);
+
+print(list._items);	

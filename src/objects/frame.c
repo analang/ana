@@ -2,7 +2,7 @@
 #include <assert.h>
 
 ana_frame *ana_frame_new(
-  unsigned int *code, 
+  unsigned int *code,
   ana_size_t code_size,
   ana_object *jumptargets, 
   ana_object *line_mapping, 
@@ -55,7 +55,8 @@ ana_frame *ana_frame_new(
   obj->filename               = filename;
   obj->caller                 = caller;
   obj->retval                 = NULL;
-  
+  obj->module = NULL;
+
   return obj;
 }
 
@@ -92,7 +93,12 @@ static void frame_dtor(ana_object *obj)
   free(self->exception);
 
   free(self->stack);
-  ana_object_dtor(self->locals);
+  
+  if(!(self->flags & COMO_FRAME_MODULE))
+  {
+    ana_object_dtor(self->locals);
+  }
+
   free(self);
 }
 

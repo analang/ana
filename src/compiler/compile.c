@@ -635,6 +635,74 @@ static void ana_compile_unit_ex(ana_vm *vm, ana_object *funcobj,
 
       break;
     }
+        TARGET(COMO_AST_IMPORT) 
+    {
+      char *name, *asname;
+      node *importlist;
+
+      importlist = ast->children[0];
+
+      if(ast->nchild == 2 && ast->children[1] != NULL)
+        asname = ((node_id *)(ast->children[1]))->value;
+      else
+        asname = NULL;
+
+      int i;
+      ana_object *import_tree = ana_array_new(4);
+      size_t len = 0;
+      size_t pos = 0;
+      char *buffer;
+
+      for(i = 0; i < importlist->nchild; i++)
+      {
+        char *level = ((node_id *)(importlist->children[i]))->value;
+        len += strlen(level);  
+        ana_array_push(import_tree, ana_stringfromstring(level));
+      }
+
+      buffer = malloc(len + importlist->nchild + 1);
+      ana_object *alias;
+
+      ana_array_foreach(import_tree, index, value) {
+        (void)index;
+        char *val = ana_cstring(value);        
+        memcpy(buffer + pos, val, ana_get_string(value)->len);
+        pos += ana_get_string(value)->len;
+
+        if(index + 1 != ana_get_array(import_tree)->size) 
+        {
+          *(buffer + pos++) = '.'; 
+        }
+        else
+        {
+          alias = ana_stringfromstring(val);
+        }
+
+        ana_object_dtor(value);
+      } ana_array_foreach_end();
+
+      buffer[pos] = '\0';
+
+      name = buffer;
+
+      if(asname)
+      {
+        EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, name), 0,  ast);
+        EMITX(vm, func, IIMPORTAS,  NEW_STR_CONST(vm, asname),  0, ast);
+      }
+      else
+      {
+        EMITX(vm, func, LOAD_CONST, NEW_STR_CONST(vm, ana_cstring(alias)), 0, ast);
+        EMITX(vm, func, IIMPORT,    NEW_STR_CONST(vm, name), 0, ast);
+      }
+
+      ana_object_dtor(import_tree);
+      ana_object_dtor(alias);
+
+      free(buffer);
+
+      break;
+    }
     TARGET(COMO_AST_WHILE) {
       compile_while(vm, funcobj, ast);
       break;
@@ -1255,4 +1323,19 @@ ana_function *ana_compileast(ana_vm *vm, ana_compile_state *state)
   ana_compile_return_statement(vm, ANA_GET_FUNCTION_DEF(func));
   
   return ana_get_function(func);
+}
+
+ana_module *ana_compilemodule(ana_vm *vm, ana_compile_state *state, char *modname)	
+{	
+  ana_object *func = ana_function_defn_new(state->filename, modname);	
+
+  ana_compile_builtins(vm, ANA_GET_FUNCTION(func), state->ast);	
+
+  ana_compile_unit(vm, func, state->ast);	
+
+  ana_compile_return_statement(vm, ANA_GET_FUNCTION_DEF(func));	
+
+  ana_module *module = (ana_module *)ana_module_new(modname, func);	
+
+  return module;	
 }

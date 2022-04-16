@@ -29,6 +29,8 @@
 #define IEQUAL 0x18
 #define INEQUAL 0x19
 #define IREM 0x1A
+#define IIMPORT 0X1B
+#define IIMPORTAS 0x1C
 #define IIN       0x1D
 #define BEGIN_LOOP 0x1E
 #define END_LOOP   0x1F

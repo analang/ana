@@ -140,6 +140,9 @@ static inline int invoke_function(
         frame->filename
       );
 
+      if(frame->module)
+        execframe->module = frame->module;
+        
       if(self && ana_type_is(self, ana_instance_type))
       {
         execframe->self = self;
@@ -230,6 +233,11 @@ static inline int invoke_class(
         (ana_function *)ana_map_get(invoked_class->members, invoked_class->name);
     ana_frame *invoked_constructor_frame = NULL;
 
+    if(self && ana_type_is(self, ana_module_type))
+    {
+      invoked_instance->module = ana_get_module(self);
+    }
+    
     if(invoked_constructor)
     { 
       invoked_constructor_frame = (ana_frame *)ana_frame_new(
@@ -464,6 +472,215 @@ static inline ana_object *do_div(ana_vm *vm, ana_object *a, ana_object *b)
     if(retval)
       GC_TRACK(vm, retval);
   }
+
+  return retval;
+}
+
+/**
+ TODO Unit test this exception 
+ */
+static char *get_relative_dir(ana_frame *frame)
+{
+  ana_object *curr_file_copy = ana_stringfromstring(ana_cstring(frame->filename));
+  ana_object *parts = ana_array_new(4);
+  char *path = ana_cstring(curr_file_copy);
+  char part[50];
+  size_t i = 0;
+
+  while(*path)
+  {
+    if(*path == '/')
+    {
+      part[i] = '\0';
+      ana_array_push(parts, ana_stringfromstring(part));
+      memset(part, '\0', sizeof(part));
+      i = 0;
+    }
+    else
+    {
+      if(i == sizeof(part) - 1)
+      {
+        Ana_SetError("ImportError", "Directory path is too large");
+
+        ana_object_dtor(parts);
+        ana_object_dtor(curr_file_copy);
+
+        return NULL;
+      }
+      else
+      {
+        part[i++] = *path;
+      }
+    }
+
+    path++;
+  }
+
+  size_t buffsize = 1;
+  i = 0;
+  char *buffer;
+
+  ana_array_foreach(parts, index, value)
+  {
+    (void)index;
+    buffsize += ana_get_string(value)->len + 1;
+  } ana_array_foreach_end();
+
+  buffer = malloc(buffsize);
+
+  ana_array_foreach(parts, index, value)
+  {
+    (void)index;
+
+    memcpy(buffer + i, ana_cstring(value), ana_get_string(value)->len);
+    i += ana_get_string(value)->len;
+    memcpy(buffer + i, "/", 1);
+    i += 1;
+  } ana_array_foreach_end();
+
+  buffer[i] = '\0';
+
+
+  ana_array_foreach(parts, index, value)
+  {
+    (void)index;
+
+    ana_object_dtor(value);
+
+  } ana_array_foreach_end();
+
+
+  ana_object_dtor(parts);
+  ana_object_dtor(curr_file_copy);
+
+  return buffer;
+}
+
+static char *get_real_path(ana_frame *frame, ana_object *pathobj)
+{
+  char *relative_path = get_relative_dir(frame);
+
+  if(!relative_path)
+  {
+    return NULL;
+  }
+
+  ana_object *pathobjcopy = ana_stringfromstring(ana_cstring(pathobj));
+  char *pathwithext = NULL;
+  char *path = ana_cstring(pathobjcopy);
+
+  while(*path)
+  {
+    if(*path == '.')
+    {
+      *path = '/';
+    }
+
+    path++; 
+  }
+
+  path = ana_cstring(pathobjcopy);
+  pathwithext = ana_build_str("%s%s.ana", relative_path, path);
+
+  free(relative_path);
+  ana_object_dtor(pathobjcopy);
+
+  return pathwithext;
+}
+
+static int compile_file(char *path, FILE *fp, ana_parser_state *state)
+{
+  int retval;
+
+  retval = ana_astfromfile(
+    fp, path, 0, NULL, state);
+
+  if(retval != 0)
+  {
+    Ana_SetError("ImportError", "%s", state->error);
+    return 1;
+  }
+
+  return retval;
+}
+
+static inline int import_file(ana_vm *vm, ana_frame *frame, ana_object *alias, 
+  ana_object *pathobj)
+{ 
+  char *path = get_real_path(frame, pathobj);
+  int retval = 0;
+
+  if(path == NULL)
+  {
+    import_error:
+
+    Ana_SetError("ImportError", "`%s` was not located", ana_cstring(pathobj));
+
+    return 1;
+  }
+
+  FILE *fp = ana_open_file_for_parsing(path);
+
+  if(!fp)
+  {
+    goto import_error;
+  }
+
+  ana_parser_state parser_state;
+  parser_state.debug = 0;
+  parser_state.arena = ana_arena_new();
+
+  int status = compile_file(path, fp, &parser_state);
+
+  if(status != 0)
+  {
+    retval = 1;
+    goto exit;
+  }
+
+  ana_compile_state compile_state;
+  compile_state.ast = parser_state.ast;
+  compile_state.filename = (char *)path;
+
+  ana_module *code = ana_compilemodule(vm, &compile_state, 
+    ana_cstring(pathobj));
+
+  code->filename = ana_stringfromstring(path);
+
+  ana_frame *execframe = ana_frame_new(
+    ana_get_function_defn(code->func)->code,
+    ana_get_function_defn(code->func)->code_size,    
+    ana_get_function_defn(code->func)->jump_targets, 
+    ana_get_function_defn(code->func)->line_mapping, 
+    vm->global_frame->locals,
+    code->name,
+    frame,
+    frame->current_line,
+    pathobj
+  );
+
+  execframe->module = code;
+  execframe->flags |= COMO_FRAME_MODULE;
+
+  GC_TRACK(vm, code);
+
+  ana_map_put(frame->locals, alias, (ana_object *)code);
+
+  COMO_VM_PUSH_FRAME(frame);
+  COMO_VM_PUSH_FRAME(execframe);
+
+  code->members = execframe->locals;
+
+  exit:
+
+  ana_arena_free(parser_state.arena);
+
+  if(fp != NULL)
+  {
+    fclose(fp);
+  }
+
+  free(path);
 
   return retval;
 }
