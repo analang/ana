@@ -32,35 +32,28 @@ This screenshot was produced by running ``ana --opcodes -c 'print(1);`
 -	garbage collection
 -	first class functions
 
+
+```
+cd tests/grammar/import
+```
+
+```
+ana mod.ana
+```
+
+The source code of `mod.ana` is below:
+
 ```javascript
-import String;
+import logger;
+import system.collections.generic.list;
 
-class Logger 
-{
-    function Logger(buffered)
-    {
-      self._buffered = buffered;
-      self._lines = [];
-    }
+logger.log("Hello World", "Second argument");
 
-    function log(fmt, ...args)
-    {
-      line = String.format(fmt, args);
+list = list.List();
+list.add("Hello World");
+list.add(logger);
 
-      if(!_buffered)
-      {
-        print(line); 
-      }
-      else 
-      {
-        self._lines.push(line);
-      }
-    }
-}
-
-logger = Logger(false);
+print(list._items);
 
 logger.log("{}", "Welcome to Ana Lang v.0.0.1");
 ```
-
-To run this example, simply execute `ana logger.ana` at your shell of choice. Hint: Make sure `String.ana` is located in the directory of `logger.ana`. It's located in the `lib` directory.

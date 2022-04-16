@@ -7,5 +7,4 @@ list = list.List();
 list.add("Hello World");
 list.add(logger);
 
-print(list._items);
-	
+print(list._items);	
