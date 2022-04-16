@@ -73,7 +73,7 @@ char *ex_type = NULL;
 
 // #define ANA_GC_DEBUG1 0
 // #define ANA_GC_DEBUG 0
-#define ANA_GC_OBJ_THRES 128
+#define ANA_GC_OBJ_THRES 16
 
 ana_vm *ana_vm_new()
 {  
