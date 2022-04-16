@@ -71,8 +71,9 @@ char *ex_type = NULL;
 
 #define ANA_KEY_NOT_FOUND ((void*)-1)
 
-#define ANA_GC_DEBUG1 1
-#define ANA_GC_DEBUG 1
+// #define ANA_GC_DEBUG1 0
+// #define ANA_GC_DEBUG 0
+#define ANA_GC_OBJ_THRES 128
 
 ana_vm *ana_vm_new()
 {  
@@ -88,7 +89,7 @@ ana_vm *ana_vm_new()
   vm->flags = 0;
   vm->nobjs = 0;
   vm->do_gc = gc;
-  vm->mxobjs = 24;
+  vm->mxobjs = ANA_GC_OBJ_THRES;
   vm->root = NULL;
   vm->symbols   = ana_array_new(8);
   vm->constants = ana_array_new(16);
@@ -2179,8 +2180,12 @@ static void mark_frame(ana_frame *frame)
 
 static void mark(ana_vm *vm)
 {
-  if(vm->flags & COMO_VM_GC_DISABLED)
+  if(vm->flags & COMO_VM_GC_DISABLED) {
+      #ifdef ANA_GC_DEBUG1
+      fprintf(stderr, "mark: not collecting because COMO_VM_GC_DISABLED is true\n");
+      #endif
     return;
+  }
 
   ana_size_t i;
 
@@ -2197,8 +2202,13 @@ static void mark(ana_vm *vm)
 
 static void sweep(ana_vm *vm)
 {
-  if(vm->flags & COMO_VM_GC_DISABLED)
+  if(vm->flags & COMO_VM_GC_DISABLED) {
+      #ifdef ANA_GC_DEBUG1
+      fprintf(stderr, "sweep: not collecting because COMO_VM_GC_DISABLED is true\n");
+      #endif
+
     return;
+  }
   
   ana_object **root = &vm->root;
 

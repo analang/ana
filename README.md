@@ -57,3 +57,6 @@ print(list._items);
 
 logger.log("{}", "Welcome to Ana Lang v.0.0.1");
 ```
+
+Here's an advanced example which implements a JSON parser. The JSON is provided via `stdin` and the `ana` program reads from stdin and converts
+the JSON string into an abstract syntax tree. The full source code is [jsonparser.ana](tests/grammar/jsonparser.ana)
