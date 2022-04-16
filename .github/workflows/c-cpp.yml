@@ -10,10 +10,12 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+  
     steps:
     - uses: actions/checkout@v2
     - name: make
-      run: make
+      run: |
+        apt-get install --yes --no-install-recommends valgrind python3
+        make
     - name: make test
       run: make test
