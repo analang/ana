@@ -20,6 +20,7 @@ ana --opcodes -c 'print(1);'
 
 ```
 ana --opcodes tests/grammar/if-statements/if-statement.ana --function test_if_statement```
+```
 
 ```
 Ana Virtual Machine Disassembler
@@ -84,8 +85,8 @@ Ana Virtual Machine Disassembler
 
 ## Features
 
--   Virtual machine
--   source to bytecode compiler, intepreted by the VM
+- Virtual machine
+- source to bytecode compiler, intepreted by the VM
 -	classes with single layered inheritance
 -	dynamically sized arrays
 -	built in hash map support
